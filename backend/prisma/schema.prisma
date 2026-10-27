@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+/// Résultat d'une vérification de disponibilité (une adresse d'une appli).
+model CheckResult {
+  id         BigInt   @id @default(autoincrement())
+  appKey     String
+  checkId    String
+  at         DateTime @default(now())
+  ok         Boolean
+  statusCode Int?
+  latencyMs  Int?
+  error      String?
+
+  @@index([appKey, checkId, at])
+  @@index([at])
+}
+
+/// Alerte : panne détectée, erreur remontée par une appli ou alerte métier.
+/// Une même alerte (même empreinte) ouverte n'est pas dupliquée : son
+/// compteur augmente.
+model Alert {
+  id          String    @id @default(cuid())
+  appKey      String
+  kind        String // down | error | app
+  severity    String // critical | warning | info
+  title       String
+  detail      String?
+  fingerprint String
+  status      String    @default("open") // open | acknowledged | resolved
+  count       Int       @default(1)
+  openedAt    DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  ackAt       DateTime?
+  resolvedAt  DateTime?
+
+  @@index([status, openedAt])
+  @@index([appKey, fingerprint, status])
+}
+
+/// Journal envoyé par une appli.
+model LogEntry {
+  id        BigInt   @id @default(autoincrement())
+  appKey    String
+  at        DateTime
+  receivedAt DateTime @default(now())
+  level     String // debug | info | warn | error | fatal
+  source    String? // backend | frontend | cron | ...
+  message   String
+  context   Json?
+  requestId String?
+
+  @@index([appKey, at])
+  @@index([level, at])
+  @@index([at])
+}
+
+/// Trace de chaque action super administrateur lancée depuis la supervision.
+model ActionAudit {
+  id      String   @id @default(cuid())
+  at      DateTime @default(now())
+  by      String
+  appKey  String
+  action  String
+  params  Json?
+  ok      Boolean
+  message String?
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+}
