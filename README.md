@@ -22,9 +22,9 @@ Tableau de bord unique pour superviser tous nos projets :
 
 | Dossier | Rôle |
 |---|---|
-| `backend/` | API Node/Express/Prisma (PostgreSQL) : vérifications, alertes, réception des journaux, actions |
+| `backend/` | API Node/Express/Prisma (PostgreSQL) : vérifications, alertes, réception des journaux, actions ; sert aussi l'interface |
 | `frontend/` | Appli web React/Vite installable |
 | `clients/` | Modules d'envoi à copier dans les applis supervisées |
 | `docs/` | Documentation (index `docs/README.md`) |
 
-Statut : **v0.1.0** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).
+Statut : **v0.1.1** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).

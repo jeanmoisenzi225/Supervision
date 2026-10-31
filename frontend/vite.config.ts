@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  // En développement, l'API locale (port 4100) est jointe via le serveur Vite.
+  server: { proxy: { "/api": "http://localhost:4100" } },
+  preview: { proxy: { "/api": "http://localhost:4100" } },
   plugins: [
     react(),
     VitePWA({

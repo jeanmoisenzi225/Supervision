@@ -19,7 +19,13 @@ export const env = {
   databaseUrl: required("DATABASE_URL"),
   jwtSecret: required("JWT_SECRET"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
-  corsOrigins: (process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",").map((o) => o.trim()),
+  // Adresse publique du service, fournie automatiquement par Render.
+  publicUrl: optional("RENDER_EXTERNAL_URL"),
+  // L'interface est servie par ce même service (même origine) : CORS_ORIGIN
+  // ne sert qu'au développement local ou à un domaine supplémentaire.
+  corsOrigins: [optional("RENDER_EXTERNAL_URL"), ...(process.env.CORS_ORIGIN ?? "http://localhost:5173").split(",")]
+    .map((o) => o.trim())
+    .filter(Boolean),
   adminEmail: optional("ADMIN_EMAIL"),
   adminPassword: optional("ADMIN_PASSWORD"),
   vapidPublicKey: optional("VAPID_PUBLIC_KEY"),

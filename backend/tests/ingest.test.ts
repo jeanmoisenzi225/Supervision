@@ -57,3 +57,10 @@ describe("safeEqual", () => {
     expect(safeEqual("abc", "abd")).toBe(false);
   });
 });
+
+describe("sujet des notifications", async () => {
+  const { vapidSubject } = await import("../src/modules/push/push.service");
+  it("n'utilise jamais une adresse http (refusée par web-push)", () => {
+    expect(vapidSubject()).toMatch(/^(https:|mailto:)/);
+  });
+});

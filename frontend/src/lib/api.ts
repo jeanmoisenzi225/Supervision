@@ -1,4 +1,5 @@
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "") ?? "http://localhost:4100";
+// Vide en production : l'interface est servie par l'API elle-même (même adresse).
+const API_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? "").replace(/\/+$/, "");
 const TOKEN_KEY = "supervision.token";
 
 export function getToken(): string | null {

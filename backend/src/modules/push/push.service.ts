@@ -2,12 +2,53 @@ import webpush from "web-push";
 import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
 
-export function isPushConfigured(): boolean {
-  return Boolean(env.vapidPublicKey && env.vapidPrivateKey && env.vapidSubject);
+let vapidPublicKey: string | null = null;
+
+/**
+ * Sujet des notifications : doit être un vrai mailto: ou une vraie URL,
+ * sinon Apple (Safari/iOS) refuse les envois.
+ */
+export function vapidSubject(): string {
+  if (env.vapidSubject) return env.vapidSubject;
+  if (env.publicUrl.startsWith("https://")) return env.publicUrl;
+  if (env.adminEmail) return `mailto:${env.adminEmail}`;
+  return "mailto:supervision@localhost";
 }
 
-if (isPushConfigured()) {
-  webpush.setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
+/**
+ * Prépare les notifications push. Les clés VAPID viennent des variables
+ * d'environnement si elles sont définies ; sinon elles sont générées au
+ * premier démarrage et gardées en base (table Setting) : rien à saisir dans
+ * Render, et les abonnements des téléphones restent valables d'un
+ * redémarrage à l'autre.
+ */
+export async function initPush(): Promise<void> {
+  let keys = env.vapidPublicKey && env.vapidPrivateKey ? { publicKey: env.vapidPublicKey, privateKey: env.vapidPrivateKey } : null;
+  if (!keys) {
+    const stored = await prisma.setting.findUnique({ where: { key: "vapid" } });
+    if (stored) {
+      keys = JSON.parse(stored.value) as { publicKey: string; privateKey: string };
+    } else {
+      keys = webpush.generateVAPIDKeys();
+      await prisma.setting.create({ data: { key: "vapid", value: JSON.stringify(keys) } });
+      console.log("[push] clés de notification générées et enregistrées en base");
+    }
+  }
+  try {
+    webpush.setVapidDetails(vapidSubject(), keys.publicKey, keys.privateKey);
+    vapidPublicKey = keys.publicKey;
+  } catch (err) {
+    // Les notifications restent coupées, le reste de la supervision démarre.
+    console.error("[push] notifications désactivées :", (err as Error).message);
+  }
+}
+
+export function isPushConfigured(): boolean {
+  return vapidPublicKey !== null;
+}
+
+export function getVapidPublicKey(): string | null {
+  return vapidPublicKey;
 }
 
 export interface PushMessage {

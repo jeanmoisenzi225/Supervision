@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.1.1 — 2026-10-31
+
+Mise en ligne simplifiée : plus aucune clé à copier dans Render.
+
+- L'interface est servie par l'API elle-même : un seul service Render, une seule adresse, plus de `VITE_API_URL` ni de `CORS_ORIGIN` à recopier entre deux services.
+- Les clés des notifications sont générées au premier démarrage et gardées en base (nouvelle table `Setting`) : plus de `VAPID_*` à saisir. Le sujet des notifications est l'adresse publique Render (https) ou, à défaut, l'e-mail du super administrateur.
+- Un problème de notifications n'empêche plus jamais le serveur de démarrer.
+- Seules valeurs demandées à la création du Blueprint : `ADMIN_EMAIL` et `ADMIN_PASSWORD`.
+
 ## v0.1.0 — 2026-10-27
 
 Première version de la Supervision.

@@ -20,8 +20,8 @@ Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules
 
 ## 2. Journaux et alertes
 
-1. Côté supervision : `<PREFIXE>_INGEST_TOKEN` (généré par Render).
-2. Côté appli : `SUPERVISION_URL` (adresse de supervision-api) et `SUPERVISION_INGEST_TOKEN` (même valeur).
+1. Côté supervision : `<PREFIXE>_INGEST_TOKEN` (généré par Render pour MGA, Yiri, Procedia et My Family).
+2. Côté appli : `SUPERVISION_URL` (adresse du service `supervision`) et `SUPERVISION_INGEST_TOKEN` (même valeur).
 3. Copier le module :
    - Node : `clients/node/supervision.ts`
      ```ts

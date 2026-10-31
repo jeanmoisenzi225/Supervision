@@ -1,5 +1,10 @@
 # Blueprint Render de la Supervision : projet dédié, indépendant des applis
 # surveillées (si MGA tombe, la supervision reste en ligne pour le dire).
+#
+# Un seul service web : l'API sert aussi l'interface (même adresse), et les
+# clés des notifications sont générées au premier démarrage. Seules valeurs
+# demandées à la création : ADMIN_EMAIL et ADMIN_PASSWORD.
+#
 # L'API doit tourner en continu pour vérifier les applis toutes les minutes :
 # plan Starter obligatoire (l'offre gratuite se met en veille).
 projects:
@@ -14,12 +19,11 @@ projects:
 
         services:
           - type: web
-            name: supervision-api
+            name: supervision
             runtime: node
             plan: starter
-            rootDir: backend
-            buildCommand: npm install && npx prisma generate && npm run build
-            startCommand: npx prisma migrate deploy && npm start
+            buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install && npx prisma generate && npm run build
+            startCommand: cd backend && npx prisma migrate deploy && npm start
             healthCheckPath: /api/health
             envVars:
               - key: NODE_VERSION
@@ -30,59 +34,17 @@ projects:
                   property: connectionString
               - key: JWT_SECRET
                 generateValue: true
-              # Adresse de supervision-web (et domaine personnalisé éventuel).
-              - key: CORS_ORIGIN
-                sync: false
               # Super administrateur, créé au premier démarrage seulement.
               - key: ADMIN_EMAIL
                 sync: false
               - key: ADMIN_PASSWORD
                 sync: false
-              # Notifications push des alertes.
-              - key: VAPID_PUBLIC_KEY
-                sync: false
-              - key: VAPID_PRIVATE_KEY
-                sync: false
-              - key: VAPID_SUBJECT
-                sync: false
-              # Actions Render (redémarrer, redéployer).
-              - key: RENDER_API_KEY
-                sync: false
-              # Un jeu par appli, voir docs/integration.md.
+              # Jetons d'envoi des journaux, un par appli (voir docs/integration.md).
               - key: MGA_INGEST_TOKEN
                 generateValue: true
-              - key: MGA_RENDER_SERVICES
-                sync: false
-              - key: SITE_AUTONOVA_RENDER_SERVICES
-                sync: false
               - key: YIRI_INGEST_TOKEN
                 generateValue: true
-              - key: YIRI_RENDER_SERVICES
-                sync: false
-              - key: PROCEDIA_URLS
-                sync: false
               - key: PROCEDIA_INGEST_TOKEN
                 generateValue: true
-              - key: PROCEDIA_RENDER_SERVICES
-                sync: false
               - key: MY_FAMILY_INGEST_TOKEN
                 generateValue: true
-
-          - type: web
-            name: supervision-web
-            runtime: static
-            rootDir: frontend
-            buildCommand: npm install && npm run build
-            staticPublishPath: dist
-            envVars:
-              # Adresse publique de supervision-api.
-              - key: VITE_API_URL
-                sync: false
-            headers:
-              - path: /*
-                name: X-Robots-Tag
-                value: noindex
-            routes:
-              - type: rewrite
-                source: /*
-                destination: /index.html

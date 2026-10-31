@@ -1,16 +1,15 @@
 import { z } from "zod";
-import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
-import { isPushConfigured, sendPushToAll } from "./push.service";
+import { getVapidPublicKey, isPushConfigured, sendPushToAll } from "./push.service";
 
 export const pushRouter = asyncRouter();
 pushRouter.use(requireAdmin);
 
 pushRouter.get("/public-key", async (_req, res) => {
-  res.json({ configured: isPushConfigured(), publicKey: isPushConfigured() ? env.vapidPublicKey : null });
+  res.json({ configured: isPushConfigured(), publicKey: getVapidPublicKey() });
 });
 
 const subscriptionSchema = z.object({

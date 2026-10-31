@@ -87,3 +87,11 @@ model PushSubscription {
   auth      String
   createdAt DateTime @default(now())
 }
+
+/// Réglages générés par le serveur lui-même (ex. clés des notifications),
+/// pour ne rien avoir à saisir à la main dans Render.
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -2,10 +2,11 @@
 
 ## 1. Mise en ligne
 
-- [ ] Créer le dépôt GitHub `Supervision` (privé) et y pousser ce code.
-- [ ] Créer le projet Render depuis `render.yaml` (API Starter + base + site statique).
-- [ ] Renseigner `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `CORS_ORIGIN`, `VITE_API_URL`, clés VAPID, `RENDER_API_KEY`.
+- [x] Créer le dépôt GitHub `Supervision` (privé) et y pousser ce code (2026-10-30).
+- [x] Simplifier la mise en ligne : un seul service, clés de notification générées par le serveur (v0.1.1, 2026-10-31, demande du propriétaire : impossible de copier-coller chaque clé).
+- [ ] Créer le projet Render depuis `render.yaml` (seules saisies : `ADMIN_EMAIL`, `ADMIN_PASSWORD`).
 - [ ] Installer l'appli sur le téléphone et activer les notifications.
+- [ ] Plus tard : `RENDER_API_KEY` et identifiants des services pour les boutons Redémarrer / Redéployer.
 
 ## 2. Branchement des applis (journaux et alertes)
 

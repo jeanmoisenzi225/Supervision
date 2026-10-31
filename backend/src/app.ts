@@ -1,4 +1,6 @@
 import cors from "cors";
+import fs from "fs";
+import path from "path";
 import express from "express";
 import helmet from "helmet";
 import { env } from "./config/env";
@@ -39,6 +41,32 @@ export function createApp() {
   app.use("/api/logs", logsRouter);
   app.use("/api/apps", actionsRouter);
   app.use("/api/push", pushRouter);
+
+  app.use("/api", (_req, res) => res.status(404).json({ error: "Route inconnue" }));
+
+  // Interface (frontend/dist) servie par ce même service : une seule adresse
+  // à retenir, et rien à recopier entre deux services dans Render.
+  const webDir = path.resolve(__dirname, "../../frontend/dist");
+  if (fs.existsSync(path.join(webDir, "index.html"))) {
+    app.use((_req, res, next) => {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow");
+      next();
+    });
+    app.use(
+      express.static(webDir, {
+        index: false,
+        setHeaders(res, file) {
+          // Fichiers à noms fixes : toujours revérifiés, pour que chaque
+          // déploiement apparaisse dès la prochaine ouverture.
+          if (!file.includes(`${path.sep}assets${path.sep}`)) res.setHeader("Cache-Control", "no-cache");
+        },
+      })
+    );
+    app.get("*", (_req, res) => {
+      res.setHeader("Cache-Control", "no-cache");
+      res.sendFile(path.join(webDir, "index.html"));
+    });
+  }
 
   app.use(errorHandler);
   return app;

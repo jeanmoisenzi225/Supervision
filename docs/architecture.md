@@ -5,15 +5,17 @@
 ```
  Applis supervisées                    Supervision (projet Render dédié)
  ┌──────────────┐  journaux, alertes   ┌──────────────────────────────┐
- │ MGA, Yiri,   │ ───────────────────▶ │ supervision-api (Starter)    │──▶ PostgreSQL
+ │ MGA, Yiri,   │ ───────────────────▶ │ supervision (Starter)        │──▶ PostgreSQL
  │ Procedia,    │  POST /api/ingest/*  │  · boucle de vérification    │
  │ My Family    │ ◀─────────────────── │  · alertes + push            │──▶ API Render
  └──────────────┘  /supervision/*      │  · actions, purge 30 j       │    (redémarrer,
         ▲          (actions admin)     └──────────────▲───────────────┘     redéployer)
         │ GET (disponibilité)                         │ /api/*
         └────────────────────── boucle ───────────────┤
-                                               supervision-web (PWA)
+                                         interface PWA (servie par l'API)
 ```
+
+Un seul service Render (`supervision`) : l'API sert aussi l'interface construite (`frontend/dist`), à la même adresse. Toute adresse hors `/api` renvoie l'interface.
 
 L'API tourne en continu : elle interroge les applis selon leur intervalle (boucle toutes les 15 s, vérification lancée quand l'intervalle de l'appli est écoulé, jamais deux en même temps pour une même appli).
 
@@ -27,6 +29,7 @@ L'API tourne en continu : elle interroge les applis selon leur intervalle (boucl
 | `LogEntry` | Journal reçu : appli, date, niveau, source, message (4 000 car. max), contexte JSON (8 Ko max). Conservé 30 jours |
 | `ActionAudit` | Chaque action lancée : qui, quand, quoi, paramètres, résultat |
 | `PushSubscription` | Appareils abonnés aux notifications |
+| `Setting` | Réglages générés par le serveur : clés des notifications (`vapid`), créées au premier démarrage si `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` ne sont pas définies |
 
 ## Règles d'alerte
 
