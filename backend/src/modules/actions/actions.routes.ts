@@ -5,7 +5,7 @@ import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
-import { deployService, describeService, restartService } from "./render";
+import { deployService, describeService, resolveServiceIds, restartService } from "./render";
 
 export const actionsRouter = asyncRouter();
 actionsRouter.use(requireAdmin);
@@ -51,11 +51,16 @@ async function audit(by: string, appKey: string, action: string, params: unknown
 
 actionsRouter.get("/:key/actions", async (req, res) => {
   const app = getApp(req.params.key);
-  const renderConfigured = Boolean(env.renderApiKey && app.renderServiceIds.length);
+  const renderConfigured = Boolean(env.renderApiKey);
+  let renderError: string | null = null;
+  const serviceIds = renderConfigured
+    ? await resolveServiceIds(app).catch((err: Error) => {
+        renderError = err.message;
+        return [] as string[];
+      })
+    : [];
   const [services, appActions, appSummary, history] = await Promise.all([
-    renderConfigured
-      ? Promise.all(app.renderServiceIds.map((id) => describeService(id).catch((err) => ({ id, error: (err as Error).message }))))
-      : Promise.resolve([]),
+    Promise.all(serviceIds.map((id) => describeService(id).catch((err) => ({ id, error: (err as Error).message })))),
     app.adminUrl && app.adminToken
       ? callApp<{ actions: unknown[] }>(app, "/supervision/actions").then((r) => ({ actions: r.actions ?? [] }), (err) => ({ actions: [], error: (err as Error).message }))
       : Promise.resolve(null),
@@ -65,7 +70,7 @@ actionsRouter.get("/:key/actions", async (req, res) => {
     prisma.actionAudit.findMany({ where: { appKey: app.key }, orderBy: { at: "desc" }, take: 20 }),
   ]);
   res.json({
-    render: { configured: renderConfigured, services },
+    render: { configured: renderConfigured, services, error: renderError },
     app: appActions ? { configured: true, ...appActions } : { configured: false, actions: [] },
     metrics: appSummary,
     history,
@@ -75,7 +80,7 @@ actionsRouter.get("/:key/actions", async (req, res) => {
 actionsRouter.post("/:key/render/:serviceId/:op", async (req, res) => {
   const app = getApp(req.params.key);
   const { serviceId, op } = req.params;
-  if (!app.renderServiceIds.includes(serviceId)) throw new HttpError(404, "Service Render inconnu pour cette appli");
+  if (!(await resolveServiceIds(app)).includes(serviceId)) throw new HttpError(404, "Service Render inconnu pour cette appli");
   const { clearCache } = z.object({ clearCache: z.boolean().default(false) }).parse(req.body ?? {});
   const message = await audit(req.admin!.email, app.key, `render:${op}:${serviceId}`, { clearCache }, async () => {
     if (op === "restart") {

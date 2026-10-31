@@ -76,3 +76,28 @@ describe("adresses par défaut", () => {
     expect(procedia.intervalSec).toBe(1800);
   });
 });
+
+describe("reconnaissance des services Render", async () => {
+  const { matchServices } = await import("../src/modules/actions/render");
+  const services = [
+    { id: "srv-1", name: "garage-backend", url: "https://garage-backend-r7i3.onrender.com" },
+    { id: "srv-2", name: "garage-frontend", url: "https://garage-frontend-a7uv.onrender.com" },
+    { id: "srv-3", name: "agent-brvm", url: "https://agent-brvm.onrender.com" },
+    { id: "srv-4", name: "procedia-backend", url: "https://procedia-backend.onrender.com" },
+    { id: "srv-5", name: "supervision", url: "https://supervision-20zi.onrender.com" },
+    { id: "srv-6", name: "nom-libre", url: "https://autonova-group.ci" },
+  ];
+  const ids = (key: string) => matchServices(buildApps(() => "").find((a) => a.key === key)!.renderMatch, services).map((s) => s.id);
+
+  it("rattache chaque service à la bonne appli", () => {
+    expect(ids("mga")).toEqual(["srv-1", "srv-2"]);
+    expect(ids("yiri")).toEqual(["srv-3"]);
+    expect(ids("procedia")).toEqual(["srv-4"]);
+    expect(ids("site-autonova")).toEqual(["srv-6"]);
+    expect(ids("my-family")).toEqual([]);
+  });
+
+  it("ne rattache jamais la supervision elle-même", () => {
+    for (const key of ["mga", "yiri", "procedia", "site-autonova", "my-family"]) expect(ids(key)).not.toContain("srv-5");
+  });
+});

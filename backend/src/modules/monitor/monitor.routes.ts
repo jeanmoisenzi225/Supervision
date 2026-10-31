@@ -56,7 +56,7 @@ async function appOverview(app: AppTarget) {
     integration: {
       logs: Boolean(app.ingestToken),
       adminActions: Boolean(app.adminUrl && app.adminToken),
-      render: Boolean(env.renderApiKey && app.renderServiceIds.length),
+      render: Boolean(env.renderApiKey),
     },
   };
 }

@@ -30,11 +30,19 @@ interface RenderService {
 }
 
 interface ActionsData {
-  render: { configured: boolean; services: RenderService[] };
+  render: { configured: boolean; services: RenderService[]; error?: string | null };
   app: { configured: boolean; actions: AppAction[]; error?: string };
   metrics: { label: string; value: string | number; hint?: string }[];
   history: { id: string; at: string; by: string; action: string; ok: boolean; message: string | null }[];
 }
+
+const SERVICE_TYPE: Record<string, string> = {
+  web_service: "Service web",
+  static_site: "Site statique",
+  background_worker: "Tâche de fond",
+  cron_job: "Tâche planifiée",
+  private_service: "Service privé",
+};
 
 const DEPLOY_STATUS: Record<string, string> = {
   live: "En ligne",
@@ -90,8 +98,12 @@ export function AdminPanel({ app }: { app: AppOverview }) {
         <h3>Hébergement (Render)</h3>
         {!data.render.configured && (
           <p className="muted small">
-            Non branché : définir <code>RENDER_API_KEY</code> et <code>{app.key.toUpperCase().replace(/-/g, "_")}_RENDER_SERVICES</code> sur la supervision.
+            Non branché : ajouter la clé API Render (<code>RENDER_API_KEY</code>) sur le service supervision. Les services de l'appli sont ensuite reconnus automatiquement.
           </p>
+        )}
+        {data.render.error && <p className="error small">{data.render.error}</p>}
+        {data.render.configured && !data.render.error && data.render.services.length === 0 && (
+          <p className="muted small">Aucun service Render reconnu pour cette appli (ni par son nom, ni par son adresse).</p>
         )}
         {data.render.services.map((s) => (
           <div key={s.id} className="service">
@@ -103,7 +115,7 @@ export function AdminPanel({ app }: { app: AppOverview }) {
               <>
                 <div className="row">
                   <strong className="grow">{s.name}</strong>
-                  <span className="pill">{s.type}</span>
+                  <span className="pill">{SERVICE_TYPE[s.type ?? ""] ?? s.type}</span>
                   {s.suspended && <span className="pill pill-bad">Suspendu</span>}
                 </div>
                 {s.deploys?.[0] && (
@@ -113,10 +125,12 @@ export function AdminPanel({ app }: { app: AppOverview }) {
                   </p>
                 )}
                 <div className="row wrap">
-                  <button disabled={busy !== null} onClick={() => run(`${s.id}:restart`, "redémarrer le service", `/apps/${app.key}/render/${s.id}/restart`, {}, true)}>
-                    Redémarrer
-                  </button>
-                  <button disabled={busy !== null} onClick={() => run(`${s.id}:deploy`, "redéployer la dernière version", `/apps/${app.key}/render/${s.id}/deploy`, {}, true)}>
+                  {s.type !== "static_site" && (
+                    <button disabled={busy !== null} onClick={() => run(`${s.id}:restart`, `redémarrer ${s.name}`, `/apps/${app.key}/render/${s.id}/restart`, {}, true)}>
+                      Redémarrer
+                    </button>
+                  )}
+                  <button disabled={busy !== null} onClick={() => run(`${s.id}:deploy`, `redéployer la dernière version de ${s.name}`, `/apps/${app.key}/render/${s.id}/deploy`, {}, true)}>
                     Redéployer
                   </button>
                   {s.dashboardUrl && (

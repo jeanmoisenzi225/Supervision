@@ -27,4 +27,4 @@ Tableau de bord unique pour superviser tous nos projets :
 | `clients/` | Modules d'envoi à copier dans les applis supervisées |
 | `docs/` | Documentation (index `docs/README.md`) |
 
-Statut : **v0.1.5** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).
+Statut : **v0.2.0** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).

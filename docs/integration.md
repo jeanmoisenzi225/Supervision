@@ -59,4 +59,18 @@ Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètre
 
 ## 4. Render
 
-`RENDER_API_KEY` (compte Render › Account Settings › API Keys) et `<PREFIXE>_RENDER_SERVICES` : identifiants `srv-…` des services de l'appli, séparés par des virgules. Donne l'état du dernier déploiement et les boutons Redémarrer / Redéployer.
+Seule saisie : `RENDER_API_KEY` sur le service `supervision` (Render › Account Settings › API Keys › Create API Key). Donne l'état du dernier déploiement et les boutons Redémarrer (services web) / Redéployer.
+
+Les services de chaque appli sont **reconnus automatiquement** dans la liste des services du compte (gardée 10 minutes en mémoire) :
+
+| Appli | Reconnu par son nom | ou par son adresse |
+|---|---|---|
+| MGA | `garage-…`, `mga-…` | adresses surveillées, `garage-frontend-a7uv.onrender.com` |
+| Site Autonova | contient `autonova` | adresse surveillée |
+| Yiri Invest | contient `brvm` ou `yiri` | adresse surveillée |
+| My Family | contient `family` | adresse surveillée |
+| Procedia | `procedia-…` | adresses surveillées |
+
+Le service `supervision` n'est rattaché à aucune appli. Pour imposer une liste précise : `<PREFIXE>_RENDER_SERVICES` (identifiants `srv-…` séparés par des virgules), prioritaire sur la reconnaissance automatique.
+
+La clé API Render donne accès à tout le compte Render : elle ne se saisit que dans l'onglet Environment du service `supervision`, jamais ailleurs.

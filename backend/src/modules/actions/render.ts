@@ -31,6 +31,51 @@ interface RenderDeploy {
   commit?: { id?: string; message?: string };
 }
 
+interface ServiceSummary {
+  id: string;
+  name: string;
+  url: string | null;
+}
+
+let cache: { at: number; services: ServiceSummary[] } | null = null;
+
+/** Tous les services du compte Render (gardés 10 minutes en mémoire). */
+export async function listServices(): Promise<ServiceSummary[]> {
+  if (cache && Date.now() - cache.at < 10 * 60_000) return cache.services;
+  const services: ServiceSummary[] = [];
+  let cursor = "";
+  for (let page = 0; page < 10; page++) {
+    const rows = await renderFetch<{ service: RenderService; cursor: string }[]>(`/services?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+    services.push(...rows.map(({ service }) => ({ id: service.id, name: service.name, url: service.serviceDetails?.url ?? null })));
+    if (rows.length < 100) break;
+    cursor = rows[rows.length - 1].cursor;
+  }
+  cache = { at: Date.now(), services };
+  return services;
+}
+
+/** Services Render d'une appli : par nom, ou par adresse surveillée (fonction pure, testée). */
+export function matchServices(
+  match: { names: RegExp[]; hosts: string[] },
+  services: ServiceSummary[]
+): ServiceSummary[] {
+  return services.filter((s) => {
+    if (match.names.some((re) => re.test(s.name))) return true;
+    try {
+      return s.url !== null && match.hosts.includes(new URL(s.url).hostname);
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** Identifiants à utiliser : ceux imposés par la configuration, sinon ceux reconnus automatiquement. */
+export async function resolveServiceIds(app: { renderServiceIds: string[]; renderMatch: { names: RegExp[]; hosts: string[] } }): Promise<string[]> {
+  if (app.renderServiceIds.length) return app.renderServiceIds;
+  if (!env.renderApiKey) return [];
+  return matchServices(app.renderMatch, await listServices()).map((s) => s.id);
+}
+
 export async function describeService(id: string) {
   const [service, deploys] = await Promise.all([
     renderFetch<RenderService>(`/services/${id}`),

@@ -6,7 +6,7 @@
 - [x] Simplifier la mise en ligne : un seul service, clés de notification générées par le serveur (v0.1.1, 2026-10-31, demande du propriétaire : impossible de copier-coller chaque clé).
 - [ ] Créer le projet Render depuis `render.yaml` (seules saisies : `ADMIN_EMAIL`, `ADMIN_PASSWORD`).
 - [ ] Installer l'appli sur le téléphone et activer les notifications.
-- [ ] Plus tard : `RENDER_API_KEY` et identifiants des services pour les boutons Redémarrer / Redéployer.
+- [x] Boutons Redémarrer / Redéployer : services reconnus automatiquement (v0.2.0) ; seule saisie `RENDER_API_KEY`.
 
 ## 2. Branchement des applis (journaux et alertes)
 

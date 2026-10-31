@@ -57,7 +57,7 @@ Réservées au super administrateur (jeton de session) :
 | `GET /api/alerts?status=&app=`, `POST /api/alerts/:id/ack`, `POST /api/alerts/:id/resolve` | Alertes |
 | `GET /api/logs?app=&minLevel=&q=&source=&before=&after=&limit=` | Journaux (pagination par identifiant) |
 | `GET /api/apps/:key/actions` | Services Render, actions et chiffres clés de l'appli, historique |
-| `POST /api/apps/:key/render/:serviceId/restart` · `/deploy` | Actions Render (service déclaré pour l'appli uniquement) |
+| `POST /api/apps/:key/render/:serviceId/restart` · `/deploy` | Actions Render (service rattaché à l'appli uniquement : reconnu automatiquement ou imposé par `<PREFIXE>_RENDER_SERVICES`) |
 | `POST /api/apps/:key/actions/:actionId` | Action propre à l'appli (relayée vers son protocole `/supervision`) |
 | `GET /api/push/public-key`, `POST /api/push/subscribe` · `/unsubscribe` · `/test` | Notifications |
 

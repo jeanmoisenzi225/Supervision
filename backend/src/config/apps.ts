@@ -23,7 +23,10 @@ export interface AppTarget {
   ingestToken: string;
   adminUrl: string;
   adminToken: string;
+  /** Identifiants imposés par <PREFIXE>_RENDER_SERVICES ; vide = reconnaissance automatique. */
   renderServiceIds: string[];
+  /** Reconnaissance automatique des services Render de l'appli (nom ou adresse). */
+  renderMatch: { names: RegExp[]; hosts: string[] };
 }
 
 interface AppDefinition {
@@ -34,6 +37,9 @@ interface AppDefinition {
   intervalSec: number;
   sleepsWhenIdle?: boolean;
   defaultChecks: Omit<CheckTarget, "timeoutMs">[];
+  /** Noms de services Render de l'appli, et adresses .onrender.com cachées derrière un domaine. */
+  renderNames: RegExp[];
+  renderHosts?: string[];
 }
 
 /**
@@ -49,6 +55,8 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "MGA · My Autonova",
     description: "Appli de gestion du garage et espace client My Autonova",
     intervalSec: 60,
+    renderNames: [/^garage-/, /^mga-/],
+    renderHosts: ["garage-frontend-a7uv.onrender.com"],
     defaultChecks: [
       { id: "api", label: "API", url: "https://garage-backend-r7i3.onrender.com/health", expect: "health" },
       { id: "app", label: "Appli web", url: "https://www.mga-automotive.com/", expect: "2xx" },
@@ -60,6 +68,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "Site Autonova",
     description: "Site vitrine d'Autonova Group, alimenté par My Autonova",
     intervalSec: 300,
+    renderNames: [/autonova/i],
     defaultChecks: [{ id: "site", label: "Site", url: "https://autonova-group.ci/", expect: "2xx" }],
   },
   {
@@ -68,6 +77,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "Yiri Invest",
     description: "Veille BRVM, agent WhatsApp et appli d'investissement",
     intervalSec: 60,
+    renderNames: [/brvm/i, /yiri/i],
     defaultChecks: [
       { id: "server", label: "Serveur", url: "https://agent-brvm.onrender.com/manifest.json", expect: "2xx" },
       { id: "app", label: "Appli web", url: "https://agent-brvm.onrender.com/app", expect: "2xx" },
@@ -79,6 +89,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "My Family",
     description: "Plateforme d'organisation familiale (pilote NZI FAMILY)",
     intervalSec: 300,
+    renderNames: [/family/i],
     defaultChecks: [],
   },
   {
@@ -91,6 +102,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     // tout le quota mensuel d'heures gratuites (voir docs/integration.md).
     intervalSec: 1800,
     sleepsWhenIdle: true,
+    renderNames: [/^procedia-/],
     defaultChecks: [
       // L'API dort hors usage : c'est elle que la vérification réveille.
       { id: "api", label: "API", url: "https://procedia-backend.onrender.com/api/health", expect: "health" },
@@ -112,6 +124,14 @@ export function parseUrlsEnv(raw: string): Omit<CheckTarget, "timeoutMs">[] {
       return { id, label, url, expect: url.includes("health") ? "health" : "2xx" } as const;
     })
     .filter((c) => /^https?:\/\//.test(c.url));
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
 }
 
 export function buildApps(read: (name: string) => string = readOptionalEnv): AppTarget[] {
@@ -136,6 +156,10 @@ export function buildApps(read: (name: string) => string = readOptionalEnv): App
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+      renderMatch: {
+        names: def.renderNames,
+        hosts: [...checks.map((c) => hostOf(c.url)), ...(def.renderHosts ?? [])].filter(Boolean),
+      },
     };
   });
 }

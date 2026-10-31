@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.2.0 — 2026-10-31
+
+- Boutons Redémarrer / Redéployer : les services Render de chaque appli sont reconnus automatiquement (par leur nom ou leur adresse) ; seule la clé API Render est à saisir, plus aucun identifiant `srv-…`. `<PREFIXE>_RENDER_SERVICES` reste possible pour imposer une liste.
+- « Redémarrer » n'est proposé que pour les services web (un site statique se redéploie seulement) ; type de service affiché en français ; message clair si aucun service n'est reconnu ou si Render refuse la clé.
+
 ## v0.1.5 — 2026-10-31
 
 Module d'envoi Python (`clients/python/supervision_client.py`), utilisé par Yiri Invest 0.47.0 :
