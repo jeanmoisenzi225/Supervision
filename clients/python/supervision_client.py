@@ -24,6 +24,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import threading
 import traceback
 import urllib.request
@@ -35,6 +36,32 @@ _LEVELS = {
     logging.ERROR: "error",
     logging.CRITICAL: "fatal",
 }
+
+
+# Bibliothèques très bavardes (une ligne par requête HTTP, par passage du
+# planificateur...) : seuls leurs avertissements et erreurs sont envoyés. Les
+# lignes de httpx contiennent aussi les adresses appelées, jetons compris.
+QUIET_LOGGERS = ("uvicorn.access", "httpx", "httpcore", "urllib3", "apscheduler", "hpack", "asyncio", "multipart")
+
+# Suite de 9 à 15 chiffres isolée (un point final de phrase est accepté,
+# pas un séparateur de milliers ou de décimales).
+_PHONE = re.compile(r"(?<![\w.])\+?\d{9,15}(?!\w|[.,]\d)")
+
+
+def mask_phone_numbers(text: str) -> str:
+    """+2250707123456 -> +22507•••••56 : le numéro reste reconnaissable sans être exploitable."""
+    def _mask(m: re.Match) -> str:
+        raw = m.group(0)
+        plus = "+" if raw.startswith("+") else ""
+        digits = raw.lstrip("+")
+        return plus + digits[:5] + "•" * (len(digits) - 7) + digits[-2:]
+    return _PHONE.sub(_mask, text)
+
+
+def short_source(logger_name: str) -> str:
+    """brvm_agent.jobs -> jobs ; __main__ / webhook_server -> serveur."""
+    name = logger_name.rsplit(".", 1)[-1]
+    return "serveur" if name in ("__main__", "webhook_server", "error") else name
 
 
 def _post(url: str, token: str, path: str, body: dict) -> None:
@@ -51,8 +78,14 @@ class SupervisionHandler(logging.Handler):
     """Handler logging qui envoie les journaux par lots toutes les 5 s."""
 
     def __init__(self, url: str | None, token: str | None, source: str | None = None,
-                 level: int = logging.INFO, flush_interval: float = 5.0):
+                 level: int = logging.INFO, flush_interval: float = 5.0,
+                 redact=mask_phone_numbers, quiet_loggers=QUIET_LOGGERS):
+        """redact : fonction appliquée à chaque message avant envoi (par défaut,
+        masquage des numéros de téléphone). source : fixe la source ; sinon
+        elle vient du nom du logger (brvm_agent.jobs -> jobs)."""
         super().__init__(level)
+        self.redact = redact
+        self.quiet_loggers = tuple(quiet_loggers)
         self.url = (url or "").strip()
         self.token = (token or "").strip()
         self.source = source
@@ -66,17 +99,21 @@ class SupervisionHandler(logging.Handler):
             atexit.register(self.flush)
 
     def emit(self, record: logging.LogRecord) -> None:
-        if not self.enabled or record.name.startswith("urllib3"):
+        if not self.enabled:
+            return
+        if record.levelno < logging.WARNING and record.name.startswith(self.quiet_loggers):
             return
         try:
             message = record.getMessage()
             if record.exc_info:
                 message += "\n" + "".join(traceback.format_exception(*record.exc_info))
+            if self.redact:
+                message = self.redact(message)
             entry = {
                 "at": _dt.datetime.fromtimestamp(record.created, _dt.timezone.utc).isoformat(),
                 "level": _LEVELS.get(record.levelno, "info"),
                 "message": message[:4000],
-                "source": self.source or record.name,
+                "source": self.source or short_source(record.name),
                 "context": {"logger": record.name, "fonction": record.funcName, "ligne": record.lineno},
             }
             with self._lock:

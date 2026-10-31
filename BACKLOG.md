@@ -13,7 +13,8 @@
 Une section par appli, dans son propre dépôt, avec sa propre version :
 - [x] **MGA** v0.87.0 (2026-10-31) : module copié, `mirrorConsole` + `captureProcessErrors`, erreurs 500 avec modèle de route, requêtes lentes. À saisir sur `garage-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
 - [ ] **MGA** suite : alertes métier (paiement en échec, push en erreur).
-- [ ] **Yiri Invest** : `SupervisionHandler` sur le logger racine, alertes métier sur les envois WhatsApp, le récap et le BOC.
+- [x] **Yiri Invest** 0.47.0 (2026-10-31) : `SupervisionHandler` sur le logger racine et `uvicorn.error`, numéros et contenus masqués. À saisir sur le service Yiri : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
+- [ ] **Yiri Invest** suite : alertes métier dédiées (récap ou BOC non parti à l'heure).
 - [x] **Procedia** : disponibilité surveillée (v0.1.4, 2026-10-31).
 - [ ] **Procedia** : module Node, erreurs de l'analyse par Claude.
 - [ ] **My Family** : à intégrer dès le premier backend.
