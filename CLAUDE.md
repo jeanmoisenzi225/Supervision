@@ -14,6 +14,7 @@
 - `docs/` : documentation (index `docs/README.md`), à mettre à jour dans le même commit que le code.
 - Jamais de secret dans le dépôt ni la documentation : noms de variables seulement.
 - Échanges avec le propriétaire du produit en français.
+- Variables d'environnement à saisir par le propriétaire (Render, etc.) : donner **chaque nom et chaque valeur dans son propre bloc de code**, jamais dans un tableau, pour qu'il puisse les copier un par un depuis son téléphone (demande du 2026-10-31). Proposer aussi un bloc unique au format `.env` pour le bouton « Add from .env » de Render.
 
 ## Tests
 
