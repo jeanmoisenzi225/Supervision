@@ -99,11 +99,14 @@ export function TwoFactorSettings() {
             Ajouter sur cet appareil
           </a>
           <p className="muted small">
-            Sur iPhone, ce bouton ouvre l'appli Mots de passe, qui génère les codes. Depuis un ordinateur, scanne plutôt ce code avec l'appareil photo du téléphone :
+            Sur iPhone ou iPad, ce bouton ouvre l'appli Mots de passe sur une fiche « Nouveau mot de passe » : renseigne le site web et ton mot de passe de la Supervision, puis
+            valide ✓. Le code à 6 chiffres apparaît ensuite dans la fiche, sous « Code de validation ». Depuis un ordinateur, scanne plutôt ce code avec l'appareil photo du
+            téléphone :
           </p>
           <img className="qr" src={setup.qrCodeDataUrl} alt="QR code à scanner" width={180} height={180} />
           <p className="muted small">
-            Ou saisis la clé à la main : <code className="secret">{setup.secret}</code>{" "}
+            Sinon, dans Mots de passe : fiche › Modifier › Configurer le code de validation › Saisir la clé de configuration, et colle cette clé (ne la montre à personne) :{" "}
+            <code className="secret">{setup.secret}</code>{" "}
             <button className="link" onClick={copySecret}>
               {copied ? "Copiée" : "Copier"}
             </button>

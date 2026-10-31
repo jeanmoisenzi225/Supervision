@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.3.1 — 2026-10-31
+
+- Activation de la double authentification : explications corrigées après le premier essai réel sur iPad (le bouton ouvre une fiche « Nouveau mot de passe » à compléter et valider ; chemin pour saisir la clé à la main).
+
 ## v0.3.0 — 2026-10-31
 
 - **Double authentification** du super administrateur : un code à 6 chiffres (changeant toutes les 30 s, généré par le téléphone) est demandé après le mot de passe. Activation dans Réglages : bouton « Ajouter sur cet appareil » (ouvre l'appli Mots de passe sur iPhone), QR code ou clé à saisir, puis un premier code pour confirmer. Désactivation avec mot de passe et code.
