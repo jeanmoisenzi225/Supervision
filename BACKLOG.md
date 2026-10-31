@@ -1,5 +1,7 @@
 # Backlog — Supervision
 
+**Vision (2026-10-31)** : la Supervision est la base de NJMDev, l'épicentre du développement ; à terme, elle deviendra une brique de NJMDev. Nom et dépôt inchangés pour l'instant.
+
 ## 1. Mise en ligne
 
 - [x] Créer le dépôt GitHub `Supervision` (privé) et y pousser ce code (2026-10-30).
