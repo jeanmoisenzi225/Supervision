@@ -5,7 +5,8 @@ import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
-import { deployService, describeService, resolveServiceIds, restartService } from "./render";
+import { pauseApp, resumeApp } from "../pause/pause.service";
+import { deployService, describeService, resolveServiceIds, restartService, resumeService, suspendService } from "./render";
 
 export const actionsRouter = asyncRouter();
 actionsRouter.use(requireAdmin);
@@ -75,6 +76,62 @@ actionsRouter.get("/:key/actions", async (req, res) => {
     metrics: appSummary,
     history,
   });
+});
+
+/**
+ * Coupure complète du service : tous les services Render de l'appli sont
+ * suspendus (l'appli est hors ligne). La supervision de l'appli est coupée
+ * en même temps, sans échéance, pour ne pas alerter sur une panne voulue.
+ * Confirmation : le nom de l'appli doit être retapé (`confirm`).
+ */
+actionsRouter.post("/:key/render/suspend-all", async (req, res) => {
+  const app = getApp(req.params.key);
+  const { confirm, reason } = z.object({ confirm: z.string(), reason: z.string().max(200).nullable().default(null) }).parse(req.body ?? {});
+  if (confirm.trim().toLowerCase() !== app.name.toLowerCase()) throw new HttpError(400, `Pour confirmer, tape exactement : ${app.name}`);
+  const ids = await resolveServiceIds(app);
+  if (ids.length === 0) throw new HttpError(400, "Aucun service Render reconnu pour cette appli");
+  await pauseApp(app.key, req.admin!.email, null, reason ? `Service coupé : ${reason}` : "Service coupé");
+  const results: string[] = [];
+  const message = await audit(req.admin!.email, app.key, "render:suspend-all", { services: ids, reason }, async () => {
+    const failed: string[] = [];
+    for (const id of ids) {
+      const name = await describeService(id).then((s) => s.name, () => id);
+      try {
+        await suspendService(id);
+        results.push(`${name} : coupé`);
+      } catch (err) {
+        failed.push(`${name} (${(err as Error).message})`);
+      }
+    }
+    if (failed.length) throw new HttpError(502, `Coupure incomplète : ${failed.join(", ")}${results.length ? ` — déjà coupés : ${results.join(", ")}` : ""}`);
+    return `Service coupé · ${results.join(" · ")}`;
+  });
+  res.json({ ok: true, message });
+});
+
+/** Remise en service : services Render relancés, supervision reprise. */
+actionsRouter.post("/:key/render/resume-all", async (req, res) => {
+  const app = getApp(req.params.key);
+  const ids = await resolveServiceIds(app);
+  if (ids.length === 0) throw new HttpError(400, "Aucun service Render reconnu pour cette appli");
+  const results: string[] = [];
+  const message = await audit(req.admin!.email, app.key, "render:resume-all", { services: ids }, async () => {
+    const failed: string[] = [];
+    for (const id of ids) {
+      const s = await describeService(id).catch(() => null);
+      if (s && !s.suspended) continue;
+      try {
+        await resumeService(id);
+        results.push(`${s?.name ?? id} : remis en service`);
+      } catch (err) {
+        failed.push(`${s?.name ?? id} (${(err as Error).message})`);
+      }
+    }
+    if (failed.length) throw new HttpError(502, `Remise en service incomplète : ${failed.join(", ")}`);
+    await resumeApp(app.key);
+    return results.length ? `${results.join(" · ")} · supervision reprise` : "Aucun service n'était coupé · supervision reprise";
+  });
+  res.json({ ok: true, message });
 });
 
 /** « Tout relancer » : redémarre tous les services web de l'appli (un site statique n'a rien à redémarrer). */

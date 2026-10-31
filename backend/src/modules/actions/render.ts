@@ -1,11 +1,10 @@
 import { env } from "../../config/env";
 import { HttpError } from "../../utils/httpError";
 
-const BASE = "https://api.render.com/v1";
 
 async function renderFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!env.renderApiKey) throw new HttpError(400, "Clé API Render non configurée (RENDER_API_KEY)");
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${env.renderApiUrl}${path}`, {
     ...init,
     headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${env.renderApiKey}`, ...init.headers },
   });
@@ -107,4 +106,14 @@ export async function deployService(id: string, clearCache: boolean): Promise<vo
     method: "POST",
     body: JSON.stringify({ clearCache: clearCache ? "clear" : "do_not_clear" }),
   });
+}
+
+/** Met le service hors ligne (Render le suspend : plus de trafic, plus de facturation de l'instance). */
+export async function suspendService(id: string): Promise<void> {
+  await renderFetch(`/services/${id}/suspend`, { method: "POST" });
+}
+
+/** Remet en ligne un service suspendu. */
+export async function resumeService(id: string): Promise<void> {
+  await renderFetch(`/services/${id}/resume`, { method: "POST" });
 }

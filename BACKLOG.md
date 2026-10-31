@@ -32,9 +32,9 @@ Protocole `/supervision` décrit dans `docs/integration.md`. Liste à valider av
 - [x] Double authentification (code TOTP) pour le super administrateur (v0.3.0, 2026-10-31).
 - [ ] Journal des connexions à la supervision.
 
-## 4 bis. Coupure et diagnostic ✅ (v0.4.0)
+## 4 bis. Coupure de la supervision, diagnostic, coupure du service ✅ (v0.4.0, v0.5.0)
 
-Demandé le 2026-10-31 : « pouvoir couper la sup sur une ou plusieurs applis, et faire une compute complète de service via une commande, par application ». Compris comme : coupure de la supervision par appli (journaux conservés) et diagnostic complet par appli avec « Tout relancer ». À confirmer avec le propriétaire du produit.
+Demandé le 2026-10-31 : « pouvoir couper la sup sur une ou plusieurs applis, et faire une compute complète de service via une commande, par application ». Première lecture (v0.4.0) : coupure de la supervision par appli (journaux conservés) et diagnostic complet par appli avec « Tout relancer ». Précision du propriétaire le même jour : « je voulais dire coupure et non compute » → **coupure complète du service** par appli, c'est-à-dire suspension de tous ses services Render, avec remise en service (v0.5.0). Les fonctions de la v0.4.0 restent en place.
 
 ## 5. Idées pour la suite
 

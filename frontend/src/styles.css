@@ -37,6 +37,7 @@ button, .button { background: var(--surface-2); color: var(--text); border: 1px 
 button:hover:not(:disabled), .button:hover { border-color: var(--muted); }
 button:disabled { opacity: 0.5; cursor: default; }
 button.primary { background: var(--accent); border-color: var(--accent); }
+button.danger { background: rgba(239, 68, 68, 0.15); border-color: var(--bad); color: #fecaca; }
 button.link { background: none; border: none; color: var(--muted); padding: 4px; }
 input, select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }

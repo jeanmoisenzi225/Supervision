@@ -36,6 +36,8 @@ export const env = {
   vapidPrivateKey: optional("VAPID_PRIVATE_KEY"),
   vapidSubject: optional("VAPID_SUBJECT"),
   renderApiKey: optional("RENDER_API_KEY"),
+  // Adresse de l'API Render, remplaçable seulement pour les essais locaux.
+  renderApiUrl: optional("RENDER_API_URL") || "https://api.render.com/v1",
   // Nombre d'échecs consécutifs avant d'ouvrir une alerte « en panne » :
   // évite d'alerter sur un simple raté réseau isolé.
   alertAfterFailures: Number(process.env.ALERT_AFTER_FAILURES ?? 2),

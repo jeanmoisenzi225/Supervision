@@ -62,6 +62,8 @@ Réservées au super administrateur (jeton de session) :
 | `GET /api/apps/:key/actions` | Services Render, actions et chiffres clés de l'appli, historique |
 | `POST /api/apps/:key/diagnostic` | Diagnostic complet (vérifications lancées à l'instant), compte-rendu `ok` / `warn` / `ko` / `info` par point et état d'ensemble |
 | `POST /api/pause` `{ apps, minutes, reason }` · `POST /api/resume` `{ apps }` | Coupe / reprend la supervision d'une ou plusieurs applis (`minutes` nul : jusqu'à réactivation) |
+| `POST /api/apps/:key/render/suspend-all` `{ confirm, reason }` | Coupure complète du service : suspend tous les services Render de l'appli et coupe sa supervision ; `confirm` doit reprendre le nom de l'appli |
+| `POST /api/apps/:key/render/resume-all` | Remise en service : relance les services suspendus et reprend la supervision |
 | `POST /api/apps/:key/render/restart-all` | « Tout relancer » : redémarre tous les services web Render de l'appli (sites statiques ignorés) |
 | `POST /api/apps/:key/render/:serviceId/restart` · `/deploy` | Actions Render (service rattaché à l'appli uniquement : reconnu automatiquement ou imposé par `<PREFIXE>_RENDER_SERVICES`) |
 | `POST /api/apps/:key/actions/:actionId` | Action propre à l'appli (relayée vers son protocole `/supervision`) |

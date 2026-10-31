@@ -73,4 +73,6 @@ Les services de chaque appli sont **reconnus automatiquement** dans la liste des
 
 Le service `supervision` n'est rattaché à aucune appli. Pour imposer une liste précise : `<PREFIXE>_RENDER_SERVICES` (identifiants `srv-…` séparés par des virgules), prioritaire sur la reconnaissance automatique.
 
+« Coupure du service » suspend tous les services reconnus pour l'appli (onglet Administration) : vérifier la liste affichée avant de confirmer.
+
 La clé API Render donne accès à tout le compte Render : elle ne se saisit que dans l'onglet Environment du service `supervision`, jamais ailleurs.

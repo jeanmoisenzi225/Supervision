@@ -55,11 +55,36 @@ const DEPLOY_STATUS: Record<string, string> = {
   created: "En file",
 };
 
-export function AdminPanel({ app }: { app: AppOverview }) {
+export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () => void }) {
   const { data, error, refresh } = usePolling(() => api<ActionsData>(`/apps/${app.key}/actions`), 30_000, [app.key]);
   const [busy, setBusy] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [forms, setForms] = useState<Record<string, Record<string, string | boolean>>>({});
+  const [cutting, setCutting] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
+  const [cutReason, setCutReason] = useState("");
+
+  async function serviceCommand(op: "suspend-all" | "resume-all") {
+    if (op === "resume-all" && !window.confirm(`Remettre ${app.name} en service ?`)) return;
+    setBusy(op);
+    setFeedback(null);
+    try {
+      const res = await api<{ message?: string }>(`/apps/${app.key}/render/${op}`, {
+        method: "POST",
+        body: op === "suspend-all" ? { confirm: confirmName, reason: cutReason.trim() || null } : {},
+      });
+      setFeedback({ ok: true, text: res.message ?? "Fait" });
+      setCutting(false);
+      setConfirmName("");
+      setCutReason("");
+    } catch (err) {
+      setFeedback({ ok: false, text: (err as Error).message });
+    } finally {
+      setBusy(null);
+      await refresh();
+      onChange?.();
+    }
+  }
 
   async function run(id: string, label: string, path: string, body: unknown, danger: boolean) {
     if (!window.confirm(`${danger ? "⚠️ Action sensible. " : ""}Confirmer : ${label} sur ${app.name} ?`)) return;
@@ -144,6 +169,55 @@ export function AdminPanel({ app }: { app: AppOverview }) {
           </div>
         ))}
       </section>
+
+      {data.render.configured && data.render.services.some((s) => !s.error) && (
+        <section className={`card ${data.render.services.some((s) => s.suspended) ? "diag diag-ko" : ""}`}>
+          <h3>Coupure du service</h3>
+          {data.render.services.some((s) => s.suspended) ? (
+            <>
+              <p className="small">
+                <strong>Service coupé :</strong> {data.render.services.filter((s) => s.suspended).map((s) => s.name).join(", ")} hors ligne. La supervision de l'appli est coupée en attendant.
+              </p>
+              <button className="primary" disabled={busy !== null} onClick={() => serviceCommand("resume-all")}>
+                {busy === "resume-all" ? "Remise en service…" : "Remettre en service"}
+              </button>
+            </>
+          ) : !cutting ? (
+            <>
+              <p className="muted small">Met toute l'appli hors ligne sur Render (tous ses services), jusqu'à sa remise en service. La supervision de l'appli est coupée en même temps.</p>
+              <button className="danger" onClick={() => setCutting(true)} disabled={busy !== null}>
+                Couper le service
+              </button>
+            </>
+          ) : (
+            <div className="stack-small">
+              <p className="small">
+                ⚠️ <strong>{app.name}</strong> sera inaccessible pour tous ses utilisateurs : {data.render.services.map((s) => s.name).join(", ")}.
+              </p>
+              <label>
+                Pour confirmer, tape : {app.name}
+                <input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} autoComplete="off" />
+              </label>
+              <label>
+                Motif (facultatif)
+                <input value={cutReason} maxLength={200} onChange={(e) => setCutReason(e.target.value)} />
+              </label>
+              <div className="row wrap">
+                <button
+                  className="danger"
+                  disabled={busy !== null || confirmName.trim().toLowerCase() !== app.name.toLowerCase()}
+                  onClick={() => serviceCommand("suspend-all")}
+                >
+                  {busy === "suspend-all" ? "Coupure…" : "Couper maintenant"}
+                </button>
+                <button onClick={() => setCutting(false)} disabled={busy !== null}>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="card">
         <h3>Actions de l'appli</h3>

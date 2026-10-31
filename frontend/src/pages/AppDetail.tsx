@@ -165,7 +165,7 @@ export function AppDetail() {
             <p className="muted small">Pendant une maintenance : plus de vérifications, d'alertes ni de notifications. Les journaux continuent d'arriver.</p>
             <PauseControls apps={[app]} compact onChange={() => void refresh()} />
           </section>
-          <AdminPanel app={app} />
+          <AdminPanel app={app} onChange={() => void refresh()} />
         </>
       )}
     </>

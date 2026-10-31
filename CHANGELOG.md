@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.5.0 — 2026-10-31
+
+- **Coupure complète du service** par appli (onglet Administration › Coupure du service) : tous les services Render de l'appli sont suspendus, l'appli est hors ligne. Confirmation en retapant le nom de l'appli, motif facultatif. La supervision de l'appli est coupée en même temps (pas d'alerte de panne pour une coupure voulue).
+- **Remettre en service** : services suspendus relancés et supervision reprise.
+- Coupures et remises en service tracées dans l'historique des actions ; la fiche de l'appli se met à jour aussitôt.
+- `RENDER_API_URL` (facultative) : adresse de l'API Render, remplaçable pour les essais locaux uniquement.
+
 ## v0.4.0 — 2026-10-31
 
 - **Couper la supervision** d'une ou plusieurs applis (maintenance) : depuis les Réglages (plusieurs applis cochées) ou l'onglet Administration d'une appli ; pendant 1 h, 4 h, 24 h ou jusqu'à réactivation, avec un motif facultatif. Pendant la coupure : ni vérifications, ni alertes, ni notifications ; les journaux continuent d'arriver. Reprise automatique à l'échéance. Carte « Supervision coupée » sur le tableau de bord. Coupures et reprises tracées dans l'historique des actions.
