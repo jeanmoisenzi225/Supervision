@@ -7,7 +7,7 @@
 3. C'est tout : `JWT_SECRET` et les jetons `*_INGEST_TOKEN` sont générés par Render, les clés des notifications par le serveur lui-même (table `Setting`), et l'adresse publique (`RENDER_EXTERNAL_URL`) est fournie par Render.
 4. Ouvrir l'adresse du service `supervision`, se connecter, installer l'appli sur l'écran d'accueil, puis Réglages › Activer les notifications.
 
-À ajouter plus tard, au fil des besoins (Environment du service `supervision`) : `RENDER_API_KEY` et `<APPLI>_RENDER_SERVICES` (boutons Redémarrer / Redéployer), `PROCEDIA_URLS`, `<APPLI>_ADMIN_URL` / `<APPLI>_ADMIN_TOKEN` (voir [integration.md](integration.md)).
+À ajouter plus tard, au fil des besoins (Environment du service `supervision`) : `RENDER_API_KEY` et `<APPLI>_RENDER_SERVICES` (boutons Redémarrer / Redéployer), `<APPLI>_ADMIN_URL` / `<APPLI>_ADMIN_TOKEN` (voir [integration.md](integration.md)).
 
 Après le premier démarrage, `ADMIN_PASSWORD` peut être retirée (le compte existe en base). Ne pas supprimer la ligne `vapid` de la table `Setting` : les téléphones abonnés ne recevraient plus les notifications.
 

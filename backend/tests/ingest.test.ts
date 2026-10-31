@@ -64,3 +64,15 @@ describe("sujet des notifications", async () => {
     expect(vapidSubject()).toMatch(/^(https:|mailto:)/);
   });
 });
+
+describe("adresses par défaut", () => {
+  it("surveille Procedia sans variable, avec le délai d'un service en veille", () => {
+    const procedia = buildApps(() => "").find((a) => a.key === "procedia")!;
+    expect(procedia.checks.map((c) => c.url)).toEqual([
+      "https://procedia-backend.onrender.com/api/health",
+      "https://procedia-frontend.onrender.com/",
+    ]);
+    expect(procedia.checks.every((c) => c.timeoutMs === 90_000)).toBe(true);
+    expect(procedia.intervalSec).toBe(1800);
+  });
+});

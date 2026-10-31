@@ -8,7 +8,7 @@ Tableau de bord unique pour superviser tous nos projets :
 | **Site Autonova** | Site vitrine (alimenté par My Autonova) |
 | **Yiri Invest** | Serveur de l'agent WhatsApp et appli web |
 | **My Family** | À brancher dès la mise en ligne |
-| **Procedia** | API (offre gratuite Render, vérifiée toutes les 30 min) |
+| **Procedia** | API (offre gratuite Render, vérifiée toutes les 30 min) et appli web |
 
 ## Ce que fait l'appli
 
@@ -27,4 +27,4 @@ Tableau de bord unique pour superviser tous nos projets :
 | `clients/` | Modules d'envoi à copier dans les applis supervisées |
 | `docs/` | Documentation (index `docs/README.md`) |
 
-Statut : **v0.1.3** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).
+Statut : **v0.1.4** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).

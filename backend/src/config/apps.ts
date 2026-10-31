@@ -38,7 +38,7 @@ interface AppDefinition {
 
 /**
  * Catalogue des applis supervisées. Les adresses par défaut sont celles de
- * production connues au 2026-10-27 ; chacune peut être remplacée par la
+ * production connues au 2026-10-27 (Procedia : 2026-10-31) ; chacune peut être remplacée par la
  * variable <PREFIXE>_URLS (format "id|libellé|adresse" séparés par des
  * virgules, voir docs/integration.md).
  */
@@ -91,7 +91,11 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     // tout le quota mensuel d'heures gratuites (voir docs/integration.md).
     intervalSec: 1800,
     sleepsWhenIdle: true,
-    defaultChecks: [],
+    defaultChecks: [
+      // L'API dort hors usage : c'est elle que la vérification réveille.
+      { id: "api", label: "API", url: "https://procedia-backend.onrender.com/api/health", expect: "health" },
+      { id: "app", label: "Appli web", url: "https://procedia-frontend.onrender.com/", expect: "2xx" },
+    ],
   },
 ];
 

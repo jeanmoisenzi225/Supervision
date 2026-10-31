@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.1.4 — 2026-10-31
+
+- Procedia surveillé : API (`procedia-backend`, route de santé) et appli web (`procedia-frontend`), toutes les 30 minutes. L'API, en offre gratuite Render, se réveille en une minute environ (mesuré : 52 s) : délai de 90 s avant de la déclarer en panne. Plus besoin de `PROCEDIA_URLS`.
+
 ## v0.1.3 — 2026-10-31
 
 Journaux, retours après les premiers journaux réels de MGA :

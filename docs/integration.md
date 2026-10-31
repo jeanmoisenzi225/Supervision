@@ -12,7 +12,7 @@ Adresses surveillées par défaut (`backend/src/config/apps.ts`) :
 | Site Autonova | page d'accueil | 5 min |
 | Yiri Invest | `/manifest.json`, `/app` | 1 min |
 | My Family | aucune (pas encore en ligne) | 5 min |
-| Procedia | aucune par défaut : renseigner `PROCEDIA_URLS` | 30 min |
+| Procedia | API `/api/health` (réveillée par la vérification, ~1 min), appli web | 30 min |
 
 Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules au format `id|libellé|adresse` (une adresse contenant `health` est lue comme une route de santé). `<PREFIXE>_INTERVAL_SEC` change l'intervalle.
 
