@@ -4,7 +4,7 @@ import { HttpError } from "../utils/httpError";
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: err.message });
+    res.status(err.status).json({ ...err.extra, error: err.message });
     return;
   }
   if (err instanceof ZodError) {

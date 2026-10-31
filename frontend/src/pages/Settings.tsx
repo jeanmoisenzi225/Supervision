@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { TwoFactorSettings } from "../components/TwoFactorSettings";
 import { api } from "../lib/api";
 import { APP_VERSION } from "../version";
 
@@ -65,6 +66,7 @@ export function Settings() {
   return (
     <>
       <h1>Réglages</h1>
+      <TwoFactorSettings />
       <section className="card">
         <h3>Notifications des alertes</h3>
         <p className="muted small">Une notification arrive sur cet appareil dès qu'une appli tombe, qu'une erreur apparaît ou qu'un incident est clos.</p>

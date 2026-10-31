@@ -22,7 +22,8 @@ export function setToken(token: string | null): void {
 export class ApiError extends Error {
   constructor(
     public status: number,
-    message: string
+    message: string,
+    public data: Record<string, unknown> = {}
   ) {
     super(message);
   }
@@ -44,11 +45,13 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     throw new ApiError(0, "Serveur de supervision injoignable");
   }
   const data = await res.json().catch(() => ({}));
-  if (res.status === 401 && path !== "/auth/login") {
+  // 401 d'une vérification de code (double authentification) : la session
+  // reste valable, seul le code est refusé.
+  if (res.status === 401 && path !== "/auth/login" && !(data as { totpRequired?: boolean }).totpRequired && !path.startsWith("/auth/2fa")) {
     setToken(null);
     window.dispatchEvent(new Event("supervision:logout"));
   }
-  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error ?? `Erreur ${res.status}`);
+  if (!res.ok) throw new ApiError(res.status, (data as { error?: string }).error ?? `Erreur ${res.status}`, data as Record<string, unknown>);
   return data as T;
 }
 

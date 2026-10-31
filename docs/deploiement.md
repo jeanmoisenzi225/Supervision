@@ -9,6 +9,8 @@
 
 À ajouter plus tard, au fil des besoins (Environment du service `supervision`) : `RENDER_API_KEY` (boutons Redémarrer / Redéployer ; services reconnus automatiquement), `<APPLI>_ADMIN_URL` / `<APPLI>_ADMIN_TOKEN` (voir [integration.md](integration.md)).
 
+**Téléphone perdu (codes à 6 chiffres inaccessibles)** : ajouter `ADMIN_RESET_2FA` = `true` sur le service `supervision` et enregistrer ; au redémarrage, la double authentification est coupée. Se connecter, **retirer aussitôt la variable**, puis réactiver la double authentification dans Réglages.
+
 Après le premier démarrage, `ADMIN_PASSWORD` peut être retirée (le compte existe en base). Ne pas supprimer la ligne `vapid` de la table `Setting` : les téléphones abonnés ne recevraient plus les notifications.
 
 Coût : service Starter + petite base payante (la base gratuite expire après 30 jours).

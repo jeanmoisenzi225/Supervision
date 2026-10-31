@@ -12,6 +12,12 @@ model AdminUser {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+  /// Double authentification (code à 6 chiffres) : secret en attente tant
+  /// que totpEnabled est faux, puis actif.
+  totpSecret   String?
+  totpEnabled  Boolean  @default(false)
+  /// Dernier pas de temps accepté : un même code ne sert qu'une fois.
+  totpLastStep Int?
 }
 
 /// Résultat d'une vérification de disponibilité (une adresse d'une appli).

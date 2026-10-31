@@ -29,7 +29,7 @@ Protocole `/supervision` décrit dans `docs/integration.md`. Liste à valider av
 
 ## 4. Sécurité de l'accès
 
-- [ ] Double authentification (code TOTP) pour le super administrateur : à faire **avant** de brancher les actions sensibles.
+- [x] Double authentification (code TOTP) pour le super administrateur (v0.3.0, 2026-10-31).
 - [ ] Journal des connexions à la supervision.
 
 ## 5. Idées pour la suite

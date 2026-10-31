@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.3.0 — 2026-10-31
+
+- **Double authentification** du super administrateur : un code à 6 chiffres (changeant toutes les 30 s, généré par le téléphone) est demandé après le mot de passe. Activation dans Réglages : bouton « Ajouter sur cet appareil » (ouvre l'appli Mots de passe sur iPhone), QR code ou clé à saisir, puis un premier code pour confirmer. Désactivation avec mot de passe et code.
+- Un code ne sert qu'une fois ; 10 essais par 15 minutes au plus (connexion et réglages).
+- Secours en cas de téléphone perdu : variable `ADMIN_RESET_2FA=true` sur le service `supervision`, à retirer après redémarrage.
+
 ## v0.2.0 — 2026-10-31
 
 - Boutons Redémarrer / Redéployer : les services Render de chaque appli sont reconnus automatiquement (par leur nom ou leur adresse) ; seule la clé API Render est à saisir, plus aucun identifiant `srv-…`. `<PREFIXE>_RENDER_SERVICES` reste possible pour imposer une liste.

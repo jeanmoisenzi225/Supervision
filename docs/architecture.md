@@ -23,7 +23,7 @@ L'API tourne en continu : elle interroge les applis selon leur intervalle (boucl
 
 | Table | Contenu |
 |---|---|
-| `AdminUser` | Super administrateur (créé au premier démarrage depuis `ADMIN_EMAIL` / `ADMIN_PASSWORD`) |
+| `AdminUser` | Super administrateur (créé au premier démarrage depuis `ADMIN_EMAIL` / `ADMIN_PASSWORD`) ; double authentification : `totpSecret`, `totpEnabled`, `totpLastStep` (anti-rejeu) |
 | `CheckResult` | Une vérification : appli, adresse, réussite, code HTTP, temps de réponse, erreur. Conservée 30 jours |
 | `Alert` | Alerte : type (`down`, `error`, `app`), gravité, empreinte, statut (`open`, `acknowledged`, `resolved`), compteur |
 | `LogEntry` | Journal reçu : appli, date, niveau, source, message (4 000 car. max), contexte JSON (8 Ko max). Conservé 30 jours |
@@ -51,7 +51,8 @@ Réservées au super administrateur (jeton de session) :
 
 | Route | Rôle |
 |---|---|
-| `POST /api/auth/login`, `GET /api/auth/me` | Connexion (10 essais / 15 min) |
+| `POST /api/auth/login`, `GET /api/auth/me` | Connexion (10 essais / 15 min) ; si la double authentification est active, réponse 401 `totpRequired` tant que `code` (6 chiffres) manque ou est faux |
+| `POST /api/auth/2fa/setup` · `/confirm` · `/disable` | Double authentification : nouveau secret (QR code, lien `otpauth://`), activation par un premier code, désactivation avec mot de passe et code |
 | `GET /api/overview` | État de toutes les applis |
 | `GET /api/apps/:key`, `GET /api/apps/:key/checks?hours=` , `POST /api/apps/:key/check-now` | Détail, historique, vérification immédiate |
 | `GET /api/alerts?status=&app=`, `POST /api/alerts/:id/ack`, `POST /api/alerts/:id/resolve` | Alertes |

@@ -101,3 +101,23 @@ describe("reconnaissance des services Render", async () => {
     for (const key of ["mga", "yiri", "procedia", "site-autonova", "my-family"]) expect(ids(key)).not.toContain("srv-5");
   });
 });
+
+describe("code à 6 chiffres", async () => {
+  const { authenticator } = await import("otplib");
+  const { verifyTotp, generateTotpSecret } = await import("../src/modules/auth/totp");
+  const secret = generateTotpSecret();
+
+  it("accepte le code du moment, une seule fois", () => {
+    const code = authenticator.generate(secret);
+    const step = verifyTotp(secret, code, null);
+    expect(step).not.toBeNull();
+    expect(verifyTotp(secret, code, step)).toBeNull();
+  });
+
+  it("refuse un code faux ou mal formé, tolère les espaces", () => {
+    expect(verifyTotp(secret, "000000", null) === null || authenticator.generate(secret) === "000000").toBe(true);
+    expect(verifyTotp(secret, "12345", null)).toBeNull();
+    const code = authenticator.generate(secret);
+    expect(verifyTotp(secret, `${code.slice(0, 3)} ${code.slice(3)}`, null)).not.toBeNull();
+  });
+});

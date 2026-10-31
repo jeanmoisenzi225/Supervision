@@ -28,6 +28,10 @@ export const env = {
     .filter(Boolean),
   adminEmail: optional("ADMIN_EMAIL"),
   adminPassword: optional("ADMIN_PASSWORD"),
+  // Secours si le téléphone qui génère les codes est perdu : "true" coupe la
+  // double authentification du super administrateur au démarrage (à retirer
+  // ensuite, voir docs/deploiement.md).
+  adminReset2fa: optional("ADMIN_RESET_2FA") === "true",
   vapidPublicKey: optional("VAPID_PUBLIC_KEY"),
   vapidPrivateKey: optional("VAPID_PRIVATE_KEY"),
   vapidSubject: optional("VAPID_SUBJECT"),
