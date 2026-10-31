@@ -4,6 +4,13 @@ import { dateTime } from "../lib/format";
 
 const LEVELS = ["debug", "info", "warn", "error", "fatal"] as const;
 
+/** « [news] planificateur… » avec la source « news » : le préfixe, déjà affiché à part, est retiré. */
+export function withoutSourcePrefix(message: string, source: string | null): string {
+  if (!source) return message;
+  const prefix = `[${source}]`;
+  return message.startsWith(prefix) ? message.slice(prefix.length).trimStart() : message;
+}
+
 export function LogsView({ app, apps }: { app?: string; apps?: { key: string; name: string }[] }) {
   const [appFilter, setAppFilter] = useState(app ?? "");
   const [minLevel, setMinLevel] = useState<string>("info");
@@ -101,7 +108,7 @@ export function LogsView({ app, apps }: { app?: string; apps?: { key: string; na
             <span className={`log-level lvl-${e.level}`}>{e.level}</span>
             {!app && <span className="log-app">{appName(e.appKey)}</span>}
             {e.source && <span className="log-src">{e.source}</span>}
-            <span className="log-msg">{e.message}</span>
+            <span className="log-msg">{withoutSourcePrefix(e.message, e.source)}</span>
             {open === e.id && (e.context || e.requestId) && (
               <pre className="log-ctx">{JSON.stringify({ requestId: e.requestId ?? undefined, ...e.context }, null, 2)}</pre>
             )}

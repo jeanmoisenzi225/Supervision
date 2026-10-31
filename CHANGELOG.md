@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.1.3 — 2026-10-31
+
+Journaux, retours après les premiers journaux réels de MGA :
+
+- Taille du texte identique sur toutes les lignes sur iPhone (iOS agrandissait de lui-même certains messages, surtout en paysage).
+- Le préfixe « [module] » n'est plus répété dans le message quand le module est déjà affiché à côté (ex. « news »).
+
 ## v0.1.2 — 2026-10-31
 
 Module d'envoi Node (`clients/node/supervision.ts`), utilisé par MGA v0.87.0 :

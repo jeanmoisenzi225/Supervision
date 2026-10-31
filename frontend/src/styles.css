@@ -14,6 +14,9 @@
 }
 
 * { box-sizing: border-box; }
+/* Empêche iOS d'agrandir de lui-même certains textes (en paysage surtout) :
+   tailles inégales d'une ligne de journal à l'autre. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 a { color: inherit; text-decoration: none; }
 code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-size: 0.9em; }
