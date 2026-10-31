@@ -8,12 +8,15 @@
  *     source: "backend",
  *   });
  *   supervision.captureProcessErrors();
+ *   supervision.mirrorConsole();                // console.log/warn/error partent aussi vers la supervision
  *   app.use(supervision.expressErrorLogger);    // juste avant le gestionnaire d'erreurs
  *   app.use("/supervision", supervisionAdminRouter(express.Router, { token: process.env.SUPERVISION_ADMIN_TOKEN, actions, summary }));
  *
  * Sans SUPERVISION_URL ou sans jeton, tout devient silencieux : l'appli
  * fonctionne exactement comme avant.
  */
+
+import { format } from "util";
 
 type Level = "debug" | "info" | "warn" | "error" | "fatal";
 const ORDER: Level[] = ["debug", "info", "warn", "error", "fatal"];
@@ -74,11 +77,15 @@ export function createSupervision(options: SupervisionOptions) {
   const timer = enabled ? setInterval(() => void flush(), options.flushIntervalMs ?? 5000) : null;
   timer?.unref?.();
 
+  function enqueue(level: Level, message: string, source?: string, context?: Record<string, unknown>, requestId?: string): void {
+    if (!enabled || ORDER.indexOf(level) < minIndex) return;
+    queue.push({ at: new Date().toISOString(), level, message, source: source ?? options.source, context, requestId });
+    if (level === "error" || level === "fatal" || queue.length >= 200) void flush();
+  }
+
   function log(level: Level, message: string, context?: Record<string, unknown>, requestId?: string): void {
     if (echo) (level === "error" || level === "fatal" ? console.error : level === "warn" ? console.warn : console.log)(`[${level}] ${message}`, context ?? "");
-    if (!enabled || ORDER.indexOf(level) < minIndex) return;
-    queue.push({ at: new Date().toISOString(), level, message, source: options.source, context, requestId });
-    if (level === "error" || level === "fatal" || queue.length >= 200) void flush();
+    enqueue(level, message, undefined, context, requestId);
   }
 
   function errorToEntry(err: unknown): { message: string; context: Record<string, unknown> } {
@@ -104,13 +111,54 @@ export function createSupervision(options: SupervisionOptions) {
       if (enabled) await post("alerts", { key, title, resolve: true }).catch(() => undefined);
     },
 
-    /** Erreurs non rattrapées du processus : journalisées et envoyées avant l'arrêt. */
+    /**
+     * Erreurs non rattrapées du processus : journalisées et envoyées avant
+     * l'arrêt. Le processus s'arrête toujours ensuite, comme le fait Node sans
+     * ce module (l'hébergeur le redémarre). L'arrêt demandé par l'hébergeur
+     * (SIGTERM, à chaque déploiement) est aussi journalisé.
+     */
     captureProcessErrors(): void {
+      const stop = (code: number) => {
+        void Promise.race([flush(), new Promise((r) => setTimeout(r, 3000))]).finally(() => process.exit(code));
+      };
       process.on("uncaughtException", (err) => {
-        log("fatal", errorToEntry(err).message);
-        void flush().finally(() => process.exit(1));
+        log("fatal", `Erreur non rattrapée, arrêt du serveur : ${errorToEntry(err).message}`);
+        stop(1);
       });
-      process.on("unhandledRejection", (reason) => log("error", `Promesse rejetée non gérée : ${errorToEntry(reason).message}`));
+      process.on("unhandledRejection", (reason) => {
+        log("fatal", `Promesse rejetée non gérée, arrêt du serveur : ${errorToEntry(reason).message}`);
+        stop(1);
+      });
+      process.once("SIGTERM", () => {
+        log("info", "Arrêt du serveur demandé par l'hébergeur (déploiement ou redémarrage)");
+        stop(0);
+      });
+    },
+
+    /**
+     * Recopie console.log / info / warn / error vers la supervision (la
+     * console continue d'afficher comme avant). Un préfixe « [module] » en
+     * tête de message devient la source du journal.
+     */
+    mirrorConsole(): void {
+      const levels: [keyof Console & ("log" | "info" | "warn" | "error"), Level][] = [
+        ["log", "info"],
+        ["info", "info"],
+        ["warn", "warn"],
+        ["error", "error"],
+      ];
+      for (const [method, level] of levels) {
+        const original = console[method].bind(console) as (...args: unknown[]) => void;
+        (console as unknown as Record<string, unknown>)[method] = (...args: unknown[]) => {
+          original(...args);
+          try {
+            const message = format(...args);
+            enqueue(level, message, sourceFromMessage(message));
+          } catch {
+            // Un journal impossible à mettre en forme ne doit jamais casser l'appli.
+          }
+        };
+      }
     },
 
     /** Middleware Express : journalise chaque erreur 5xx avec la route concernée, puis passe la main. */
@@ -123,6 +171,12 @@ export function createSupervision(options: SupervisionOptions) {
       next(err);
     },
   };
+}
+
+/** « [news] échec… » → "news" ; sinon undefined (source par défaut). */
+export function sourceFromMessage(message: string): string | undefined {
+  const match = /^\[([^\]]{1,40})\]/.exec(message);
+  return match ? match[1] : undefined;
 }
 
 /* ---------- Actions super administrateur (protocole /supervision) ---------- */

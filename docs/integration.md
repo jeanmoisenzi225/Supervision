@@ -26,6 +26,7 @@ Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules
    - Node : `clients/node/supervision.ts`
      ```ts
      export const supervision = createSupervision({ url: process.env.SUPERVISION_URL, token: process.env.SUPERVISION_INGEST_TOKEN, source: "backend" });
+     supervision.mirrorConsole();          // tous les console.* partent aussi ("[module] …" → source)
      supervision.captureProcessErrors();
      app.use(supervision.expressErrorLogger); // avant errorHandler
      supervision.warn("Envoi push refusé", { garage, code });

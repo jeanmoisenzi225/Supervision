@@ -11,7 +11,8 @@
 ## 2. Branchement des applis (journaux et alertes)
 
 Une section par appli, dans son propre dépôt, avec sa propre version :
-- [ ] **MGA** : copier `clients/node/supervision.ts`, brancher `captureProcessErrors`, `expressErrorLogger`, les erreurs du planificateur (actus, rappels) et des paiements ; alertes métier (paiement en échec, push en erreur).
+- [x] **MGA** v0.87.0 (2026-10-31) : module copié, `mirrorConsole` + `captureProcessErrors`, erreurs 500 avec modèle de route, requêtes lentes. À saisir sur `garage-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
+- [ ] **MGA** suite : alertes métier (paiement en échec, push en erreur).
 - [ ] **Yiri Invest** : `SupervisionHandler` sur le logger racine, alertes métier sur les envois WhatsApp, le récap et le BOC.
 - [ ] **Procedia** : module Node, erreurs de l'analyse par Claude.
 - [ ] **My Family** : à intégrer dès le premier backend.

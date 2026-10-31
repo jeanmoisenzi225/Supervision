@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.1.2 — 2026-10-31
+
+Module d'envoi Node (`clients/node/supervision.ts`), utilisé par MGA v0.87.0 :
+
+- `mirrorConsole()` : recopie `console.log` / `info` / `warn` / `error` vers la supervision, le préfixe « [module] » devenant la source du journal.
+- `captureProcessErrors()` : une promesse rejetée non gérée arrête désormais le processus comme le fait Node par défaut (au lieu de le laisser tourner), après envoi du journal ; l'arrêt demandé par l'hébergeur (SIGTERM) est journalisé.
+- Tests du module (envoi par lots, silence sans configuration, conservation si la supervision est injoignable).
+
 ## v0.1.1 — 2026-10-31
 
 Mise en ligne simplifiée : plus aucune clé à copier dans Render.
