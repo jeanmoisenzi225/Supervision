@@ -2,6 +2,7 @@ import { apps, type AppTarget } from "../../config/apps";
 import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
+import { isPaused } from "../pause/pause.service";
 import { nextTransition, runCheck } from "./check";
 
 const failures = new Map<string, number>();
@@ -40,6 +41,12 @@ async function tick(): Promise<void> {
   const now = Date.now();
   for (const app of apps) {
     if (app.checks.length === 0 || running.has(app.key)) continue;
+    if (await isPaused(app.key)) {
+      // Au retour, le premier passage repart de zéro (et referme une alerte
+      // de panne restée ouverte si l'appli répond).
+      for (const c of app.checks) failures.delete(`${app.key}:${c.id}`);
+      continue;
+    }
     if (now - (lastRun.get(app.key) ?? 0) < app.intervalSec * 1000) continue;
     lastRun.set(app.key, now);
     running.add(app.key);

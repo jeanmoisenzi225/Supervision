@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.4.0 — 2026-10-31
+
+- **Couper la supervision** d'une ou plusieurs applis (maintenance) : depuis les Réglages (plusieurs applis cochées) ou l'onglet Administration d'une appli ; pendant 1 h, 4 h, 24 h ou jusqu'à réactivation, avec un motif facultatif. Pendant la coupure : ni vérifications, ni alertes, ni notifications ; les journaux continuent d'arriver. Reprise automatique à l'échéance. Carte « Supervision coupée » sur le tableau de bord. Coupures et reprises tracées dans l'historique des actions.
+- **Diagnostic complet** par appli (bouton en tête de la fiche) : adresses vérifiées à l'instant et temps de réponse, disponibilité 24 h, services Render et dernier déploiement, erreurs des dernières 24 h regroupées par message, alertes en cours, réception des journaux, actions de l'appli joignables. Compte-rendu point par point en vert, orange ou rouge.
+- **Tout relancer** (depuis le diagnostic) : redémarre d'un coup tous les services web Render de l'appli ; tracé dans l'historique.
+
 ## v0.3.1 — 2026-10-31
 
 - Activation de la double authentification : explications corrigées après le premier essai réel sur iPad (le bouton ouvre une fiche « Nouveau mot de passe » à compléter et valider ; chemin pour saisir la clé à la main).

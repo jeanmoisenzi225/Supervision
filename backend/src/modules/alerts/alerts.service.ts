@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { isPaused } from "../pause/pause.service";
 import { sendPushToAll } from "../push/push.service";
 
 export interface AlertInput {
@@ -15,6 +16,8 @@ export interface AlertInput {
  * (une erreur répétée 200 fois reste une seule alerte, avec son compteur).
  */
 export async function raiseAlert(input: AlertInput): Promise<void> {
+  // Supervision coupée sur cette appli (maintenance) : ni alerte ni notification.
+  if (await isPaused(input.appKey)) return;
   const existing = await prisma.alert.findFirst({
     where: { appKey: input.appKey, fingerprint: input.fingerprint, status: { in: ["open", "acknowledged"] } },
   });

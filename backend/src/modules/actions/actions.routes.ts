@@ -77,6 +77,33 @@ actionsRouter.get("/:key/actions", async (req, res) => {
   });
 });
 
+/** « Tout relancer » : redémarre tous les services web de l'appli (un site statique n'a rien à redémarrer). */
+actionsRouter.post("/:key/render/restart-all", async (req, res) => {
+  const app = getApp(req.params.key);
+  const ids = await resolveServiceIds(app);
+  if (ids.length === 0) throw new HttpError(400, "Aucun service Render reconnu pour cette appli");
+  const results: { id: string; name: string; outcome: string }[] = [];
+  const message = await audit(req.admin!.email, app.key, "render:restart-all", { services: ids }, async () => {
+    for (const id of ids) {
+      try {
+        const s = await describeService(id);
+        if (s.type === "static_site") {
+          results.push({ id, name: s.name, outcome: "site statique, rien à redémarrer" });
+          continue;
+        }
+        await restartService(id);
+        results.push({ id, name: s.name, outcome: "redémarrage demandé" });
+      } catch (err) {
+        results.push({ id, name: id, outcome: `échec : ${(err as Error).message}` });
+      }
+    }
+    const failed = results.filter((r) => r.outcome.startsWith("échec"));
+    if (failed.length) throw new HttpError(502, `Relance incomplète : ${failed.map((f) => `${f.name} (${f.outcome})`).join(", ")}`);
+    return results.map((r) => `${r.name} : ${r.outcome}`).join(" · ");
+  });
+  res.json({ ok: true, message, results });
+});
+
 actionsRouter.post("/:key/render/:serviceId/:op", async (req, res) => {
   const app = getApp(req.params.key);
   const { serviceId, op } = req.params;

@@ -101,3 +101,13 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+/// Supervision coupée sur une appli (maintenance) : plus de vérifications,
+/// d'alertes ni de notifications ; les journaux continuent d'arriver.
+model AppPause {
+  appKey   String    @id
+  until    DateTime?
+  reason   String?
+  by       String
+  pausedAt DateTime  @default(now())
+}

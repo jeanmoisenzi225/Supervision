@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
 import { StatusBadge } from "../components/StatusBadge";
 import { api, type AppOverview } from "../lib/api";
-import { timeAgo } from "../lib/format";
+import { pauseLabel, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 
 export function Dashboard() {
   const { data, error, updatedAt } = usePolling(() => api<{ apps: AppOverview[] }>("/overview"), 15_000);
   const apps = data?.apps ?? [];
-  const watched = apps.filter((a) => a.status !== "not_deployed");
+  const watched = apps.filter((a) => a.status !== "not_deployed" && a.status !== "paused");
+  const paused = apps.filter((a) => a.status === "paused");
   const down = watched.filter((a) => a.status === "down" || a.status === "degraded");
   const alerts = apps.reduce((n, a) => n + a.openAlerts, 0);
 
@@ -20,6 +21,7 @@ export function Dashboard() {
           </strong>
           <span>
             {watched.length} appli(s) surveillée(s) · {alerts} alerte(s) active(s)
+            {paused.length ? ` · supervision coupée : ${paused.map((a) => a.name).join(", ")}` : ""}
           </span>
         </div>
         <small>{updatedAt ? `Mis à jour ${timeAgo(updatedAt.toISOString())}` : ""}</small>
@@ -33,6 +35,12 @@ export function Dashboard() {
               <StatusBadge status={app.status} />
             </div>
             <p className="muted small">{app.description}</p>
+            {app.pause && (
+              <p className="small paused-note">
+                Supervision coupée {pauseLabel(app.pause.until)}
+                {app.pause.reason ? ` · ${app.pause.reason}` : ""}
+              </p>
+            )}
             {app.checks.length === 0 ? (
               <p className="muted small">Aucune adresse surveillée pour l'instant.</p>
             ) : (

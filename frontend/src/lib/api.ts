@@ -55,7 +55,14 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   return data as T;
 }
 
-export type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed";
+export type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed" | "paused";
+
+export interface PauseInfo {
+  until: string | null;
+  reason: string | null;
+  by: string;
+  pausedAt: string;
+}
 
 export interface CheckSummary {
   id: string;
@@ -72,6 +79,7 @@ export interface AppOverview {
   intervalSec: number;
   sleepsWhenIdle: boolean;
   status: AppStatus;
+  pause: PauseInfo | null;
   checks: CheckSummary[];
   openAlerts: number;
   errors24h: number;

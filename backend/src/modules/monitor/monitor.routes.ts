@@ -5,9 +5,11 @@ import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
+import { getPause, pauseApp, resumeApp } from "../pause/pause.service";
+import { runDiagnostic } from "./diagnostic";
 import { checkNow } from "./monitor";
 
-export type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed";
+export type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed" | "paused";
 
 /** État global d'une appli à partir du dernier résultat de chaque adresse. */
 export function computeStatus(lastResults: ({ ok: boolean } | null)[]): AppStatus {
@@ -37,6 +39,7 @@ async function appOverview(app: AppTarget) {
       };
     })
   );
+  const pause = await getPause(app.key);
   const [openAlerts, errors24h, lastLog] = await Promise.all([
     prisma.alert.count({ where: { appKey: app.key, status: { in: ["open", "acknowledged"] } } }),
     prisma.logEntry.count({ where: { appKey: app.key, at: { gte: since }, level: { in: ["error", "fatal"] } } }),
@@ -48,7 +51,8 @@ async function appOverview(app: AppTarget) {
     description: app.description,
     intervalSec: app.intervalSec,
     sleepsWhenIdle: app.sleepsWhenIdle,
-    status: computeStatus(checks.map((c) => c.last)),
+    status: pause ? ("paused" as AppStatus) : computeStatus(checks.map((c) => c.last)),
+    pause: pause ? { until: pause.until, reason: pause.reason, by: pause.by, pausedAt: pause.pausedAt } : null,
     checks,
     openAlerts,
     errors24h,
@@ -104,6 +108,39 @@ monitorRouter.get("/apps/:key/checks", async (req, res) => {
       .sort((a, b) => a.hour.localeCompare(b.hour)),
     recent: results.slice(0, 50).map((r) => ({ ...r, id: r.id.toString() })),
   });
+});
+
+monitorRouter.post("/apps/:key/diagnostic", async (req, res) => {
+  res.json(await runDiagnostic(getApp(req.params.key)));
+});
+
+const pauseSchema = z.object({
+  // null : jusqu'à réactivation ; sinon durée en minutes (30 jours au plus).
+  minutes: z.number().int().min(1).max(30 * 24 * 60).nullable().default(null),
+  reason: z.string().max(200).nullable().default(null),
+});
+
+/** Coupe la supervision sur une ou plusieurs applis : { apps: ["mga", ...], minutes, reason }. */
+monitorRouter.post("/pause", async (req, res) => {
+  const body = pauseSchema.extend({ apps: z.array(z.string()).min(1) }).parse(req.body);
+  const targets = body.apps.map(getApp);
+  for (const app of targets) {
+    await pauseApp(app.key, req.admin!.email, body.minutes, body.reason);
+    await prisma.actionAudit.create({
+      data: { by: req.admin!.email, appKey: app.key, action: "supervision:pause", params: { minutes: body.minutes, reason: body.reason }, ok: true, message: "Supervision coupée" },
+    });
+  }
+  res.json({ ok: true });
+});
+
+/** Reprend la supervision sur une ou plusieurs applis : { apps: [...] }. */
+monitorRouter.post("/resume", async (req, res) => {
+  const { apps: keys } = z.object({ apps: z.array(z.string()).min(1) }).parse(req.body);
+  for (const app of keys.map(getApp)) {
+    await resumeApp(app.key);
+    await prisma.actionAudit.create({ data: { by: req.admin!.email, appKey: app.key, action: "supervision:resume", ok: true, message: "Supervision reprise" } });
+  }
+  res.json({ ok: true });
 });
 
 monitorRouter.post("/apps/:key/check-now", async (req, res) => {

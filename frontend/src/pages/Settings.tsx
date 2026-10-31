@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { TwoFactorSettings } from "../components/TwoFactorSettings";
-import { api } from "../lib/api";
+import { PauseControls } from "../components/PauseControls";
+import { api, type AppOverview } from "../lib/api";
+import { usePolling } from "../lib/usePolling";
 import { APP_VERSION } from "../version";
 
 function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
@@ -15,6 +17,7 @@ export function Settings() {
   const [pushState, setPushState] = useState<"unsupported" | "unconfigured" | "off" | "on" | "loading">("loading");
   const [message, setMessage] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const overview = usePolling(() => api<{ apps: AppOverview[] }>("/overview"), 60_000);
 
   useEffect(() => {
     void api<{ email: string }>("/auth/me").then((r) => setEmail(r.email), () => undefined);
@@ -67,6 +70,13 @@ export function Settings() {
     <>
       <h1>Réglages</h1>
       <TwoFactorSettings />
+      <section className="card">
+        <h3>Couper la supervision</h3>
+        <p className="muted small">
+          Pendant une maintenance : plus de vérifications, d'alertes ni de notifications pour les applis choisies. Les journaux continuent d'arriver. Reprise automatique à la fin de la durée choisie.
+        </p>
+        {overview.data ? <PauseControls apps={overview.data.apps} onChange={() => void overview.refresh()} /> : <p className="muted small">Chargement…</p>}
+      </section>
       <section className="card">
         <h3>Notifications des alertes</h3>
         <p className="muted small">Une notification arrive sur cet appareil dès qu'une appli tombe, qu'une erreur apparaît ou qu'un incident est clos.</p>

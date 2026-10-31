@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AlertsList } from "../components/AlertsList";
+import { DiagnosticPanel } from "../components/DiagnosticPanel";
+import { PauseControls } from "../components/PauseControls";
 import { LogsView } from "../components/LogsView";
 import { StatusBadge } from "../components/StatusBadge";
 import { api, type AppOverview } from "../lib/api";
-import { dateTime, timeAgo } from "../lib/format";
+import { dateTime, pauseLabel, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 import { AdminPanel } from "./AdminPanel";
 
@@ -19,7 +21,7 @@ export function AppDetail() {
   const { key = "" } = useParams();
   const [tab, setTab] = useState<Tab>("dispo");
   const [checking, setChecking] = useState(false);
-  const { data: app, error, setData } = usePolling(() => api<AppOverview>(`/apps/${key}`), 15_000, [key]);
+  const { data: app, error, setData, refresh } = usePolling(() => api<AppOverview>(`/apps/${key}`), 15_000, [key]);
   const checks = usePolling(() => api<ChecksData>(`/apps/${key}/checks?hours=24`), 60_000, [key]);
 
   async function checkNow() {
@@ -47,6 +49,14 @@ export function AppDetail() {
         </div>
         <StatusBadge status={app.status} />
       </div>
+      {app.pause && (
+        <p className="small paused-note">
+          Supervision coupée {pauseLabel(app.pause.until)}
+          {app.pause.reason ? ` · ${app.pause.reason}` : ""} : ni vérifications, ni alertes, ni notifications. Les journaux continuent d'arriver.
+        </p>
+      )}
+      <DiagnosticPanel app={app} onDone={() => void refresh()} />
+
       <div className="tabs">
         <button className={tab === "dispo" ? "active" : ""} onClick={() => setTab("dispo")}>
           Disponibilité
@@ -148,7 +158,16 @@ export function AppDetail() {
 
       {tab === "alertes" && <AlertsList app={app.key} />}
 
-      {tab === "admin" && <AdminPanel app={app} />}
+      {tab === "admin" && (
+        <>
+          <section className="card">
+            <h3>Supervision de cette appli</h3>
+            <p className="muted small">Pendant une maintenance : plus de vérifications, d'alertes ni de notifications. Les journaux continuent d'arriver.</p>
+            <PauseControls apps={[app]} compact onChange={() => void refresh()} />
+          </section>
+          <AdminPanel app={app} />
+        </>
+      )}
     </>
   );
 }

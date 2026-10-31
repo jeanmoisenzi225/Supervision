@@ -121,3 +121,37 @@ describe("code à 6 chiffres", async () => {
     expect(verifyTotp(secret, `${code.slice(0, 3)} ${code.slice(3)}`, null)).not.toBeNull();
   });
 });
+
+describe("coupure de la supervision", async () => {
+  const { isActive } = await import("../src/modules/pause/pause.service");
+  const now = new Date("2026-10-31T12:00:00Z");
+  it("sans fin : toujours active ; avec fin : jusqu'à l'échéance", () => {
+    expect(isActive({ until: null }, now)).toBe(true);
+    expect(isActive({ until: new Date("2026-10-31T13:00:00Z") }, now)).toBe(true);
+    expect(isActive({ until: new Date("2026-10-31T11:00:00Z") }, now)).toBe(false);
+    expect(isActive(undefined, now)).toBe(false);
+  });
+});
+
+describe("diagnostic complet", async () => {
+  const { overallStatus, uptimeStatus, latencyStatus, deployStatus } = await import("../src/modules/monitor/diagnostic");
+  const item = (status: "ok" | "warn" | "ko" | "info") => ({ id: status, label: status, status, detail: "" });
+
+  it("retient le pire point, l'information ne compte pas", () => {
+    expect(overallStatus([item("ok"), item("info")])).toBe("ok");
+    expect(overallStatus([item("ok"), item("warn")])).toBe("warn");
+    expect(overallStatus([item("warn"), item("ko"), item("ok")])).toBe("ko");
+    expect(overallStatus([])).toBe("ok");
+  });
+
+  it("note disponibilité, temps de réponse et déploiement", () => {
+    expect([uptimeStatus(100), uptimeStatus(95), uptimeStatus(80), uptimeStatus(null)]).toEqual(["ok", "warn", "ko", "info"]);
+    expect(latencyStatus(800, false)).toBe("ok");
+    expect(latencyStatus(8000, false)).toBe("warn");
+    expect(latencyStatus(52_000, true)).toBe("ok");
+    expect(deployStatus({ deploys: [{ status: "live" }] })).toBe("ok");
+    expect(deployStatus({ deploys: [{ status: "build_failed" }] })).toBe("ko");
+    expect(deployStatus({ deploys: [{ status: "update_in_progress" }] })).toBe("info");
+    expect(deployStatus({ suspended: true, deploys: [{ status: "live" }] })).toBe("ko");
+  });
+});
