@@ -30,6 +30,7 @@ L'API tourne en continu : elle interroge les applis selon leur intervalle (boucl
 | `ActionAudit` | Chaque action lancée : qui, quand, quoi, paramètres, résultat |
 | `PushSubscription` | Appareils abonnés aux notifications |
 | `AppPause` | Supervision coupée sur une appli : échéance (`until`, nulle = jusqu'à réactivation), motif, auteur. Retirée automatiquement à l'échéance |
+| `ResourceSample` | Relevés faits par la Supervision quand Render ne fournit pas l'historique (offre Hobby) : taille des bases (`dbsize:<id>`), une fois par heure, conservés 90 jours |
 | `Setting` | Réglages générés par le serveur : clés des notifications (`vapid`), créées au premier démarrage si `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` ne sont pas définies |
 
 ## Règles d'alerte
@@ -65,6 +66,7 @@ Réservées au super administrateur (jeton de session) :
 | `GET /api/logs?app=&minLevel=&q=&source=&before=&after=&limit=` | Journaux (pagination par identifiant) |
 | `GET /api/apps/:key/actions` | Services Render, actions et chiffres clés de l'appli, historique |
 | `GET /api/apps/:key/resources?range=24h\|7d\|30d` | Mesures Render des services web (mémoire et limite, processeur et limite, requêtes par code HTTP, temps de réponse au 95e centile) et des bases (disque, connexions, taille, expiration) ; gardées 2 minutes en mémoire |
+| — | Offre Hobby de Render : `http-latency`, `disk-usage` des bases et `active-connections` sont refusés (« query is not allowed for plan ») ; la taille des bases vient alors de `GET /postgres/{id}/query/sizes` (autorisée partout) avec historique relevé par la Supervision, et le temps de réponse des vérifications de la Supervision remplace celui de Render |
 | `GET /api/claude/costs` | Dépenses Claude des 31 derniers jours (rapport de coûts de l'API Admin Anthropic, appel HTTP direct `GET /v1/organizations/cost_report`, regroupé par description et espace de travail ; montants en centimes convertis en dollars) ; gardées 10 minutes en mémoire |
 | `POST /api/apps/:key/diagnostic` | Diagnostic complet (vérifications lancées à l'instant), compte-rendu `ok` / `warn` / `ko` / `info` par point et état d'ensemble |
 | `POST /api/pause` `{ apps, minutes, reason }` · `POST /api/resume` `{ apps }` | Coupe / reprend la supervision d'une ou plusieurs applis (`minutes` nul : jusqu'à réactivation) |

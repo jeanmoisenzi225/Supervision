@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.8.0 — 2026-11-01
+
+Retour du propriétaire : « c'est normal de n'avoir aucune donnée concernant la base ? » — non : Render refuse certaines mesures sur l'offre Hobby de l'espace de travail (« query is not allowed for plan: Hobby »).
+
+- **Taille de chaque base et de ses plus grosses tables**, par une route Render autorisée sur toutes les offres. Historique construit par la Supervision elle-même (relevé toutes les heures, conservé 90 jours, nouvelle table `ResourceSample`), puisque Render ne le fournit pas sur Hobby.
+- **Temps de réponse mesuré par la Supervision** (à chaque vérification de disponibilité) en tête de l'onglet Ressources, disponible quelle que soit l'offre Render.
+- Mesures refusées par Render : plus de courbe vide ni de message technique, une phrase « réservé aux offres Render supérieures à Hobby ».
+
 ## v0.7.0 — 2026-11-01
 
 - **Page « Claude »** : dépenses de l'organisation Anthropic (rapport de coûts de l'API Admin) : ce mois-ci, hier, aujourd'hui, courbe des 30 derniers jours, répartition par modèle et par espace de travail. Demande une clé Admin Anthropic (`ANTHROPIC_ADMIN_KEY`) ; sans elle, la page explique comment la créer.

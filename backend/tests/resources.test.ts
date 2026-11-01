@@ -52,3 +52,51 @@ describe("incidents connus dans les journaux", () => {
     expect(detectKnownIncident("Paiement 1234 refusé par Wave")).toBeNull();
   });
 });
+
+describe("repli quand Render limite les mesures (offre Hobby)", async () => {
+  const { parseSizes } = await import("../src/modules/actions/render");
+  const { readableMetricError, bucketLatency } = await import("../src/modules/resources/resources.service");
+
+  it("lit la taille de la base et classe ses tables", () => {
+    const s = parseSizes(
+      [
+        { Database: "postgres", Bytes: 8_000_000 },
+        { Database: "garage_app", Bytes: 52_000_000 },
+        { Database: "garage_app", Schema: "public", Table: "Invoice", Bytes: 9_000_000 },
+        { Database: "garage_app", Schema: "public", Table: "Vehicle", Bytes: 21_000_000 },
+        { Database: "garage_app", Schema: "public", Table: "Vehicle", Index: "Vehicle_pkey", Bytes: 500_000 },
+      ],
+      "garage_app"
+    );
+    expect(s.databaseBytes).toBe(52_000_000);
+    expect(s.tables).toEqual([
+      { name: "Vehicle", bytes: 21_000_000 },
+      { name: "Invoice", bytes: 9_000_000 },
+    ]);
+  });
+
+  it("rend lisible le refus lié à l'offre Render", () => {
+    expect(readableMetricError("temps de réponse", 'Render a répondu 400 : {"message":"query is not allowed for plan: Hobby"}')).toBe(
+      "temps de réponse (réservé aux offres Render supérieures à Hobby)"
+    );
+    expect(readableMetricError("disque", "Render a répondu 500 : boom")).toBe("disque : Render a répondu 500 : boom");
+  });
+
+  it("moyenne le temps de réponse des vérifications réussies par intervalle", () => {
+    const at = (min: number) => new Date(Date.UTC(2026, 10, 1, 10, min));
+    expect(
+      bucketLatency(
+        [
+          { at: at(0), latencyMs: 100, ok: true },
+          { at: at(5), latencyMs: 300, ok: true },
+          { at: at(7), latencyMs: 9000, ok: false },
+          { at: at(12), latencyMs: 50, ok: true },
+        ],
+        600
+      )
+    ).toEqual([
+      [Date.UTC(2026, 10, 1, 10, 0), 200],
+      [Date.UTC(2026, 10, 1, 10, 10), 50],
+    ]);
+  });
+});

@@ -123,6 +123,7 @@ export async function resumeService(id: string): Promise<void> {
 export interface PostgresSummary {
   id: string;
   name: string;
+  databaseName: string | null;
   plan: string;
   status: string;
   suspended: boolean;
@@ -142,6 +143,7 @@ export async function listPostgres(): Promise<PostgresSummary[]> {
     return {
       id: String(p.id),
       name: String(p.name),
+      databaseName: typeof p.databaseName === "string" ? p.databaseName : null,
       plan: String(p.plan ?? ""),
       status: String(p.status ?? ""),
       suspended: p.suspended === "suspended",
@@ -182,4 +184,32 @@ export async function fetchMetric(
     unit: r.unit ?? "",
     points: (r.values ?? []).map((v) => [new Date(v.timestamp).getTime(), Number(v.value)] as [number, number]).sort((a, b) => a[0] - b[0]),
   }));
+}
+
+export interface PostgresSizes {
+  databaseBytes: number | null;
+  tables: { name: string; bytes: number }[];
+}
+
+/**
+ * Tailles d'une base et de ses tables, à l'instant (route autorisée sur toutes
+ * les offres, contrairement aux mesures `disk-usage`). Fonction de lecture pure
+ * séparée (`parseSizes`) pour les tests.
+ */
+export async function fetchPostgresSizes(id: string, databaseName: string | null): Promise<PostgresSizes> {
+  const res = await renderFetch<{ sizes?: { Database?: string; Schema?: string; Table?: string; Index?: string; Bytes?: number }[] }>(`/postgres/${id}/query/sizes`);
+  return parseSizes(res.sizes ?? [], databaseName);
+}
+
+export function parseSizes(
+  sizes: { Database?: string; Schema?: string; Table?: string; Index?: string; Bytes?: number }[],
+  databaseName: string | null
+): PostgresSizes {
+  const dbRows = sizes.filter((r) => r.Database && !r.Table && !r.Index && typeof r.Bytes === "number");
+  const main = (databaseName && dbRows.find((r) => r.Database === databaseName)) || dbRows.sort((a, b) => (b.Bytes ?? 0) - (a.Bytes ?? 0))[0];
+  const tables = sizes
+    .filter((r) => r.Table && !r.Index && typeof r.Bytes === "number")
+    .map((r) => ({ name: r.Schema && r.Schema !== "public" ? `${r.Schema}.${r.Table}` : String(r.Table), bytes: r.Bytes! }))
+    .sort((a, b) => b.bytes - a.bytes);
+  return { databaseBytes: main?.Bytes ?? null, tables };
 }

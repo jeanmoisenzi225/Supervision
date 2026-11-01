@@ -111,3 +111,14 @@ model AppPause {
   by       String
   pausedAt DateTime  @default(now())
 }
+
+/// Mesure enregistrée par la Supervision elle-même (ex. taille d'une base),
+/// pour avoir un historique quand Render ne le fournit pas (offre Hobby).
+model ResourceSample {
+  id    BigInt   @id @default(autoincrement())
+  key   String // ex. "dbsize:dpg-xxx"
+  at    DateTime @default(now())
+  value Float
+
+  @@index([key, at])
+}

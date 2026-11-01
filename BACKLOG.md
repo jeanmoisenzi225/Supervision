@@ -45,6 +45,8 @@ Demandé le 2026-11-01 : « des graphiques permettant un meilleur monitoring : u
 - [x] Dépenses Claude par jour, par modèle et par espace de travail, alerte de budget (v0.7.0, 2026-11-01, « pourquoi ne pas les faire directement ? »). À saisir : `ANTHROPIC_ADMIN_KEY`, et facultatif `CLAUDE_MONTHLY_BUDGET_USD`.
 - [x] Disque persistant des services (v0.7.0).
 
+- [x] Offre Hobby de Render (2026-11-01) : taille des bases et des tables, historique relevé par la Supervision, temps de réponse des vérifications (v0.8.0). Passer l'espace de travail Render en offre supérieure rendrait aussi disponibles le temps de réponse Render, l'historique du disque et les connexions des bases.
+
 ## 5. Idées pour la suite
 
 - Battements de cœur des tâches planifiées (« le récap de 17 h doit arriver chaque jour ouvré ») : alerte si absent.

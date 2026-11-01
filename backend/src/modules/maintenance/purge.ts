@@ -4,6 +4,7 @@ import { prisma } from "../../db/prisma";
 /** Supprime les journaux et vérifications plus anciens que la durée de conservation. */
 export async function purgeOldData(): Promise<void> {
   const day = 24 * 3600_000;
+  await prisma.resourceSample.deleteMany({ where: { at: { lt: new Date(Date.now() - 90 * day) } } });
   const [logs, checks] = await Promise.all([
     prisma.logEntry.deleteMany({ where: { at: { lt: new Date(Date.now() - env.logRetentionDays * day) } } }),
     prisma.checkResult.deleteMany({ where: { at: { lt: new Date(Date.now() - env.checkRetentionDays * day) } } }),

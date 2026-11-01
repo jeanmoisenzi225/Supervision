@@ -1,6 +1,7 @@
 import { apps, type AppTarget } from "../../config/apps";
 import { env } from "../../config/env";
-import { describeService, fetchMetric, listPostgres, matchPostgres, resolveServiceIds, type MetricSeries } from "../actions/render";
+import { prisma } from "../../db/prisma";
+import { describeService, fetchMetric, fetchPostgresSizes, listPostgres, matchPostgres, resolveServiceIds, type MetricSeries } from "../actions/render";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
 import { isPaused } from "../pause/pause.service";
 import { daysUntil, last, percent, RANGES, sumSeries, toBytes, type RangeKey } from "./units";
@@ -33,6 +34,9 @@ export interface DatabaseResources {
   expiresAt: string | null;
   daysLeft: number | null;
   disk: Points; // octets
+  /** true : courbe construite à partir des relevés de la Supervision (Render ne la fournit pas sur l'offre Hobby). */
+  diskFromSamples: boolean;
+  tables: { name: string; bytes: number }[];
   connections: Points;
   errors: string[];
 }
@@ -47,13 +51,30 @@ async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Pr
   return data;
 }
 
+/** Message d'erreur Render lisible (mesure réservée aux offres supérieures à Hobby). */
+export function readableMetricError(label: string, message: string): string {
+  if (/not allowed for plan/i.test(message)) {
+    const plan = /plan:\s*([A-Za-z]+)/.exec(message)?.[1] ?? "actuelle";
+    return `${label} (réservé aux offres Render supérieures à ${plan})`;
+  }
+  return `${label} : ${message}`;
+}
+
 async function safe<T>(errors: string[], label: string, load: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await load();
   } catch (err) {
-    errors.push(`${label} : ${(err as Error).message}`);
+    errors.push(readableMetricError(label, (err as Error).message));
     return fallback;
   }
+}
+
+const sampleKey = (dbId: string) => `dbsize:${dbId}`;
+
+/** Historique des tailles relevées par la Supervision. */
+async function sampledPoints(key: string, start: Date): Promise<Points> {
+  const rows = await prisma.resourceSample.findMany({ where: { key, at: { gte: start } }, orderBy: { at: "asc" }, select: { at: true, value: true } });
+  return rows.map((r) => [r.at.getTime(), r.value] as [number, number]);
 }
 
 const bytes = (series: MetricSeries[]): Points =>
@@ -95,10 +116,18 @@ async function serviceResources(id: string, start: Date, resolution: number): Pr
 
 async function databaseResources(db: Awaited<ReturnType<typeof listPostgres>>[number], start: Date, resolution: number): Promise<DatabaseResources> {
   const errors: string[] = [];
-  const [disk, connections] = await Promise.all([
-    safe(errors, "disque", () => fetchMetric("disk-usage", db.id, start, resolution), []),
+  const [disk, connections, sizes] = await Promise.all([
+    safe(errors, "historique du disque", () => fetchMetric("disk-usage", db.id, start, resolution), []),
     safe(errors, "connexions", () => fetchMetric("active-connections", db.id, start, resolution), []),
+    safe(errors, "taille de la base", () => fetchPostgresSizes(db.id, db.databaseName), { databaseBytes: null, tables: [] }),
   ]);
+  let diskPoints = bytes(disk);
+  let diskFromSamples = false;
+  if (diskPoints.length === 0 && sizes.databaseBytes !== null) {
+    // Offre Hobby : pas d'historique Render, on s'appuie sur nos propres relevés.
+    diskPoints = [...(await sampledPoints(sampleKey(db.id), start)), [Date.now(), sizes.databaseBytes]];
+    diskFromSamples = true;
+  }
   return {
     id: db.id,
     name: db.name,
@@ -107,15 +136,43 @@ async function databaseResources(db: Awaited<ReturnType<typeof listPostgres>>[nu
     diskSizeGB: db.diskSizeGB,
     expiresAt: db.expiresAt,
     daysLeft: daysUntil(db.expiresAt),
-    disk: bytes(disk),
+    disk: diskPoints,
+    diskFromSamples,
+    tables: sizes.tables.slice(0, 8),
     connections: sumSeries(connections.map((x) => x.points)),
     errors,
   };
 }
 
+/** Temps de réponse mesuré par les vérifications de la Supervision, moyenné par intervalle. */
+export function bucketLatency(rows: { at: Date; latencyMs: number | null; ok: boolean }[], resolutionSec: number): Points {
+  const buckets = new Map<number, { sum: number; n: number }>();
+  for (const r of rows) {
+    if (!r.ok || r.latencyMs === null) continue;
+    const t = Math.floor(r.at.getTime() / (resolutionSec * 1000)) * resolutionSec * 1000;
+    const b = buckets.get(t) ?? { sum: 0, n: 0 };
+    b.sum += r.latencyMs;
+    b.n += 1;
+    buckets.set(t, b);
+  }
+  return [...buckets.entries()].sort((a, b) => a[0] - b[0]).map(([t, b]) => [t, Math.round(b.sum / b.n)] as [number, number]);
+}
+
+async function checkLatency(app: AppTarget, start: Date, resolution: number) {
+  const rows = await prisma.checkResult.findMany({
+    where: { appKey: app.key, at: { gte: start } },
+    select: { checkId: true, at: true, latencyMs: true, ok: true },
+    orderBy: { at: "asc" },
+  });
+  return app.checks.map((c) => ({ id: c.id, label: c.label, points: bucketLatency(rows.filter((r) => r.checkId === c.id), resolution) }));
+}
+
 /** Ressources d'une appli sur une période (gardées 2 minutes en mémoire). */
 export async function getAppResources(app: AppTarget, range: RangeKey) {
-  if (!env.renderApiKey) return { configured: false, services: [], databases: [] };
+  if (!env.renderApiKey) {
+    const { hours, resolution } = RANGES[range];
+    return { configured: false, services: [], databases: [], checks: await checkLatency(app, new Date(Date.now() - hours * 3600_000), resolution) };
+  }
   return cached(`${app.key}:${range}`, 2 * 60_000, async () => {
     const { hours, resolution } = RANGES[range];
     const start = new Date(Date.now() - hours * 3600_000);
@@ -124,7 +181,7 @@ export async function getAppResources(app: AppTarget, range: RangeKey) {
       (s): s is ServiceResources => s !== null
     );
     const databases = await Promise.all(matchPostgres(app.renderMatch.names, pgs).map((db) => databaseResources(db, start, resolution)));
-    return { configured: true, services, databases };
+    return { configured: true, services, databases, checks: await checkLatency(app, start, resolution) };
   });
 }
 
@@ -162,6 +219,11 @@ export async function watchApp(app: AppTarget): Promise<void> {
   }
   for (const db of data.databases) {
     const used = last(db.disk);
+    // Relevé de la taille (historique maison), au plus un par heure.
+    if (used !== null && db.diskFromSamples) {
+      const recent = await prisma.resourceSample.findFirst({ where: { key: sampleKey(db.id), at: { gte: new Date(Date.now() - 55 * 60_000) } } });
+      if (!recent) await prisma.resourceSample.create({ data: { key: sampleKey(db.id), value: used } });
+    }
     const pct = db.diskSizeGB ? percent(used, db.diskSizeGB * 1024 ** 3) : null;
     if (pct !== null) {
       const fp = `disk:${db.id}`;

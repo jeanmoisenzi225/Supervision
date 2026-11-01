@@ -31,9 +31,12 @@ interface Resources {
     expiresAt: string | null;
     daysLeft: number | null;
     disk: Points;
+    diskFromSamples: boolean;
+    tables: { name: string; bytes: number }[];
     connections: Points;
     errors: string[];
   }[];
+  checks: { id: string; label: string; points: Points }[];
 }
 
 const RANGES: { key: Range; label: string; hours: number }[] = [
@@ -86,6 +89,18 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
         <p className="muted small">Aucun service web ni base reconnus sur Render pour cette appli (un site statique n'a ni mémoire ni processeur à suivre).</p>
       )}
 
+      {data && data.checks.some((c) => c.points.length > 0) && (
+        <section className="card">
+          <h3>Temps de réponse mesuré par la Supervision</h3>
+          <p className="muted small">Mesuré à chaque vérification de disponibilité, depuis l'extérieur, comme un visiteur.</p>
+          {data.checks
+            .filter((c) => c.points.length > 0)
+            .map((c) => (
+              <LineChart key={c.id} title={c.label} points={c.points} format={formatMs} rangeHours={hours} />
+            ))}
+        </section>
+      )}
+
       {data?.services.map((s) => {
         const memNow = pct(lastOf(s.memory), s.memoryLimit);
         const memPeak = pct(maxOf(s.memory), s.memoryLimit);
@@ -106,11 +121,13 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
                 <span className="metric-value">{formatCount(e5)}</span>
                 <span className="muted small">{total ? `${((e5 / total) * 100).toFixed(2)} % des requêtes` : "—"}</span>
               </div>
-              <div className="card metric">
-                <span className="muted small">Temps de réponse (95 %)</span>
-                <span className="metric-value">{lastOf(s.latencyP95) !== null ? formatMs(lastOf(s.latencyP95)!) : "—"}</span>
-                <span className="muted small">dernière mesure</span>
-              </div>
+              {s.latencyP95.length > 0 && (
+                <div className="card metric">
+                  <span className="muted small">Temps de réponse (95 %)</span>
+                  <span className="metric-value">{formatMs(lastOf(s.latencyP95)!)}</span>
+                  <span className="muted small">dernière mesure</span>
+                </div>
+              )}
             </div>
             <LineChart
               title="Mémoire utilisée"
@@ -141,9 +158,9 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
               </>
             )}
             <LineChart title="Processeur" points={s.cpu} format={formatCpu} rangeHours={hours} limit={s.cpuLimit ? { value: s.cpuLimit, label: `limite ${formatCpu(s.cpuLimit)}` } : null} />
-            <LineChart title="Requêtes par intervalle" points={s.requests} format={formatCount} rangeHours={hours} />
-            <LineChart title="Temps de réponse (95 % des requêtes)" points={s.latencyP95} format={formatMs} rangeHours={hours} />
-            {s.errors.length > 0 && <p className="muted small">Mesures indisponibles : {s.errors.join(" ; ")}</p>}
+            {s.requests.length > 0 && <LineChart title="Requêtes par intervalle" points={s.requests} format={formatCount} rangeHours={hours} />}
+            {s.latencyP95.length > 0 && <LineChart title="Temps de réponse (95 % des requêtes)" points={s.latencyP95} format={formatMs} rangeHours={hours} />}
+            {s.errors.length > 0 && <p className="muted small">Non disponible : {s.errors.join(" ; ")}.</p>}
           </section>
         );
       })}
@@ -155,17 +172,22 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
           <section key={db.id} className="card">
             <h3>Base {db.name}</h3>
             <div className="metrics">
-              <Gauge
-                label="Disque"
-                value={pct(used, size)}
-                alertAt={80}
-                detail={used !== null && size ? `${formatBytes(used)} sur ${db.diskSizeGB} Go` : `offre ${db.plan}`}
-              />
-              <div className="card metric">
-                <span className="muted small">Connexions actives</span>
-                <span className="metric-value">{lastOf(db.connections) ?? "—"}</span>
-                <span className="muted small">pic {maxOf(db.connections) ?? "—"}</span>
-              </div>
+              {size ? (
+                <Gauge label="Disque" value={pct(used, size)} alertAt={80} detail={used !== null ? `${formatBytes(used)} sur ${db.diskSizeGB} Go` : `offre ${db.plan}`} />
+              ) : (
+                <div className="card metric">
+                  <span className="muted small">Taille de la base</span>
+                  <span className="metric-value">{used !== null ? formatBytes(used) : "—"}</span>
+                  <span className="muted small">offre {db.plan}</span>
+                </div>
+              )}
+              {db.connections.length > 0 && (
+                <div className="card metric">
+                  <span className="muted small">Connexions actives</span>
+                  <span className="metric-value">{lastOf(db.connections)}</span>
+                  <span className="muted small">pic {maxOf(db.connections)}</span>
+                </div>
+              )}
               {db.daysLeft !== null && (
                 <div className={`card metric ${db.daysLeft <= 7 ? "metric-alert" : ""}`}>
                   <span className="muted small">Base gratuite</span>
@@ -176,16 +198,40 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
                 </div>
               )}
             </div>
+            {db.disk.length > 1 && (
             <LineChart
-              title="Espace disque utilisé"
+              title={db.diskFromSamples ? "Taille de la base (relevée par la Supervision)" : "Espace disque utilisé"}
               points={db.disk}
               format={formatBytes}
               rangeHours={hours}
               limit={size ? { value: size, label: `taille ${db.diskSizeGB} Go` } : null}
               threshold={size ? { value: size * 0.8, label: "alerte 80 %" } : null}
             />
-            <LineChart title="Connexions actives" points={db.connections} format={(v) => `${Math.round(v)}`} rangeHours={hours} />
-            {db.errors.length > 0 && <p className="muted small">Mesures indisponibles : {db.errors.join(" ; ")}</p>}
+            )}
+            {db.diskFromSamples && db.disk.length <= 1 && (
+              <p className="muted small">L'historique de la taille se construit : la Supervision la relève toutes les heures, la courbe apparaîtra au fil des jours.</p>
+            )}
+            {db.connections.length > 0 && (
+              <LineChart title="Connexions actives" points={db.connections} format={(v) => `${Math.round(v)}`} rangeHours={hours} />
+            )}
+            {db.tables.length > 0 && (
+              <>
+                <h4 className="small">Plus grosses tables</h4>
+                <table className="table">
+                  <tbody>
+                    {db.tables.map((t) => (
+                      <tr key={t.name}>
+                        <td>{t.name}</td>
+                        <td className="num">{formatBytes(t.bytes)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+            {db.errors.filter((e) => !(db.diskFromSamples && e.startsWith("historique du disque"))).length > 0 && (
+              <p className="muted small">Non disponible : {db.errors.filter((e) => !(db.diskFromSamples && e.startsWith("historique du disque"))).join(" ; ")}.</p>
+            )}
           </section>
         );
       })}
