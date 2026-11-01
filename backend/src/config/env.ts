@@ -36,6 +36,13 @@ export const env = {
   vapidPrivateKey: optional("VAPID_PRIVATE_KEY"),
   vapidSubject: optional("VAPID_SUBJECT"),
   renderApiKey: optional("RENDER_API_KEY"),
+  // Dépenses Claude (rapport de coûts de l'API Admin Anthropic) : clé Admin
+  // (sk-ant-admin…), distincte des clés ordinaires des applis. Facultative.
+  anthropicAdminKey: optional("ANTHROPIC_ADMIN_KEY"),
+  // Budget mensuel Claude en dollars (facultatif) : alerte à 80 % et 100 %.
+  // Adresse de l'API Admin Anthropic, remplaçable pour les essais locaux uniquement.
+  anthropicAdminApiUrl: optional("ANTHROPIC_ADMIN_API_URL") || "https://api.anthropic.com/v1/organizations",
+  claudeMonthlyBudgetUsd: Number(optional("CLAUDE_MONTHLY_BUDGET_USD")) || 0,
   // Adresse de l'API Render, remplaçable seulement pour les essais locaux.
   renderApiUrl: optional("RENDER_API_URL") || "https://api.render.com/v1",
   // Nombre d'échecs consécutifs avant d'ouvrir une alerte « en panne » :

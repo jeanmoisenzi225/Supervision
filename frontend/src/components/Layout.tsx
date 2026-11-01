@@ -15,6 +15,7 @@ export function Layout({ onLogout }: { onLogout: () => void }) {
           </NavLink>
           <NavLink to="/alertes">Alertes</NavLink>
           <NavLink to="/journaux">Journaux</NavLink>
+          <NavLink to="/claude">Claude</NavLink>
           <NavLink to="/reglages">Réglages</NavLink>
         </nav>
         <button className="link" onClick={onLogout}>

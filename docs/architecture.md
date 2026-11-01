@@ -39,6 +39,8 @@ L'API tourne en continu : elle interroge les applis selon leur intervalle (boucl
 - **Alerte métier** (`app`) : envoyée par l'appli avec une clé ; la même clé met à jour l'alerte, `resolve: true` la referme.
 - **Supervision coupée** sur une appli : aucune alerte n'est ouverte (ni panne, ni erreur, ni alerte métier) et la boucle ne la vérifie plus ; les journaux sont toujours enregistrés. À la reprise, le premier passage referme une alerte de panne restée ouverte si l'appli répond.
 - **Ressources** (toutes les 15 minutes, clé API Render nécessaire) : mémoire ≥ 85 % de la limite (critique ≥ 95 %, refermée sous 75 %) ; disque d'une base ≥ 80 % (critique ≥ 95 %, refermée sous 70 %) ; base gratuite expirant dans 7 jours ou moins (critique à 2 jours). Bases rattachées à une appli par leur nom (mêmes motifs que les services).
+- **Disque persistant** d'un service web (mesures `disk-usage` / `disk-capacity` du service) : mêmes seuils que le disque des bases.
+- **Budget Claude** (toutes les heures, si `ANTHROPIC_ADMIN_KEY` et `CLAUDE_MONTHLY_BUDGET_USD` sont définies) : dépenses du mois ≥ 80 % du budget (critique ≥ 100 %), alerte rattachée à « Claude » (`claude-budget:<mois>`).
 - **Incidents connus** repérés dans les journaux reçus, quel que soit leur niveau : crédit Claude épuisé, clé Claude refusée ou absente, saturation de l'API Claude. Alerte dédiée (`known:<clé>`), sans alerte d'erreur générique en double. Anthropic ne permet pas de lire le solde de crédit : c'est le message d'erreur de l'API qui le révèle.
 - Notification push à l'ouverture (critique ou attention) et à la fermeture automatique.
 
@@ -63,6 +65,7 @@ Réservées au super administrateur (jeton de session) :
 | `GET /api/logs?app=&minLevel=&q=&source=&before=&after=&limit=` | Journaux (pagination par identifiant) |
 | `GET /api/apps/:key/actions` | Services Render, actions et chiffres clés de l'appli, historique |
 | `GET /api/apps/:key/resources?range=24h\|7d\|30d` | Mesures Render des services web (mémoire et limite, processeur et limite, requêtes par code HTTP, temps de réponse au 95e centile) et des bases (disque, connexions, taille, expiration) ; gardées 2 minutes en mémoire |
+| `GET /api/claude/costs` | Dépenses Claude des 31 derniers jours (rapport de coûts de l'API Admin Anthropic, appel HTTP direct `GET /v1/organizations/cost_report`, regroupé par description et espace de travail ; montants en centimes convertis en dollars) ; gardées 10 minutes en mémoire |
 | `POST /api/apps/:key/diagnostic` | Diagnostic complet (vérifications lancées à l'instant), compte-rendu `ok` / `warn` / `ko` / `info` par point et état d'ensemble |
 | `POST /api/pause` `{ apps, minutes, reason }` · `POST /api/resume` `{ apps }` | Coupe / reprend la supervision d'une ou plusieurs applis (`minutes` nul : jusqu'à réactivation) |
 | `POST /api/apps/:key/render/suspend-all` `{ confirm, reason }` | Coupure complète du service : suspend tous les services Render de l'appli et coupe sa supervision ; `confirm` doit reprendre le nom de l'appli |

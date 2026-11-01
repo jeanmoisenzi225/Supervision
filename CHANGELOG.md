@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.7.0 — 2026-11-01
+
+- **Page « Claude »** : dépenses de l'organisation Anthropic (rapport de coûts de l'API Admin) : ce mois-ci, hier, aujourd'hui, courbe des 30 derniers jours, répartition par modèle et par espace de travail. Demande une clé Admin Anthropic (`ANTHROPIC_ADMIN_KEY`) ; sans elle, la page explique comment la créer.
+- **Budget mensuel Claude** (facultatif, `CLAUDE_MONTHLY_BUDGET_USD`) : alerte à 80 % puis critique à 100 %, vérifiée toutes les heures.
+- **Disque persistant des services** (ex. Yiri, qui garde ses données sur un disque Render) : jauge et courbe dans l'onglet Ressources, alerte au-delà de 80 % (critique à 95 %), ligne dans le diagnostic complet.
+- `ANTHROPIC_ADMIN_API_URL` (facultative) : adresse de l'API Admin Anthropic, remplaçable pour les essais locaux uniquement.
+
 ## v0.6.0 — 2026-11-01
 
 - **Onglet « Ressources »** dans la fiche de chaque appli (mesures Render, sur 24 h, 7 jours ou 30 jours) : pour chaque service web, mémoire utilisée face à la limite du plan, processeur, requêtes, erreurs serveur (5xx), temps de réponse (95 % des requêtes) ; pour chaque base de données, espace disque face à sa taille, connexions actives et date d'expiration des bases gratuites. Jauges, courbes avec limite et seuil d'alerte en pointillés, valeur exacte au toucher ou au survol.

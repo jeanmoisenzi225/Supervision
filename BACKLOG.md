@@ -42,8 +42,8 @@ Demandé le 2026-10-31 : « pouvoir couper la sup sur une ou plusieurs applis, e
 
 Demandé le 2026-11-01 : « des graphiques permettant un meilleur monitoring : utilisation de la mémoire, capacités des bases, clé Claude coupée par manque de crédit ». Mesures Render (mémoire, processeur, trafic, disque, connexions, expiration des bases gratuites), alertes de ressources, crédit et clé Claude reconnus dans les journaux.
 
-- [ ] Plus tard : dépenses Claude par jour et alerte de budget, avec une clé Admin Anthropic (rapport de coûts) — à décider par le propriétaire du produit.
-- [ ] Plus tard : disque persistant des services (Yiri garde ses données sur un disque Render).
+- [x] Dépenses Claude par jour, par modèle et par espace de travail, alerte de budget (v0.7.0, 2026-11-01, « pourquoi ne pas les faire directement ? »). À saisir : `ANTHROPIC_ADMIN_KEY`, et facultatif `CLAUDE_MONTHLY_BUDGET_USD`.
+- [x] Disque persistant des services (v0.7.0).
 
 ## 5. Idées pour la suite
 

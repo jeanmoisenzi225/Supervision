@@ -187,6 +187,7 @@ label.toggle { flex-direction: row; align-items: center; gap: 6px; }
 .gauge-warning { background: var(--status-warning); }
 .gauge-critical { background: var(--status-critical); }
 .gauge-unknown { background: transparent; }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .metric-alert { border-color: var(--status-warning); }
 
 .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }

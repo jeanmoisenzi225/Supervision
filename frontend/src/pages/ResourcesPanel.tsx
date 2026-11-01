@@ -19,6 +19,8 @@ interface Resources {
     requests: Points;
     errors5xx: Points;
     latencyP95: Points;
+    disk: Points;
+    diskCapacity: number | null;
     errors: string[];
   }[];
   databases: {
@@ -118,6 +120,26 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
               limit={s.memoryLimit ? { value: s.memoryLimit, label: `limite ${formatBytes(s.memoryLimit)}` } : null}
               threshold={s.memoryLimit ? { value: s.memoryLimit * 0.85, label: "alerte 85 %" } : null}
             />
+            {s.diskCapacity && s.disk.length > 0 && (
+              <>
+                <div className="metrics">
+                  <Gauge
+                    label="Disque persistant"
+                    value={pct(lastOf(s.disk), s.diskCapacity)}
+                    alertAt={80}
+                    detail={`${formatBytes(lastOf(s.disk) ?? 0)} sur ${formatBytes(s.diskCapacity)}`}
+                  />
+                </div>
+                <LineChart
+                  title="Disque persistant utilisé"
+                  points={s.disk}
+                  format={formatBytes}
+                  rangeHours={hours}
+                  limit={{ value: s.diskCapacity, label: `taille ${formatBytes(s.diskCapacity)}` }}
+                  threshold={{ value: s.diskCapacity * 0.8, label: "alerte 80 %" }}
+                />
+              </>
+            )}
             <LineChart title="Processeur" points={s.cpu} format={formatCpu} rangeHours={hours} limit={s.cpuLimit ? { value: s.cpuLimit, label: `limite ${formatCpu(s.cpuLimit)}` } : null} />
             <LineChart title="Requêtes par intervalle" points={s.requests} format={formatCount} rangeHours={hours} />
             <LineChart title="Temps de réponse (95 % des requêtes)" points={s.latencyP95} format={formatMs} rangeHours={hours} />

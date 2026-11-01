@@ -18,6 +18,9 @@ export interface ServiceResources {
   requests: Points; // requêtes par intervalle
   errors5xx: Points;
   latencyP95: Points; // millisecondes
+  /** Disque persistant du service (octets), s'il en a un. */
+  disk: Points;
+  diskCapacity: number | null;
   errors: string[];
 }
 
@@ -61,13 +64,16 @@ async function serviceResources(id: string, start: Date, resolution: number): Pr
   // Un site statique n'a ni mémoire ni processeur à surveiller.
   if (s.type === "static_site") return null;
   const errors: string[] = [];
-  const [memory, memoryLimit, cpu, cpuLimit, requests, latency] = await Promise.all([
+  const [memory, memoryLimit, cpu, cpuLimit, requests, latency, disk, diskCapacity] = await Promise.all([
     safe(errors, "mémoire", () => fetchMetric("memory", id, start, resolution, { aggregationMethod: "MAX" }), []),
     safe(errors, "limite mémoire", () => fetchMetric("memory-limit", id, start, resolution), []),
     safe(errors, "processeur", () => fetchMetric("cpu", id, start, resolution, { aggregationMethod: "MAX" }), []),
     safe(errors, "limite processeur", () => fetchMetric("cpu-limit", id, start, resolution), []),
     safe(errors, "requêtes", () => fetchMetric("http-requests", id, start, resolution, { aggregateBy: "statusCode" }), []),
     safe(errors, "temps de réponse", () => fetchMetric("http-latency", id, start, resolution, { quantile: "0.95" }), []),
+    // Disque persistant : séries vides pour un service sans disque (pas une erreur).
+    fetchMetric("disk-usage", id, start, resolution).catch(() => [] as MetricSeries[]),
+    fetchMetric("disk-capacity", id, start, resolution).catch(() => [] as MetricSeries[]),
   ]);
   const limitPoints = bytes(memoryLimit);
   return {
@@ -81,6 +87,8 @@ async function serviceResources(id: string, start: Date, resolution: number): Pr
     requests: sumSeries(requests.map((x) => x.points)),
     errors5xx: sumSeries(requests.filter((x) => /^5/.test(x.labels.statusCode ?? "")).map((x) => x.points)),
     latencyP95: sumSeries(latency.map((x) => x.points)),
+    disk: bytes(disk),
+    diskCapacity: last(bytes(diskCapacity)),
     errors,
   };
 }
@@ -140,6 +148,16 @@ export async function watchApp(app: AppTarget): Promise<void> {
       await raiseAlert({ appKey: app.key, kind: "app", severity: pct >= 95 ? "critical" : "warning", title: `${app.name} — mémoire à ${pct} % (${s.name})`, detail: `Au-delà de ${MEMORY_ALERT} % de la limite du plan : risque de redémarrage forcé par Render.`, fingerprint: fp });
     } else if (pct < MEMORY_CLEAR) {
       await resolveAlert(app.key, fp, `${app.name} — mémoire revenue à ${pct} % (${s.name})`);
+    }
+  }
+  for (const s of data.services) {
+    const pct = percent(last(s.disk), s.diskCapacity);
+    if (pct === null) continue;
+    const fp = `svcdisk:${s.id}`;
+    if (pct >= DISK_ALERT) {
+      await raiseAlert({ appKey: app.key, kind: "app", severity: pct >= 95 ? "critical" : "warning", title: `${app.name} — disque de ${s.name} rempli à ${pct} %`, detail: "Disque persistant du service presque plein : l'appli ne pourra plus enregistrer ses données. Agrandir le disque dans Render ou faire du ménage.", fingerprint: fp });
+    } else if (pct < DISK_CLEAR) {
+      await resolveAlert(app.key, fp, `${app.name} — disque de ${s.name} à ${pct} %`);
     }
   }
   for (const db of data.databases) {

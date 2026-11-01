@@ -6,6 +6,7 @@ import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { getPause, pauseApp, resumeApp } from "../pause/pause.service";
+import { getCosts } from "../costs/costs.service";
 import { getAppResources } from "../resources/resources.service";
 import { RANGES, type RangeKey } from "../resources/units";
 import { runDiagnostic } from "./diagnostic";
@@ -115,6 +116,10 @@ monitorRouter.get("/apps/:key/checks", async (req, res) => {
 monitorRouter.get("/apps/:key/resources", async (req, res) => {
   const { range } = z.object({ range: z.enum(Object.keys(RANGES) as [RangeKey, ...RangeKey[]]).default("24h") }).parse(req.query);
   res.json({ range, ...(await getAppResources(getApp(req.params.key), range)) });
+});
+
+monitorRouter.get("/claude/costs", async (_req, res) => {
+  res.json(await getCosts());
 });
 
 monitorRouter.post("/apps/:key/diagnostic", async (req, res) => {

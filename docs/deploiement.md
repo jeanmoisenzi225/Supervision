@@ -7,6 +7,8 @@
 3. C'est tout : `JWT_SECRET` et les jetons `*_INGEST_TOKEN` sont générés par Render, les clés des notifications par le serveur lui-même (table `Setting`), et l'adresse publique (`RENDER_EXTERNAL_URL`) est fournie par Render.
 4. Ouvrir l'adresse du service `supervision`, se connecter, installer l'appli sur l'écran d'accueil, puis Réglages › Activer les notifications.
 
+Dépenses Claude (page « Claude ») : `ANTHROPIC_ADMIN_KEY` (clé Admin créée dans la Console Anthropic, Settings › Admin keys ; elle commence par `sk-ant-admin`) et, facultatif, `CLAUDE_MONTHLY_BUDGET_USD` (budget mensuel en dollars).
+
 À ajouter plus tard, au fil des besoins (Environment du service `supervision`) : `RENDER_API_KEY` (boutons Redémarrer / Redéployer ; services reconnus automatiquement), `<APPLI>_ADMIN_URL` / `<APPLI>_ADMIN_TOKEN` (voir [integration.md](integration.md)).
 
 **Téléphone perdu (codes à 6 chiffres inaccessibles)** : ajouter `ADMIN_RESET_2FA` = `true` sur le service `supervision` et enregistrer ; au redémarrage, la double authentification est coupée. Se connecter, **retirer aussitôt la variable**, puis réactiver la double authentification dans Réglages.

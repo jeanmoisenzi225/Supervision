@@ -4,6 +4,7 @@ import { ensureAdmin } from "./modules/auth/auth.routes";
 import { startPurge } from "./modules/maintenance/purge";
 import { startMonitor } from "./modules/monitor/monitor";
 import { startResourceWatcher } from "./modules/resources/resources.service";
+import { startCostWatcher } from "./modules/costs/costs.service";
 import { initPush } from "./modules/push/push.service";
 
 async function main() {
@@ -13,6 +14,7 @@ async function main() {
   startMonitor();
   startPurge();
   startResourceWatcher();
+  startCostWatcher();
 }
 
 main().catch((err) => {

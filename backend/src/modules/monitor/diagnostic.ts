@@ -147,6 +147,11 @@ export async function runDiagnostic(app: AppTarget) {
           detail: pct === null ? "Mesure indisponible." : `${pct} % de la limite du plan en ce moment${peak !== null ? `, pic sur 24 h : ${peak} %` : ""}.`,
         });
       }
+      for (const s of r.services) {
+        const pct = percent(last(s.disk), s.diskCapacity);
+        if (pct === null) continue;
+        items.push({ id: `svcdisk-${s.id}`, label: `Disque · ${s.name}`, status: pct >= DISK_ALERT ? "warn" : "ok", detail: `Disque persistant rempli à ${pct} %.` });
+      }
       for (const db of r.databases) {
         const pct = db.diskSizeGB ? percent(last(db.disk), db.diskSizeGB * 1024 ** 3) : null;
         items.push({
