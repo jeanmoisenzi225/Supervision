@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.6.0 — 2026-11-01
+
+- **Onglet « Ressources »** dans la fiche de chaque appli (mesures Render, sur 24 h, 7 jours ou 30 jours) : pour chaque service web, mémoire utilisée face à la limite du plan, processeur, requêtes, erreurs serveur (5xx), temps de réponse (95 % des requêtes) ; pour chaque base de données, espace disque face à sa taille, connexions actives et date d'expiration des bases gratuites. Jauges, courbes avec limite et seuil d'alerte en pointillés, valeur exacte au toucher ou au survol.
+- **Alertes de ressources** (vérifiées toutes les 15 minutes) : mémoire au-delà de 85 % de la limite (critique à 95 %), disque d'une base au-delà de 80 %, base gratuite qui expire dans 7 jours ou moins (critique à 2 jours). Refermées seules quand la situation revient à la normale.
+- **Incidents Claude reconnus dans les journaux** des applis : crédit épuisé, clé refusée ou absente (critiques), saturation ou limite de débit. Une alerte dédiée par incident, sans alerte d'erreur en double.
+- **Diagnostic complet** enrichi : mémoire de chaque service, remplissage et expiration de chaque base.
+
 ## v0.5.0 — 2026-10-31
 
 - **Coupure complète du service** par appli (onglet Administration › Coupure du service) : tous les services Render de l'appli sont suspendus, l'appli est hors ligne. Confirmation en retapant le nom de l'appli, motif facultatif. La supervision de l'appli est coupée en même temps (pas d'alerte de panne pour une coupure voulue).

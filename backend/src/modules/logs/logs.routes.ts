@@ -8,7 +8,7 @@ import { requireAdmin } from "../../middleware/auth";
 import { HttpError } from "../../utils/httpError";
 import { safeEqual } from "../../utils/safeEqual";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
-import { cleanEntry, errorFingerprint, ingestAlertSchema, ingestLogsSchema, LEVELS } from "./ingest";
+import { cleanEntry, detectKnownIncident, errorFingerprint, ingestAlertSchema, ingestLogsSchema, LEVELS } from "./ingest";
 
 function appFromToken(header: string | undefined) {
   const token = header?.startsWith("Bearer ") ? header.slice(7).trim() : "";
@@ -29,7 +29,19 @@ ingestRouter.post("/logs", async (req, res) => {
   await prisma.logEntry.createMany({
     data: clean.map((e) => ({ appKey: app.key, ...e, context: (e.context ?? undefined) as Prisma.InputJsonValue | undefined })),
   });
-  for (const e of clean.filter((x) => x.level === "error" || x.level === "fatal")) {
+  // Incidents connus (crédit Claude épuisé, clé refusée…) : alerte dédiée,
+  // quel que soit le niveau du journal, regroupée sous une seule clé.
+  const generic: typeof clean = [];
+  for (const e of clean) {
+    const known = detectKnownIncident(e.message);
+    if (known) {
+      await raiseAlert({ appKey: app.key, kind: "app", severity: known.severity, title: `${app.name} — ${known.title}`, detail: known.detail, fingerprint: `known:${known.key}` });
+    } else {
+      generic.push(e);
+    }
+  }
+  // Les incidents connus ont déjà leur alerte dédiée : pas d'alerte d'erreur en double.
+  for (const e of generic.filter((x) => x.level === "error" || x.level === "fatal")) {
     await raiseAlert({
       appKey: app.key,
       kind: "error",

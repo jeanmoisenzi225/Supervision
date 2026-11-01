@@ -38,6 +38,13 @@ Protocole `/supervision` décrit dans `docs/integration.md`. Liste à valider av
 
 Demandé le 2026-10-31 : « pouvoir couper la sup sur une ou plusieurs applis, et faire une compute complète de service via une commande, par application ». Première lecture (v0.4.0) : coupure de la supervision par appli (journaux conservés) et diagnostic complet par appli avec « Tout relancer ». Précision du propriétaire le même jour : « je voulais dire coupure et non compute » → **coupure complète du service** par appli, c'est-à-dire suspension de tous ses services Render, avec remise en service (v0.5.0). Les fonctions de la v0.4.0 restent en place.
 
+## 4 ter. Graphiques de ressources et incidents Claude ✅ (v0.6.0)
+
+Demandé le 2026-11-01 : « des graphiques permettant un meilleur monitoring : utilisation de la mémoire, capacités des bases, clé Claude coupée par manque de crédit ». Mesures Render (mémoire, processeur, trafic, disque, connexions, expiration des bases gratuites), alertes de ressources, crédit et clé Claude reconnus dans les journaux.
+
+- [ ] Plus tard : dépenses Claude par jour et alerte de budget, avec une clé Admin Anthropic (rapport de coûts) — à décider par le propriétaire du produit.
+- [ ] Plus tard : disque persistant des services (Yiri garde ses données sur un disque Render).
+
 ## 5. Idées pour la suite
 
 - Battements de cœur des tâches planifiées (« le récap de 17 h doit arriver chaque jour ouvré ») : alerte si absent.

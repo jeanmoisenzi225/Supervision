@@ -2,7 +2,7 @@ import { env } from "../../config/env";
 import { HttpError } from "../../utils/httpError";
 
 
-async function renderFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function renderFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!env.renderApiKey) throw new HttpError(400, "Clé API Render non configurée (RENDER_API_KEY)");
   const res = await fetch(`${env.renderApiUrl}${path}`, {
     ...init,
@@ -116,4 +116,70 @@ export async function suspendService(id: string): Promise<void> {
 /** Remet en ligne un service suspendu. */
 export async function resumeService(id: string): Promise<void> {
   await renderFetch(`/services/${id}/resume`, { method: "POST" });
+}
+
+/* ---------- Bases de données et mesures (graphiques de ressources) ---------- */
+
+export interface PostgresSummary {
+  id: string;
+  name: string;
+  plan: string;
+  status: string;
+  suspended: boolean;
+  diskSizeGB: number | null;
+  expiresAt: string | null;
+  dashboardUrl: string | null;
+}
+
+let pgCache: { at: number; list: PostgresSummary[] } | null = null;
+
+/** Bases PostgreSQL du compte Render (gardées 10 minutes en mémoire). */
+export async function listPostgres(): Promise<PostgresSummary[]> {
+  if (pgCache && Date.now() - pgCache.at < 10 * 60_000) return pgCache.list;
+  const rows = await renderFetch<({ postgres: Record<string, unknown> } | Record<string, unknown>)[]>("/postgres?limit=100");
+  const list = rows.map((row) => {
+    const p = ("postgres" in row ? row.postgres : row) as Record<string, unknown>;
+    return {
+      id: String(p.id),
+      name: String(p.name),
+      plan: String(p.plan ?? ""),
+      status: String(p.status ?? ""),
+      suspended: p.suspended === "suspended",
+      diskSizeGB: typeof p.diskSizeGB === "number" ? p.diskSizeGB : null,
+      expiresAt: typeof p.expiresAt === "string" ? p.expiresAt : null,
+      dashboardUrl: typeof p.dashboardUrl === "string" ? p.dashboardUrl : null,
+    };
+  });
+  pgCache = { at: Date.now(), list };
+  return list;
+}
+
+/** Bases d'une appli : reconnues par leur nom (fonction pure, testée). */
+export function matchPostgres(names: RegExp[], list: PostgresSummary[]): PostgresSummary[] {
+  return list.filter((p) => names.some((re) => re.test(p.name)));
+}
+
+export interface MetricSeries {
+  labels: Record<string, string>;
+  unit: string;
+  points: [number, number][];
+}
+
+/** Une mesure Render (`/metrics/<name>`) sur une période, pour un service ou une base. */
+export async function fetchMetric(
+  name: string,
+  resource: string,
+  startTime: Date,
+  resolutionSeconds: number,
+  extra: Record<string, string> = {}
+): Promise<MetricSeries[]> {
+  const params = new URLSearchParams({ resource, startTime: startTime.toISOString(), endTime: new Date().toISOString(), resolutionSeconds: String(resolutionSeconds), ...extra });
+  const rows = await renderFetch<{ labels?: { field: string; value: string }[]; values?: { timestamp: string; value: number }[]; unit?: string }[]>(
+    `/metrics/${name}?${params.toString()}`
+  );
+  return (rows ?? []).map((r) => ({
+    labels: Object.fromEntries((r.labels ?? []).map((l) => [l.field, l.value])),
+    unit: r.unit ?? "",
+    points: (r.values ?? []).map((v) => [new Date(v.timestamp).getTime(), Number(v.value)] as [number, number]).sort((a, b) => a[0] - b[0]),
+  }));
 }

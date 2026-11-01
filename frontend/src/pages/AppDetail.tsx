@@ -9,8 +9,9 @@ import { api, type AppOverview } from "../lib/api";
 import { dateTime, pauseLabel, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 import { AdminPanel } from "./AdminPanel";
+import { ResourcesPanel } from "./ResourcesPanel";
 
-type Tab = "dispo" | "journaux" | "alertes" | "admin";
+type Tab = "dispo" | "ressources" | "journaux" | "alertes" | "admin";
 
 interface ChecksData {
   hourly: { checkId: string; hour: string; total: number; ok: number; avgLatencyMs: number }[];
@@ -60,6 +61,9 @@ export function AppDetail() {
       <div className="tabs">
         <button className={tab === "dispo" ? "active" : ""} onClick={() => setTab("dispo")}>
           Disponibilité
+        </button>
+        <button className={tab === "ressources" ? "active" : ""} onClick={() => setTab("ressources")}>
+          Ressources
         </button>
         <button className={tab === "journaux" ? "active" : ""} onClick={() => setTab("journaux")}>
           Journaux
@@ -155,6 +159,8 @@ export function AppDetail() {
             </p>
           </div>
         ))}
+
+      {tab === "ressources" && <ResourcesPanel app={app} />}
 
       {tab === "alertes" && <AlertsList app={app.key} />}
 

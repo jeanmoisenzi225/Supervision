@@ -6,6 +6,8 @@ import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { getPause, pauseApp, resumeApp } from "../pause/pause.service";
+import { getAppResources } from "../resources/resources.service";
+import { RANGES, type RangeKey } from "../resources/units";
 import { runDiagnostic } from "./diagnostic";
 import { checkNow } from "./monitor";
 
@@ -108,6 +110,11 @@ monitorRouter.get("/apps/:key/checks", async (req, res) => {
       .sort((a, b) => a.hour.localeCompare(b.hour)),
     recent: results.slice(0, 50).map((r) => ({ ...r, id: r.id.toString() })),
   });
+});
+
+monitorRouter.get("/apps/:key/resources", async (req, res) => {
+  const { range } = z.object({ range: z.enum(Object.keys(RANGES) as [RangeKey, ...RangeKey[]]).default("24h") }).parse(req.query);
+  res.json({ range, ...(await getAppResources(getApp(req.params.key), range)) });
 });
 
 monitorRouter.post("/apps/:key/diagnostic", async (req, res) => {

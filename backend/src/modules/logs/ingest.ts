@@ -72,3 +72,46 @@ export function errorFingerprint(message: string): string {
     .slice(0, 200);
   return "error:" + createHash("sha1").update(normalized).digest("hex").slice(0, 16);
 }
+
+/** Signatures d'incidents connus repérées dans les journaux, quel que soit leur niveau. */
+export interface KnownIncident {
+  key: string;
+  severity: "critical" | "warning";
+  title: string;
+  detail: string;
+}
+
+const KNOWN_INCIDENTS: { pattern: RegExp; incident: KnownIncident }[] = [
+  {
+    pattern: /credit balance is (too low|insufficient)|insufficient[_ ]credit|billing.*(limit|credit)/i,
+    incident: {
+      key: "claude-credit",
+      severity: "critical",
+      title: "Crédit Claude épuisé",
+      detail: "L'API Anthropic refuse les appels faute de crédit : recharger sur console.anthropic.com (Plans & Billing). Les fonctions d'IA de l'appli sont indisponibles en attendant.",
+    },
+  },
+  {
+    pattern: /invalid x-api-key|authentication_error|cl[ée] d'api claude est refus[ée]e|ANTHROPIC_API_KEY (manquant|missing)/i,
+    incident: {
+      key: "claude-key",
+      severity: "critical",
+      title: "Clé Claude refusée ou absente",
+      detail: "L'API Anthropic refuse la clé de l'appli (clé révoquée, erronée ou absente) : vérifier ANTHROPIC_API_KEY dans Render.",
+    },
+  },
+  {
+    pattern: /rate_limit_error|overloaded_error|Claude est très sollicité/i,
+    incident: {
+      key: "claude-saturation",
+      severity: "warning",
+      title: "Claude saturé ou limite de débit atteinte",
+      detail: "L'API Anthropic limite les appels de l'appli : réessais automatiques, à surveiller si cela se répète.",
+    },
+  },
+];
+
+/** Incident connu correspondant à un message, ou null (fonction pure, testée). */
+export function detectKnownIncident(message: string): KnownIncident | null {
+  return KNOWN_INCIDENTS.find((k) => k.pattern.test(message))?.incident ?? null;
+}

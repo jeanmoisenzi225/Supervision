@@ -3,6 +3,8 @@ import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
 import { describeService, resolveServiceIds } from "../actions/render";
 import { getPause } from "../pause/pause.service";
+import { DISK_ALERT, EXPIRY_WARN_DAYS, getAppResources, MEMORY_ALERT } from "../resources/resources.service";
+import { last, percent } from "../resources/units";
 import { checkNow } from "./monitor";
 
 export type DiagStatus = "ok" | "warn" | "ko" | "info";
@@ -128,6 +130,42 @@ export async function runDiagnostic(app: AppTarget) {
       }
     } catch (err) {
       items.push({ id: "render", label: "Hébergement Render", status: "ko", detail: (err as Error).message });
+    }
+  }
+
+  // 2 bis. Ressources : mémoire des services, disque et expiration des bases.
+  if (env.renderApiKey) {
+    try {
+      const r = await getAppResources(app, "24h");
+      for (const s of r.services) {
+        const pct = percent(last(s.memory), s.memoryLimit);
+        const peak = s.memoryLimit ? percent(Math.max(0, ...s.memory.map((p) => p[1])), s.memoryLimit) : null;
+        items.push({
+          id: `mem-${s.id}`,
+          label: `Mémoire · ${s.name}`,
+          status: pct === null ? "info" : pct >= MEMORY_ALERT ? "warn" : "ok",
+          detail: pct === null ? "Mesure indisponible." : `${pct} % de la limite du plan en ce moment${peak !== null ? `, pic sur 24 h : ${peak} %` : ""}.`,
+        });
+      }
+      for (const db of r.databases) {
+        const pct = db.diskSizeGB ? percent(last(db.disk), db.diskSizeGB * 1024 ** 3) : null;
+        items.push({
+          id: `disk-${db.id}`,
+          label: `Base · ${db.name}`,
+          status: pct === null ? "info" : pct >= DISK_ALERT ? "warn" : "ok",
+          detail: pct === null ? `Offre ${db.plan}.` : `Disque rempli à ${pct} % (${db.diskSizeGB} Go, offre ${db.plan}).`,
+        });
+        if (db.daysLeft !== null) {
+          items.push({
+            id: `expiry-${db.id}`,
+            label: `Base gratuite · ${db.name}`,
+            status: db.daysLeft <= 2 ? "ko" : db.daysLeft <= EXPIRY_WARN_DAYS ? "warn" : "ok",
+            detail: `Expire dans ${db.daysLeft} jour(s) (${new Date(db.expiresAt!).toLocaleDateString("fr-FR")}) : passer à une offre payante avant pour garder les données.`,
+          });
+        }
+      }
+    } catch (err) {
+      items.push({ id: "resources", label: "Ressources", status: "info", detail: `Mesures indisponibles : ${(err as Error).message}` });
     }
   }
 
