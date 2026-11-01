@@ -14,7 +14,7 @@
 
 Une section par appli, dans son propre dépôt, avec sa propre version :
 - [x] **MGA** v0.87.0 (2026-10-31) : module copié, `mirrorConsole` + `captureProcessErrors`, erreurs 500 avec modèle de route, requêtes lentes. À saisir sur `garage-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
-- [x] **MGA** v0.88.0 : 9 tâches planifiées signalées (rappels de RDV, rappels d'entretien, actualités, RDV manqués, récap hebdomadaire, purges du site) — Supervision v0.9.0, demande du 2026-11-01.
+- [x] **MGA** v0.88.0 : 8 tâches planifiées signalées (rappels de RDV, rappels d'entretien, actualités, RDV manqués, récap hebdomadaire, purges du site) — Supervision v0.9.0, demande du 2026-11-01.
 - [ ] **MGA** suite : alertes métier (paiement en échec, push en erreur).
 - [x] **Yiri Invest** 0.47.0 (2026-10-31) : `SupervisionHandler` sur le logger racine et `uvicorn.error`, numéros et contenus masqués. À saisir sur le service Yiri : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
 - [ ] **Yiri Invest** suite : alertes métier dédiées (récap ou BOC non parti à l'heure).
