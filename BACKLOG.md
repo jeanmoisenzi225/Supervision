@@ -18,7 +18,7 @@ Une section par appli, dans son propre dépôt, avec sa propre version :
 - [x] **Yiri Invest** 0.47.0 (2026-10-31) : `SupervisionHandler` sur le logger racine et `uvicorn.error`, numéros et contenus masqués. À saisir sur le service Yiri : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
 - [ ] **Yiri Invest** suite : alertes métier dédiées (récap ou BOC non parti à l'heure).
 - [x] **Procedia** : disponibilité surveillée (v0.1.4, 2026-10-31).
-- [ ] **Procedia** : module Node, erreurs de l'analyse par Claude.
+- [x] **Procedia** v0.15.0 (2026-11-01) : module Node, `mirrorConsole` + `captureProcessErrors`, erreurs 500 et 5xx prévues avec modèle de route (jamais l'objet d'erreur : données de clients). À saisir sur `procedia-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
 - [ ] **My Family** : à intégrer dès le premier backend.
 - [ ] **Site Autonova** : surveillé par son adresse ; échec de construction à remonter par MGA (publication du site).
 
