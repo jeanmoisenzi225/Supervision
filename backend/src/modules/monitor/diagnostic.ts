@@ -3,6 +3,7 @@ import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
 import { describeService, resolveServiceIds } from "../actions/render";
 import { getPause } from "../pause/pause.service";
+import { listJobs } from "../jobs/jobs.service";
 import { DISK_ALERT, EXPIRY_WARN_DAYS, getAppResources, MEMORY_ALERT } from "../resources/resources.service";
 import { last, percent } from "../resources/units";
 import { checkNow } from "./monitor";
@@ -172,6 +173,23 @@ export async function runDiagnostic(app: AppTarget) {
     } catch (err) {
       items.push({ id: "resources", label: "Ressources", status: "info", detail: `Mesures indisponibles : ${(err as Error).message}` });
     }
+  }
+
+  // 2 ter. Tâches planifiées.
+  const jobs = await listJobs(app.key);
+  if (jobs.length) {
+    const late = jobs.filter((j) => j.state === "late");
+    const failed = jobs.filter((j) => j.state === "failed");
+    items.push({
+      id: "jobs",
+      label: "Tâches planifiées",
+      status: late.length ? "ko" : failed.length ? "warn" : "ok",
+      detail: late.length
+        ? `Non exécutée(s) : ${late.map((j) => j.label).join(", ")}.`
+        : failed.length
+          ? `En échec : ${failed.map((j) => `${j.label} (${j.lastMessage ?? "erreur"})`).join(", ")}.`
+          : `${jobs.length} tâche(s), toutes à l'heure.`,
+    });
   }
 
   // 3. Erreurs des dernières 24 h, regroupées par message.

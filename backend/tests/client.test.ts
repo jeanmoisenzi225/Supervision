@@ -41,3 +41,29 @@ describe("module d'envoi Node", () => {
     expect(JSON.parse(String((fetchSpy.mock.calls[1] as [string, RequestInit])[1].body)).entries[0].message).toBe("à garder");
   });
 });
+
+describe("tâche planifiée surveillée (module Node)", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("signale une exécution réussie avec son résumé, et rend le résultat", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 202 }));
+    const s = createSupervision({ url: "https://sup.test", token: "t", echo: false });
+    const run = s.job("rappels-veille", { label: "Rappels de la veille", cron: "0 20 * * *" }, async () => 3);
+    expect(await run()).toBe(3);
+    await new Promise((r) => setTimeout(r, 0));
+    const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("https://sup.test/api/ingest/jobs");
+    expect(JSON.parse(String(init.body))).toMatchObject({ key: "rappels-veille", status: "ok", message: "3 élément(s) traité(s)", cron: "0 20 * * *" });
+  });
+
+  it("signale l'échec et laisse passer l'erreur", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 202 }));
+    const s = createSupervision({ url: "https://sup.test", token: "t", echo: false });
+    const run = s.job("purge", { label: "Purge", cron: "30 3 * * *" }, async () => {
+      throw new Error("base injoignable");
+    });
+    await expect(run()).rejects.toThrow("base injoignable");
+    await new Promise((r) => setTimeout(r, 0));
+    expect(JSON.parse(String((fetchSpy.mock.calls[0] as [string, RequestInit])[1].body))).toMatchObject({ status: "error", message: "Error: base injoignable" });
+  });
+});

@@ -122,3 +122,35 @@ model ResourceSample {
 
   @@index([key, at])
 }
+
+/// Tâche planifiée d'une appli (rappels, récap, purge…), déclarée par l'appli
+/// elle-même à sa première exécution. Sert à détecter une tâche qui ne tourne
+/// pas, échoue ou tourne deux fois.
+model Job {
+  id           String    @id @default(cuid())
+  appKey       String
+  key          String
+  label        String
+  /// Horaire attendu, expression cron à 5 champs en UTC.
+  cron         String
+  graceMinutes Int       @default(15)
+  lastRunAt    DateTime?
+  lastStatus   String? // ok | error
+  lastMessage  String?
+  createdAt    DateTime  @default(now())
+  runs         JobRun[]
+
+  @@unique([appKey, key])
+}
+
+model JobRun {
+  id         BigInt   @id @default(autoincrement())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  at         DateTime @default(now())
+  status     String // ok | error
+  message    String?
+  durationMs Int?
+
+  @@index([jobId, at])
+}

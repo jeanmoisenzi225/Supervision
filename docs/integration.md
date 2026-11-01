@@ -41,6 +41,19 @@ Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules
 
 **Ne jamais envoyer de données sensibles** dans les messages ou le contexte : mots de passe, jetons, numéros de carte, contenu de documents. Préférer des identifiants.
 
+## 2 bis. Tâches planifiées
+
+Envelopper chaque tâche avec le module Node, au moment de la programmer :
+
+```ts
+const run = supervision.job("rappels-veille", { label: "Rappels de RDV de la veille", cron: "0 20 * * *" }, runDayBeforeReminderCheck);
+cron.schedule("0 20 * * *", () => run().catch(console.error), { timezone: "UTC" });
+```
+
+- `cron` : le même horaire que le planificateur, 5 champs, **UTC**. `graceMinutes` (15 par défaut) : délai avant d'alerter.
+- La fonction enveloppée garde le même comportement (résultat, erreur). Un résultat numérique devient « N élément(s) traité(s) » ; `summarize` permet un message sur mesure.
+- La tâche apparaît dans l'onglet Tâches dès sa première exécution.
+
 ## 3. Actions super administrateur
 
 L'appli expose trois routes protégées par `SUPERVISION_ADMIN_TOKEN` (en-tête `Authorization: Bearer …`) :

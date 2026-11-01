@@ -112,6 +112,41 @@ export function createSupervision(options: SupervisionOptions) {
     },
 
     /**
+     * Tâche planifiée surveillée : enveloppe la fonction de la tâche, mesure sa
+     * durée et signale chaque exécution (réussie ou en échec) à la supervision,
+     * qui alerte si la tâche ne tourne pas à l'heure prévue, échoue ou tourne deux fois.
+     * `cron` : horaire attendu (5 champs, UTC), le même que celui du planificateur.
+     * La fonction renvoyée se comporte comme l'originale (même résultat, même erreur).
+     *
+     *   cron.schedule("0 20 * * *", supervision.job("rappels-veille", { label: "Rappels de la veille", cron: "0 20 * * *" }, runDayBeforeReminderCheck));
+     */
+    job<T>(key: string, opts: { label: string; cron: string; graceMinutes?: number; summarize?: (result: T) => string | undefined }, fn: () => Promise<T>): () => Promise<T> {
+      return async () => {
+        const started = Date.now();
+        const report = (status: "ok" | "error", message?: string) => {
+          if (!enabled) return;
+          void post("jobs", { key, label: opts.label, cron: opts.cron, graceMinutes: opts.graceMinutes ?? 15, status, message: message?.slice(0, 500), durationMs: Date.now() - started }).catch(
+            () => undefined
+          );
+        };
+        try {
+          const result = await fn();
+          let message: string | undefined;
+          try {
+            message = opts.summarize ? opts.summarize(result) : typeof result === "number" ? `${result} élément(s) traité(s)` : undefined;
+          } catch {
+            message = undefined;
+          }
+          report("ok", message);
+          return result;
+        } catch (err) {
+          report("error", err instanceof Error ? `${err.name}: ${err.message}` : String(err));
+          throw err;
+        }
+      };
+    },
+
+    /**
      * Erreurs non rattrapées du processus : journalisées et envoyées avant
      * l'arrêt. Le processus s'arrête toujours ensuite, comme le fait Node sans
      * ce module (l'hébergeur le redémarre). L'arrêt demandé par l'hébergeur

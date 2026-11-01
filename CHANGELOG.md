@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.9.0 — 2026-11-01
+
+- **Tâches planifiées** (« rendez-vous manqués ») : chaque appli signale l'exécution de ses tâches (rappels, récap, purges…) avec leur horaire attendu ; onglet **Tâches** dans la fiche de l'appli (horaire lisible, dernière exécution, résultat, prochaine échéance, historique).
+- Alertes : tâche **non exécutée** à l'heure prévue (critique, vérifié toutes les 5 minutes, marge propre à chaque tâche), tâche **en échec**, tâche **exécutée plusieurs fois** pour une même échéance (tâches au plus toutes les 6 h : risque d'envois en double). Refermées à la prochaine exécution réussie.
+- Diagnostic complet : ligne « Tâches planifiées ».
+- Module d'envoi Node : `supervision.job(clé, { label, cron, graceMinutes, summarize }, fonction)`.
+- Horaires lus sans dépendance (expressions cron à 5 champs, UTC).
+
 ## v0.8.0 — 2026-11-01
 
 Retour du propriétaire : « c'est normal de n'avoir aucune donnée concernant la base ? » — non : Render refuse certaines mesures sur l'offre Hobby de l'espace de travail (« query is not allowed for plan: Hobby »).

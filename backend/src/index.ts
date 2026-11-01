@@ -5,6 +5,7 @@ import { startPurge } from "./modules/maintenance/purge";
 import { startMonitor } from "./modules/monitor/monitor";
 import { startResourceWatcher } from "./modules/resources/resources.service";
 import { startCostWatcher } from "./modules/costs/costs.service";
+import { startJobWatcher } from "./modules/jobs/jobs.service";
 import { initPush } from "./modules/push/push.service";
 
 async function main() {
@@ -15,6 +16,7 @@ async function main() {
   startPurge();
   startResourceWatcher();
   startCostWatcher();
+  startJobWatcher();
 }
 
 main().catch((err) => {

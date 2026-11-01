@@ -8,6 +8,7 @@ import { requireAdmin } from "../../middleware/auth";
 import { HttpError } from "../../utils/httpError";
 import { safeEqual } from "../../utils/safeEqual";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
+import { jobRunSchema, recordRun } from "../jobs/jobs.service";
 import { cleanEntry, detectKnownIncident, errorFingerprint, ingestAlertSchema, ingestLogsSchema, LEVELS } from "./ingest";
 
 function appFromToken(header: string | undefined) {
@@ -70,6 +71,13 @@ ingestRouter.post("/alerts", async (req, res) => {
       fingerprint,
     });
   }
+  res.status(202).json({ ok: true });
+});
+
+/** Exécution d'une tâche planifiée (rappels, récap, purge…). */
+ingestRouter.post("/jobs", async (req, res) => {
+  const app = appFromToken(req.headers.authorization);
+  await recordRun(app, jobRunSchema.parse(req.body));
   res.status(202).json({ ok: true });
 });
 
