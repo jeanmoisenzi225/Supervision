@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.10.0 — 2026-11-02
+
+- **Actions d'administration pour tout le parc** (onglet Administration de chaque appli) : MGA (notification de test, déconnexion d'un compte, code de réinitialisation, reconstruction du site, rappels de RDV, RDV manqués, actualités), Procedia (désactiver, réactiver, mot de passe temporaire), Yiri (statut, approuver, refuser, renvoyer quiz ou digest, maintenance). Chiffres clés de chaque appli.
+- **Protocole signé, sans aucune variable à saisir** : clé d'administration dérivée du jeton d'envoi des journaux déjà partagé ; chaque appel est signé (HMAC-SHA256) et daté, l'appli refuse un appel non signé, modifié ou de plus de 5 minutes. Adresses d'administration de MGA, Yiri et Procedia connues par défaut.
+- Information sensible (code ou mot de passe temporaire) affichée une seule fois, jamais enregistrée dans l'historique des actions.
+- Refus d'une appli (compte introuvable…) affiché tel quel ; appli pas encore à jour : « pas encore branchées » au lieu d'une erreur.
+- Modules d'envoi Node et Python : `supervisionAdminRouter` et `supervision_fastapi_router` vérifient les signatures.
+
 ## v0.9.0 — 2026-11-01
 
 - **Tâches planifiées** (« rendez-vous manqués ») : chaque appli signale l'exécution de ses tâches (rappels, récap, purges…) avec leur horaire attendu ; onglet **Tâches** dans la fiche de l'appli (horaire lisible, dernière exécution, résultat, prochaine échéance, historique).

@@ -30,6 +30,8 @@ Protocole `/supervision` décrit dans `docs/integration.md`. Liste à valider av
 - Yiri Invest : abonnés en attente / actifs, relancer le récap du jour, renvoyer le BOC, mettre en pause les alertes news.
 - Procedia : missions et utilisateurs, réinitialiser un mot de passe.
 
+Fait (v0.10.0, 2026-11-02, « toute tâche d'admin pour l'ensemble des applis du parc applicatif ») : MGA v0.89.0 (8 actions), Procedia v0.16.0 (3 actions), Yiri 0.48.0 (7 actions), protocole signé sans variable à saisir. Site Autonova : reconstruction depuis MGA et boutons Render. My Family : à brancher dès sa mise en ligne.
+
 ## 4. Sécurité de l'accès
 
 - [x] Double authentification (code TOTP) pour le super administrateur (v0.3.0, 2026-10-31).

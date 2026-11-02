@@ -193,6 +193,7 @@ label.toggle { flex-direction: row; align-items: center; gap: 6px; }
 .job-ko { border-left-color: var(--bad); }
 .job-warn { border-left-color: var(--warn); }
 .job p { margin: 6px 0; }
+.display-once { background: var(--surface-2); border: 1px dashed var(--warn); border-radius: 8px; padding: 10px; user-select: all; }
 .metric-alert { border-color: var(--status-warning); }
 
 .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }

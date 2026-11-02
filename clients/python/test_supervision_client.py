@@ -80,3 +80,24 @@ class HandlerTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdminSignatureTest(unittest.TestCase):
+    # Vecteur produit par la supervision (Node) : les deux côtés doivent calculer la même chose.
+    KEY = "550f2f4f2a798a3f61e57515a5c87c39082bb5239d720f9a8db4826bf4d6388c"
+    SIG = "e43b5a7fe3cd0f5de0fc90f7ded8591aa7bec053a93fa269ddc2916b02b8bfd3"
+    BODY = '{"params":{"email":"é@b.ci","n":3},"by":"admin"}'
+
+    def test_meme_cle_et_meme_signature_que_la_supervision(self):
+        self.assertEqual(sc.derive_admin_key("jeton-envoi"), self.KEY)
+        self.assertEqual(sc.sign_admin_request(self.KEY, 1800000000000, "post", "/actions/x", self.BODY), self.SIG)
+
+    def test_corps_recalcule_comme_json_stringify(self):
+        self.assertEqual(sc.canonical_body(self.BODY.encode()), self.BODY)
+
+    def test_refus(self):
+        ok = sc.verify_admin_request(self.KEY, "1800000000000", self.SIG, "POST", "/actions/x", self.BODY, now_ms=1800000001000)
+        self.assertTrue(ok)
+        self.assertFalse(sc.verify_admin_request(self.KEY, "1800000000000", self.SIG, "POST", "/actions/y", self.BODY, now_ms=1800000001000))
+        self.assertFalse(sc.verify_admin_request(self.KEY, "1800000000000", self.SIG, "POST", "/actions/x", self.BODY, now_ms=1800000000000 + 6 * 60_000))
+        self.assertFalse(sc.verify_admin_request("", "1800000000000", self.SIG, "POST", "/actions/x", self.BODY))

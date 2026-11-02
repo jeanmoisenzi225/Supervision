@@ -1,3 +1,4 @@
+import { deriveAdminKey } from "../utils/adminSignature";
 import { readOptionalEnv } from "./env";
 
 /** Une adresse surveillée d'une appli (API, site, appli web...). */
@@ -40,6 +41,8 @@ interface AppDefinition {
   /** Noms de services Render de l'appli, et adresses .onrender.com cachées derrière un domaine. */
   renderNames: RegExp[];
   renderHosts?: string[];
+  /** Adresse de base des routes `/supervision` de l'appli (sans `/supervision`). */
+  defaultAdminUrl?: string;
 }
 
 /**
@@ -55,6 +58,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "MGA · My Autonova",
     description: "Appli de gestion du garage et espace client My Autonova",
     intervalSec: 60,
+    defaultAdminUrl: "https://garage-backend-r7i3.onrender.com/api",
     renderNames: [/^garage-/, /^mga-/],
     renderHosts: ["garage-frontend-a7uv.onrender.com"],
     defaultChecks: [
@@ -77,6 +81,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "Yiri Invest",
     description: "Veille BRVM, agent WhatsApp et appli d'investissement",
     intervalSec: 60,
+    defaultAdminUrl: "https://agent-brvm.onrender.com/api",
     renderNames: [/brvm/i, /yiri/i],
     defaultChecks: [
       { id: "server", label: "Serveur", url: "https://agent-brvm.onrender.com/manifest.json", expect: "2xx" },
@@ -102,6 +107,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     // tout le quota mensuel d'heures gratuites (voir docs/integration.md).
     intervalSec: 1800,
     sleepsWhenIdle: true,
+    defaultAdminUrl: "https://procedia-backend.onrender.com/api",
     renderNames: [/^procedia-/],
     defaultChecks: [
       // L'API dort hors usage : c'est elle que la vérification réveille.
@@ -150,8 +156,9 @@ export function buildApps(read: (name: string) => string = readOptionalEnv): App
       // Service en veille : ~1 min pour se réveiller, d'où un délai long.
       checks: checks.map((c) => ({ ...c, timeoutMs: sleeps ? 90_000 : 15_000 })),
       ingestToken: read(`${p}_INGEST_TOKEN`),
-      adminUrl: read(`${p}_ADMIN_URL`).replace(/\/+$/, ""),
-      adminToken: read(`${p}_ADMIN_TOKEN`),
+      adminUrl: (read(`${p}_ADMIN_URL`) || def.defaultAdminUrl || "").replace(/\/+$/, ""),
+      // Clé d'administration : imposée, sinon dérivée du jeton d'envoi des journaux.
+      adminToken: read(`${p}_ADMIN_TOKEN`) || deriveAdminKey(read(`${p}_INGEST_TOKEN`)),
       renderServiceIds: read(`${p}_RENDER_SERVICES`)
         .split(",")
         .map((s) => s.trim())

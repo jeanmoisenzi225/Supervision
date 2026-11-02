@@ -20,14 +20,21 @@ from __future__ import annotations
 
 import atexit
 import datetime as _dt
+import hashlib
 import hmac
 import json
 import logging
 import os
 import re
 import threading
+import time
 import traceback
 import urllib.request
+
+try:  # FastAPI est facultatif : seulement pour supervision_fastapi_router.
+    from fastapi import Request as FastAPIRequest
+except ImportError:  # pragma: no cover
+    FastAPIRequest = None  # type: ignore[assignment,misc]
 
 _LEVELS = {
     logging.DEBUG: "debug",
@@ -162,41 +169,90 @@ def supervision_alert(key: str, title: str | None = None, detail: str | None = N
         logging.getLogger(__name__).debug("supervision injoignable", exc_info=True)
 
 
-def supervision_fastapi_router(actions: list[dict], summary=None):
+def derive_admin_key(ingest_token: str) -> str:
+    """Clé d'administration dérivée du jeton d'envoi (même calcul que la supervision)."""
+    if not ingest_token:
+        return ""
+    return hmac.new(ingest_token.encode(), b"supervision-admin", hashlib.sha256).hexdigest()
+
+
+def sign_admin_request(key: str, timestamp: int, method: str, rel_path: str, body: str) -> str:
+    message = f"{timestamp}.{method.upper()}.{rel_path}.{body}".encode()
+    return hmac.new(key.encode(), message, hashlib.sha256).hexdigest()
+
+
+def verify_admin_request(key: str, timestamp: str | None, signature: str | None, method: str,
+                         rel_path: str, body: str, now_ms: int | None = None) -> bool:
+    """Signature exacte et horodatage à moins de 5 minutes (pas de rejeu)."""
+    if not key or not timestamp or not signature:
+        return False
+    try:
+        ts = int(timestamp)
+    except ValueError:
+        return False
+    now_ms = now_ms if now_ms is not None else int(time.time() * 1000)
+    if abs(now_ms - ts) > 5 * 60_000:
+        return False
+    return hmac.compare_digest(sign_admin_request(key, ts, method, rel_path, body), signature)
+
+
+def canonical_body(raw: bytes) -> str:
+    """Le corps tel que la supervision l'a signé (JSON compact, comme JSON.stringify)."""
+    if not raw:
+        return "{}"
+    return json.dumps(json.loads(raw), separators=(",", ":"), ensure_ascii=False)
+
+
+def supervision_fastapi_router(actions: list[dict], summary=None, prefix: str = "/api/supervision"):
     """Routes /supervision/... pour FastAPI (protocole décrit dans docs/integration.md).
 
-    actions : [{"id": "purger-cache", "label": "Vider le cache", "danger": False,
+    actions : [{"id": "renvoyer-recap", "label": "Renvoyer le récap", "danger": False,
                 "description": "...", "params": [...], "run": fonction(params, by) -> dict|None}]
+              (une fonction `run` peut être async).
     summary : fonction sans argument -> [{"label": "Abonnés", "value": 42}]
+    Clé : SUPERVISION_ADMIN_TOKEN, sinon dérivée de SUPERVISION_INGEST_TOKEN.
     """
-    from fastapi import APIRouter, Header, HTTPException, Request
+    import inspect
 
-    router = APIRouter(prefix="/supervision")
-    token = os.getenv("SUPERVISION_ADMIN_TOKEN", "")
+    from fastapi import APIRouter, HTTPException
 
-    def check(authorization: str | None) -> None:
-        given = (authorization or "").removeprefix("Bearer ")
-        if not token or not hmac.compare_digest(given, token):
+    router = APIRouter(prefix=prefix)
+    key = os.getenv("SUPERVISION_ADMIN_TOKEN", "").strip() or derive_admin_key(os.getenv("SUPERVISION_INGEST_TOKEN", "").strip())
+
+    async def check(request: FastAPIRequest) -> bytes:
+        raw = await request.body()
+        rel_path = request.url.path[len(prefix):] if request.url.path.startswith(prefix) else request.url.path
+        body = "" if request.method.upper() == "GET" else canonical_body(raw)
+        if not verify_admin_request(key, request.headers.get("x-supervision-timestamp"),
+                                    request.headers.get("x-supervision-signature"), request.method, rel_path, body):
             raise HTTPException(status_code=401, detail="Non autorisé")
+        return raw
+
+    async def call(fn, *args):
+        result = fn(*args)
+        return await result if inspect.isawaitable(result) else result
 
     @router.get("/actions")
-    def list_actions(authorization: str | None = Header(default=None)):
-        check(authorization)
+    async def list_actions(request: FastAPIRequest):
+        await check(request)
         return {"actions": [{k: v for k, v in a.items() if k != "run"} for a in actions]}
 
     @router.get("/summary")
-    def get_summary(authorization: str | None = Header(default=None)):
-        check(authorization)
-        return {"metrics": summary() if summary else []}
+    async def get_summary(request: FastAPIRequest):
+        await check(request)
+        return {"metrics": (await call(summary)) if summary else []}
 
     @router.post("/actions/{action_id}")
-    async def run_action(action_id: str, request: Request, authorization: str | None = Header(default=None)):
-        check(authorization)
+    async def run_action(action_id: str, request: FastAPIRequest):
+        raw = await check(request)
         action = next((a for a in actions if a["id"] == action_id), None)
         if not action:
             raise HTTPException(status_code=404, detail="Action inconnue")
-        body = await request.json()
-        result = action["run"](body.get("params") or {}, body.get("by") or "supervision") or {}
+        body = json.loads(raw) if raw else {}
+        try:
+            result = (await call(action["run"], body.get("params") or {}, body.get("by") or "supervision")) or {}
+        except Exception as exc:  # refus métier : message lisible
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return {"ok": True, "message": result.get("message", "Action effectuée"), "data": result.get("data")}
 
     return router

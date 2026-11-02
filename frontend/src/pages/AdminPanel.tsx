@@ -31,7 +31,7 @@ interface RenderService {
 
 interface ActionsData {
   render: { configured: boolean; services: RenderService[]; error?: string | null };
-  app: { configured: boolean; actions: AppAction[]; error?: string };
+  app: { configured: boolean; actions: AppAction[]; error?: string; notReady?: boolean };
   metrics: { label: string; value: string | number; hint?: string }[];
   history: { id: string; at: string; by: string; action: string; ok: boolean; message: string | null }[];
 }
@@ -58,7 +58,7 @@ const DEPLOY_STATUS: Record<string, string> = {
 export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () => void }) {
   const { data, error, refresh } = usePolling(() => api<ActionsData>(`/apps/${app.key}/actions`), 30_000, [app.key]);
   const [busy, setBusy] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string; display?: string } | null>(null);
   const [forms, setForms] = useState<Record<string, Record<string, string | boolean>>>({});
   const [cutting, setCutting] = useState(false);
   const [confirmName, setConfirmName] = useState("");
@@ -91,8 +91,9 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
     setBusy(id);
     setFeedback(null);
     try {
-      const res = await api<{ message?: string }>(path, { method: "POST", body });
-      setFeedback({ ok: true, text: res.message ?? "Action effectuée" });
+      const res = await api<{ message?: string; data?: { display?: string } | null }>(path, { method: "POST", body });
+      // `display` : information à montrer une seule fois (ex. code temporaire), jamais tracée dans l'historique.
+      setFeedback({ ok: true, text: res.message ?? "Action effectuée", display: res.data?.display });
     } catch (err) {
       setFeedback({ ok: false, text: (err as Error).message });
     } finally {
@@ -106,7 +107,18 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
 
   return (
     <div className="stack">
-      {feedback && <p className={feedback.ok ? "success" : "error"}>{feedback.text}</p>}
+      {feedback && (
+        <div className={`card ${feedback.ok ? "" : "diag diag-ko"}`}>
+          <p className={feedback.ok ? "success" : "error"}>{feedback.text}</p>
+          {feedback.display && (
+            <p className="display-once">
+              <strong>{feedback.display}</strong>
+              <br />
+              <span className="muted small">Affiché une seule fois : note-le maintenant, il n'est enregistré nulle part.</span>
+            </p>
+          )}
+        </div>
+      )}
 
       {data.metrics.length > 0 && (
         <div className="metrics">
@@ -223,11 +235,11 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
         <h3>Actions de l'appli</h3>
         {!data.app.configured && (
           <p className="muted small">
-            Non branché : l'appli doit exposer les routes <code>/supervision/…</code> et la supervision connaître <code>{app.key.toUpperCase().replace(/-/g, "_")}_ADMIN_URL</code> et{" "}
-            <code>{app.key.toUpperCase().replace(/-/g, "_")}_ADMIN_TOKEN</code> (voir <code>docs/integration.md</code>).
+            Non branché : le jeton d'envoi des journaux de cette appli (<code>{app.key.toUpperCase().replace(/-/g, "_")}_INGEST_TOKEN</code>) n'est pas défini sur la supervision.
           </p>
         )}
         {data.app.error && <p className="error small">{data.app.error}</p>}
+        {data.app.notReady && <p className="muted small">Pas encore branchées : la version de l'appli qui expose ses actions n'est pas encore en ligne.</p>}
         {data.app.actions.map((a) => (
           <div key={a.id} className="action">
             <div className="row">

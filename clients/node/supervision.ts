@@ -10,12 +10,13 @@
  *   supervision.captureProcessErrors();
  *   supervision.mirrorConsole();                // console.log/warn/error partent aussi vers la supervision
  *   app.use(supervision.expressErrorLogger);    // juste avant le gestionnaire d'erreurs
- *   app.use("/supervision", supervisionAdminRouter(express.Router, { token: process.env.SUPERVISION_ADMIN_TOKEN, actions, summary }));
+ *   app.use("/api/supervision", supervisionAdminRouter(express.Router, { ingestToken: process.env.SUPERVISION_INGEST_TOKEN, actions, summary }));
  *
  * Sans SUPERVISION_URL ou sans jeton, tout devient silencieux : l'appli
  * fonctionne exactement comme avant.
  */
 
+import { createHmac, timingSafeEqual } from "crypto";
 import { format } from "util";
 
 type Level = "debug" | "info" | "warn" | "error" | "fatal";
@@ -216,6 +217,35 @@ export function sourceFromMessage(message: string): string | undefined {
 
 /* ---------- Actions super administrateur (protocole /supervision) ---------- */
 
+/** Clé d'administration dérivée du jeton d'envoi des journaux (même calcul que la supervision). */
+export function deriveAdminKey(ingestToken: string): string {
+  return ingestToken ? createHmac("sha256", ingestToken).update("supervision-admin").digest("hex") : "";
+}
+
+export function signAdminRequest(key: string, timestamp: number, method: string, relPath: string, body: string): string {
+  return createHmac("sha256", key).update(`${timestamp}.${method.toUpperCase()}.${relPath}.${body}`).digest("hex");
+}
+
+/**
+ * Vérifie un appel signé par la supervision (fonction pure, testée) :
+ * signature exacte et horodatage à moins de 5 minutes (pas de rejeu).
+ */
+export function verifyAdminRequest(
+  key: string,
+  headers: { timestamp?: string; signature?: string },
+  method: string,
+  relPath: string,
+  body: string,
+  now = Date.now()
+): boolean {
+  if (!key || !headers.timestamp || !headers.signature) return false;
+  const ts = Number(headers.timestamp);
+  if (!Number.isFinite(ts) || Math.abs(now - ts) > 5 * 60_000) return false;
+  const expected = Buffer.from(signAdminRequest(key, ts, method, relPath, body), "hex");
+  const given = Buffer.from(headers.signature, "hex");
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
 export interface SupervisionAction {
   id: string;
   label: string;
@@ -226,7 +256,10 @@ export interface SupervisionAction {
 }
 
 export interface SupervisionAdminOptions {
-  token?: string;
+  /** Jeton d'envoi des journaux (SUPERVISION_INGEST_TOKEN) : la clé d'administration en est dérivée. */
+  ingestToken?: string;
+  /** Clé imposée (SUPERVISION_ADMIN_TOKEN), prioritaire sur la clé dérivée. */
+  key?: string;
   actions: SupervisionAction[];
   /** Chiffres clés affichés dans la supervision (ex. nombre d'utilisateurs). */
   summary?: () => Promise<{ label: string; value: string | number; hint?: string }[]>;
@@ -234,6 +267,8 @@ export interface SupervisionAdminOptions {
 
 // Types minimaux d'Express, pour ne pas imposer la dépendance à ce fichier.
 interface Req {
+  method: string;
+  path: string;
   headers: Record<string, string | string[] | undefined>;
   params: Record<string, string>;
   body?: { params?: Record<string, unknown>; by?: string };
@@ -248,22 +283,23 @@ interface RouterLike {
   post(path: string, handler: Handler): unknown;
 }
 
+/**
+ * Routes `/supervision/...` à monter dans l'appli (après express.json()).
+ * Sans clé (ni SUPERVISION_INGEST_TOKEN ni SUPERVISION_ADMIN_TOKEN), tout appel est refusé.
+ */
 export function supervisionAdminRouter<R extends RouterLike>(RouterFactory: () => R, options: SupervisionAdminOptions): R {
   const router = RouterFactory();
-  const token = options.token ?? "";
+  const key = options.key || deriveAdminKey(options.ingestToken ?? "");
 
-  function authorized(req: Req): boolean {
-    const header = String(req.headers.authorization ?? "");
-    const given = header.startsWith("Bearer ") ? header.slice(7) : "";
-    if (!token || given.length !== token.length) return false;
-    // Comparaison à durée constante.
-    let diff = 0;
-    for (let i = 0; i < token.length; i++) diff |= token.charCodeAt(i) ^ given.charCodeAt(i);
-    return diff === 0;
-  }
+  const header = (req: Req, name: string) => {
+    const v = req.headers[name];
+    return Array.isArray(v) ? v[0] : v;
+  };
 
   const guard = (handler: (req: Req, res: Res) => Promise<void>): Handler => (req, res) => {
-    if (!authorized(req)) return res.status(401).json({ error: "Non autorisé" });
+    const body = req.method.toUpperCase() === "GET" ? "" : JSON.stringify(req.body ?? {});
+    const ok = verifyAdminRequest(key, { timestamp: header(req, "x-supervision-timestamp"), signature: header(req, "x-supervision-signature") }, req.method, req.path, body);
+    if (!ok) return res.status(401).json({ error: "Non autorisé" });
     handler(req, res).catch((err: Error) => res.status(500).json({ ok: false, error: err.message }));
   };
 
@@ -286,8 +322,13 @@ export function supervisionAdminRouter<R extends RouterLike>(RouterFactory: () =
     guard(async (req, res) => {
       const action = options.actions.find((a) => a.id === req.params.id);
       if (!action) return res.status(404).json({ ok: false, error: "Action inconnue" });
-      const result = (await action.run(req.body?.params ?? {}, req.body?.by ?? "supervision")) ?? {};
-      res.json({ ok: true, message: result.message ?? "Action effectuée", data: result.data ?? null });
+      try {
+        const result = (await action.run(req.body?.params ?? {}, req.body?.by ?? "supervision")) ?? {};
+        res.json({ ok: true, message: result.message ?? "Action effectuée", data: result.data ?? null });
+      } catch (err) {
+        // Refus métier (paramètre manquant, utilisateur introuvable…) : message lisible, pas d'erreur 500.
+        res.status(422).json({ ok: false, error: (err as Error).message });
+      }
     })
   );
 

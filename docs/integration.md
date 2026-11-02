@@ -56,7 +56,9 @@ cron.schedule("0 20 * * *", () => run().catch(console.error), { timezone: "UTC" 
 
 ## 3. Actions super administrateur
 
-L'appli expose trois routes protégées par `SUPERVISION_ADMIN_TOKEN` (en-tête `Authorization: Bearer …`) :
+L'appli expose trois routes sous `/api/supervision`, **signées** par la Supervision : en-têtes `X-Supervision-Timestamp` (millisecondes) et `X-Supervision-Signature` = HMAC-SHA256(clé, `horodatage.MÉTHODE.chemin.corps`), chemin relatif à `/supervision` (ex. `/actions/deconnecter`), corps JSON compact (vide pour un GET). Refus si la signature est fausse ou l'horodatage à plus de 5 minutes.
+
+**Clé** : `SUPERVISION_ADMIN_TOKEN` côté appli et `<PREFIXE>_ADMIN_TOKEN` côté supervision si l'on veut l'imposer ; sinon (cas normal) elle est **dérivée du jeton d'envoi des journaux** déjà partagé (HMAC-SHA256(jeton, "supervision-admin")) : rien à saisir.
 
 | Route | Réponse |
 |---|---|
@@ -64,9 +66,9 @@ L'appli expose trois routes protégées par `SUPERVISION_ADMIN_TOKEN` (en-tête 
 | `GET /supervision/summary` | `{ metrics: [{ label, value, hint? }] }` |
 | `POST /supervision/actions/:id` corps `{ params, by }` | `{ ok, message?, data? }` |
 
-Aides prêtes à l'emploi : `supervisionAdminRouter(express.Router, { token, actions, summary })` (Node) et `supervision_fastapi_router(actions, summary)` (Python).
+Aides prêtes à l'emploi : `supervisionAdminRouter(express.Router, { ingestToken, actions, summary })` à monter sur `/api/supervision` (Node, après `express.json()`) et `supervision_fastapi_router(actions, summary)` (Python/FastAPI). Une action qui lève une erreur renvoie 422 avec son message (refus lisible). Une valeur à montrer une seule fois (code, mot de passe temporaire) va dans `data.display` : jamais dans `message`, qui est tracé.
 
-Côté supervision : `<PREFIXE>_ADMIN_URL` (adresse de base de l'appli, sans `/supervision`) et `<PREFIXE>_ADMIN_TOKEN` (même valeur que `SUPERVISION_ADMIN_TOKEN` dans l'appli).
+Côté supervision : adresse d'administration connue par défaut pour MGA, Yiri et Procedia (`<PREFIXE>_ADMIN_URL` pour la remplacer).
 
 Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètres, résultat). Une action marquée `danger` affiche un avertissement.
 

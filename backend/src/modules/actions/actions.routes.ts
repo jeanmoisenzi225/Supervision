@@ -6,6 +6,7 @@ import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { pauseApp, resumeApp } from "../pause/pause.service";
+import { signAdminRequest } from "../../utils/adminSignature";
 import { deployService, describeService, resolveServiceIds, restartService, resumeService, suspendService } from "./render";
 
 export const actionsRouter = asyncRouter();
@@ -20,10 +21,22 @@ function getApp(key: string): AppTarget {
 /** Appel du protocole d'administration exposé par une appli (voir docs/integration.md). */
 async function callApp<T>(app: AppTarget, path: string, init: RequestInit = {}): Promise<T> {
   if (!app.adminUrl || !app.adminToken) throw new HttpError(400, "Actions d'administration non configurées pour cette appli");
+  const method = (init.method ?? "GET").toUpperCase();
+  const payload = typeof init.body === "string" ? init.body : "";
+  const timestamp = Date.now();
+  const relPath = path.replace(/^\/supervision/, "");
   const res = await fetch(`${app.adminUrl}${path}`, {
     ...init,
-    signal: AbortSignal.timeout(30_000),
-    headers: { Accept: "application/json", "Content-Type": "application/json", Authorization: `Bearer ${app.adminToken}` },
+    method,
+    body: payload || undefined,
+    // Une appli au repos (offre gratuite) peut mettre une minute à se réveiller.
+    signal: AbortSignal.timeout(app.sleepsWhenIdle ? 90_000 : 30_000),
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Supervision-Timestamp": String(timestamp),
+      "X-Supervision-Signature": signAdminRequest(app.adminToken, timestamp, method, relPath, payload),
+    },
   });
   const text = await res.text();
   let body: unknown = null;
@@ -33,7 +46,11 @@ async function callApp<T>(app: AppTarget, path: string, init: RequestInit = {}):
     body = { message: text.slice(0, 300) };
   }
   if (!res.ok) {
-    const message = (body as { error?: string; message?: string } | null)?.error ?? (body as { message?: string } | null)?.message;
+    // `error` (applis Node) ou `detail` (FastAPI, Yiri).
+    const b = body as { error?: string; message?: string; detail?: unknown } | null;
+    const message = b?.error ?? (typeof b?.detail === "string" ? b.detail : undefined) ?? b?.message;
+    // Refus métier de l'appli (paramètre manquant, compte introuvable…) : message tel quel.
+    if (res.status === 422 && message) throw new HttpError(422, message);
     throw new HttpError(502, `L'appli a répondu ${res.status}${message ? ` : ${message}` : ""}`);
   }
   return body as T;
@@ -63,7 +80,14 @@ actionsRouter.get("/:key/actions", async (req, res) => {
   const [services, appActions, appSummary, history] = await Promise.all([
     Promise.all(serviceIds.map((id) => describeService(id).catch((err) => ({ id, error: (err as Error).message })))),
     app.adminUrl && app.adminToken
-      ? callApp<{ actions: unknown[] }>(app, "/supervision/actions").then((r) => ({ actions: r.actions ?? [] }), (err) => ({ actions: [], error: (err as Error).message }))
+      ? callApp<{ actions: unknown[] }>(app, "/supervision/actions").then(
+          (r) => ({ actions: r.actions ?? [] }),
+          (err) => {
+            const message = (err as Error).message;
+            // 404 : l'appli n'expose pas encore les actions (version pas encore en ligne).
+            return /répondu 404/.test(message) ? { actions: [], notReady: true } : { actions: [], error: message };
+          }
+        )
       : Promise.resolve(null),
     app.adminUrl && app.adminToken
       ? callApp<{ metrics: unknown[] }>(app, "/supervision/summary").then((r) => r.metrics ?? [], () => [])
