@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.11.1 — 2026-11-02
+
+- MGA présentée comme la plateforme multi-garages qu'elle est : « MGA » au lieu de « MGA · My Autonova » (My Autonova n'est que l'appli du premier garage client). Les nouvelles alertes s'intitulent « MGA — … ». Le site Autonova est « alimenté par MGA ».
+
 ## v0.11.0 — 2026-11-02
 
 Demandé le 2026-11-02 : « avoir dans l'interface les différents garages ayant acheté l'outil, et pour chaque garage ses spécificités ; on reste trop en surface, pour toutes les applis — sans les infos confidentielles de chaque client (CA…) ».

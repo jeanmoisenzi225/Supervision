@@ -4,8 +4,8 @@ Tableau de bord unique pour superviser tous nos projets :
 
 | Appli | Ce qui est surveillé |
 |---|---|
-| **MGA · My Autonova** | API et appli web |
-| **Site Autonova** | Site vitrine (alimenté par My Autonova) |
+| **MGA** (Mon Garage Auto, plateforme multi-garages) | API et appli web |
+| **Site Autonova** | Site vitrine (alimenté par MGA) |
 | **Yiri Invest** | Serveur de l'agent WhatsApp et appli web |
 | **My Family** | À brancher dès la mise en ligne |
 | **Procedia** | API (offre gratuite Render, vérifiée toutes les 30 min) et appli web |
@@ -29,4 +29,4 @@ Tableau de bord unique pour superviser tous nos projets :
 | `clients/` | Modules d'envoi à copier dans les applis supervisées |
 | `docs/` | Documentation (index `docs/README.md`) |
 
-Statut : **v0.11.0** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).
+Statut : **v0.11.1** — socle complet ; branchement des applis à faire (voir `BACKLOG.md`).

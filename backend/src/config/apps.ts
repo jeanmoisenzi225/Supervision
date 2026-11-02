@@ -55,8 +55,10 @@ export const APP_DEFINITIONS: AppDefinition[] = [
   {
     key: "mga",
     envPrefix: "MGA",
-    name: "MGA · My Autonova",
-    description: "Appli de gestion du garage et espace client My Autonova",
+    name: "MGA",
+    // Plateforme multi-garages : chaque garage client a son appli à son nom
+    // (« My Autonova » pour Autonova Group, premier client).
+    description: "Mon Garage Auto, plateforme de gestion pour les garages (chaque garage client a son appli à son nom)",
     intervalSec: 60,
     defaultAdminUrl: "https://garage-backend-r7i3.onrender.com/api",
     renderNames: [/^garage-/, /^mga-/],
@@ -70,7 +72,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     key: "site-autonova",
     envPrefix: "SITE_AUTONOVA",
     name: "Site Autonova",
-    description: "Site vitrine d'Autonova Group, alimenté par My Autonova",
+    description: "Site vitrine d'Autonova Group, alimenté par MGA",
     intervalSec: 300,
     renderNames: [/autonova/i],
     defaultChecks: [{ id: "site", label: "Site", url: "https://autonova-group.ci/", expect: "2xx" }],
