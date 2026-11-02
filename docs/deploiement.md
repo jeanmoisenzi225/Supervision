@@ -9,6 +9,8 @@
 
 Dépenses Claude (page « Claude ») : `ANTHROPIC_ADMIN_KEY` (clé Admin créée dans la Console Anthropic, Settings › Admin keys ; elle commence par `sk-ant-admin`) et, facultatif, `CLAUDE_MONTHLY_BUDGET_USD` (budget mensuel en dollars).
 
+Rubriques « Backlog » : `GITHUB_TOKEN`, jeton GitHub à granularité fine (Settings › Developer settings › Fine-grained tokens) limité aux dépôts Mon-Garage-Auto, Procedia, JmDev, My-Family et Supervision, permission **Contents : Read-only** seulement.
+
 À ajouter plus tard, au fil des besoins (Environment du service `supervision`) : `RENDER_API_KEY` (boutons Redémarrer / Redéployer ; services reconnus automatiquement), `<APPLI>_ADMIN_URL` / `<APPLI>_ADMIN_TOKEN` (voir [integration.md](integration.md)).
 
 **Téléphone perdu (codes à 6 chiffres inaccessibles)** : ajouter `ADMIN_RESET_2FA` = `true` sur le service `supervision` et enregistrer ; au redémarrage, la double authentification est coupée. Se connecter, **retirer aussitôt la variable**, puis réactiver la double authentification dans Réglages.

@@ -8,6 +8,7 @@ import { HttpError } from "../../utils/httpError";
 import { getPause, pauseApp, resumeApp } from "../pause/pause.service";
 import { getCosts } from "../costs/costs.service";
 import { listJobs } from "../jobs/jobs.service";
+import { BACKLOG_SOURCES, backlogItem, backlogOf, backlogOverview, recentEvents, syncSource } from "../backlog/backlog.service";
 import { getAppResources } from "../resources/resources.service";
 import { RANGES, type RangeKey } from "../resources/units";
 import { runDiagnostic } from "./diagnostic";
@@ -121,6 +122,33 @@ monitorRouter.get("/apps/:key/resources", async (req, res) => {
 
 monitorRouter.get("/apps/:key/jobs", async (req, res) => {
   res.json(await listJobs(getApp(req.params.key).key));
+});
+
+monitorRouter.get("/backlog", async (_req, res) => {
+  res.json({ sources: await backlogOverview(), events: await recentEvents(20), githubConfigured: Boolean(env.githubToken) });
+});
+
+monitorRouter.get("/backlog/:source", async (req, res) => {
+  if (!BACKLOG_SOURCES.some((s) => s.key === req.params.source)) throw new HttpError(404, "Backlog inconnu");
+  res.json(await backlogOf(req.params.source));
+});
+
+monitorRouter.get("/backlog/:source/:key", async (req, res) => {
+  const item = await backlogItem(req.params.source, req.params.key);
+  if (!item) throw new HttpError(404, "Chantier introuvable");
+  res.json(item);
+});
+
+/** Synchronisation immédiate d'un backlog (bouton « Actualiser »). */
+monitorRouter.post("/backlog/:source/sync", async (req, res) => {
+  const src = BACKLOG_SOURCES.find((s) => s.key === req.params.source);
+  if (!src) throw new HttpError(404, "Backlog inconnu");
+  try {
+    const { changes } = await syncSource(src);
+    res.json({ ok: true, changes });
+  } catch (err) {
+    throw new HttpError(502, (err as Error).message);
+  }
 });
 
 monitorRouter.get("/claude/costs", async (_req, res) => {

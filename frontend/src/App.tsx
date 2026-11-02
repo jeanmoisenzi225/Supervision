@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout";
 import { getToken, setToken } from "./lib/api";
 import { AlertsPage } from "./pages/AlertsPage";
 import { AppDetail } from "./pages/AppDetail";
+import { BacklogPage } from "./pages/BacklogPage";
 import { ClaudePage } from "./pages/ClaudePage";
 import { Dashboard } from "./pages/Dashboard";
 import { Login } from "./pages/Login";
@@ -39,6 +40,7 @@ export function App() {
           <Route path="alertes" element={<AlertsPage />} />
           <Route path="journaux" element={<LogsPage />} />
           <Route path="claude" element={<ClaudePage />} />
+          <Route path="backlog" element={<BacklogPage />} />
           <Route path="reglages" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

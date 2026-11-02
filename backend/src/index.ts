@@ -6,6 +6,7 @@ import { startMonitor } from "./modules/monitor/monitor";
 import { startResourceWatcher } from "./modules/resources/resources.service";
 import { startCostWatcher } from "./modules/costs/costs.service";
 import { startJobWatcher } from "./modules/jobs/jobs.service";
+import { startBacklogSync } from "./modules/backlog/backlog.service";
 import { initPush } from "./modules/push/push.service";
 
 async function main() {
@@ -17,6 +18,7 @@ async function main() {
   startResourceWatcher();
   startCostWatcher();
   startJobWatcher();
+  startBacklogSync();
 }
 
 main().catch((err) => {

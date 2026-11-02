@@ -52,6 +52,14 @@ Demandé le 2026-11-01 : « des graphiques permettant un meilleur monitoring : u
 
 - [x] Offre Hobby de Render (2026-11-01) : taille des bases et des tables, historique relevé par la Supervision, temps de réponse des vérifications (v0.8.0). Passer l'espace de travail Render en offre supérieure rendrait aussi disponibles le temps de réponse Render, l'historique du disque et les connexions des bases.
 
+## 4 quater. Backlog de chaque appli ✅ (v0.12.0)
+
+Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par application qui reprennent tout le backlog ; à chaque évol, la tâche change de statut dans le backlog ». Page « Backlog » : une rubrique par appli, lue dans son dépôt GitHub toutes les 15 minutes, statuts et historique des changements.
+
+- [x] Lecture des backlogs MGA, Procedia, Yiri (ROADMAP), My Family, Supervision.
+- [x] Historique des changements de statut.
+- [ ] Saisir `GITHUB_TOKEN` sur Render (propriétaire).
+
 ## 5. Idées pour la suite
 
 - Battements de cœur des tâches planifiées (« le récap de 17 h doit arriver chaque jour ouvré ») : alerte si absent.

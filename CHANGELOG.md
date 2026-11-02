@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.12.0 — 2026-11-02
+
+Demandé le 2026-11-02 : « des rubriques par application qui reprennent tout le backlog ; à chaque évolution, la tâche change de statut ».
+
+- **Page « Backlog »** : une rubrique par appli (MGA, Procedia, Yiri Invest, My Family, Supervision) qui reprend tout son backlog, lu directement dans son dépôt GitHub (`BACKLOG.md`, ou `ROADMAP.md` pour Yiri).
+- Chaque chantier avec son **statut** (terminé, en cours, en attente, à faire, abandonné, information), ses versions, l'avancement de ses cases à cocher et son texte complet. Filtres (« À traiter », par statut, tout) et recherche.
+- **Suivi automatique** : relecture toutes les 15 minutes (et bouton « Actualiser ») ; à chaque évolution livrée, le statut mis à jour dans le backlog de l'appli change dans la Supervision et le changement est historisé (« Derniers changements », historique par chantier).
+- Statut déduit des marqueurs du backlog : ✅ / « fait » → terminé, 🚧 / « en cours » → en cours, ⏸ / « en attente » → en attente, ❌ / « abandonné » → abandonné, ℹ️ → information, sinon d'après les cases cochées.
+- À saisir sur Render : `GITHUB_TOKEN` (jeton GitHub en lecture seule sur les dépôts).
+
 ## v0.11.1 — 2026-11-02
 
 - MGA présentée comme la plateforme multi-garages qu'elle est : « MGA » au lieu de « MGA · My Autonova » (My Autonova n'est que l'appli du premier garage client). Les nouvelles alertes s'intitulent « MGA — … ». Le site Autonova est « alimenté par MGA ».

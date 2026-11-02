@@ -32,6 +32,8 @@ L'API tourne en continu : elle interroge les applis selon leur intervalle (boucl
 | `AppPause` | Supervision coupée sur une appli : échéance (`until`, nulle = jusqu'à réactivation), motif, auteur. Retirée automatiquement à l'échéance |
 | `ResourceSample` | Relevés faits par la Supervision quand Render ne fournit pas l'historique (offre Hobby) : taille des bases (`dbsize:<id>`), une fois par heure, conservés 90 jours |
 | `Job` / `JobRun` | Tâches planifiées déclarées par les applis (clé, libellé, horaire cron UTC, marge) et leurs exécutions (statut, message, durée), conservées comme les journaux |
+| `BacklogItem` | Chantier du backlog d'une appli (source, clé, numéro, titre, statut, versions, groupe, priorité, cases à cocher, texte), date du dernier changement de statut, `removedAt` s'il a disparu du fichier |
+| `BacklogEvent` | Changement de statut d'un chantier (ancien, nouveau, date) ; ancien vide = nouveau chantier |
 | `Setting` | Réglages générés par le serveur : clés des notifications (`vapid`), créées au premier démarrage si `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` ne sont pas définies |
 
 ## Règles d'alerte
@@ -80,8 +82,14 @@ Réservées au super administrateur (jeton de session) :
 | `POST /api/apps/:key/render/restart-all` | « Tout relancer » : redémarre tous les services web Render de l'appli (sites statiques ignorés) |
 | `POST /api/apps/:key/render/:serviceId/restart` · `/deploy` | Actions Render (service rattaché à l'appli uniquement : reconnu automatiquement ou imposé par `<PREFIXE>_RENDER_SERVICES`) |
 | `POST /api/apps/:key/actions/:actionId` | Action propre à l'appli (relayée vers son protocole `/supervision`) |
+| `GET /api/backlog` | Rubriques backlog : par appli, nombre de chantiers par statut, dernière lecture, erreur éventuelle ; 30 derniers changements ; `githubConfigured` |
+| `GET /api/backlog/:source` · `/:source/:key` · `POST /api/backlog/:source/sync` | Chantiers d'une appli (sans le texte) et ses changements, fiche d'un chantier (texte et historique), relecture immédiate |
 | `GET /api/push/public-key`, `POST /api/push/subscribe` · `/unsubscribe` · `/test` | Notifications |
 
 ## Configuration des applis
 
 Catalogue dans `backend/src/config/apps.ts` (adresses de production par défaut), variables par appli décrites dans [integration.md](integration.md).
+
+## Backlog des applis
+
+`backend/src/modules/backlog/` : lecture des fichiers de backlog sur GitHub (API `contents`, jeton `GITHUB_TOKEN` en lecture seule), 30 s après le démarrage puis toutes les 15 minutes. `parse.ts` découpe le fichier en chantiers (`## N. Titre`, ou `### ÉPOPÉE` / `**CODE — Titre**` pour My Family) et déduit le statut des marqueurs (✅ terminé, 🚧 en cours, ⏸ en attente, ❌ abandonné, ℹ️ information, puis cases à cocher). Chaque changement de statut est enregistré dans `BacklogEvent`. Sources : `backend/src/modules/backlog/backlog.service.ts` (`BACKLOG_SOURCES`).

@@ -154,3 +154,38 @@ model JobRun {
 
   @@index([jobId, at])
 }
+
+/// Chantier d'un backlog (lu sur GitHub dans le dépôt de l'appli).
+model BacklogItem {
+  id              String    @id @default(cuid())
+  source          String // mga, procedia, yiri, my-family, supervision
+  key             String
+  number          String?
+  title           String
+  status          String // done | in_progress | waiting | todo | dropped | info
+  versions        String[]
+  grp             String?
+  priority        String?
+  subtasks        Json
+  body            String
+  position        Int
+  firstSeenAt     DateTime  @default(now())
+  statusChangedAt DateTime  @default(now())
+  /// Rubrique disparue du backlog (renumérotée ou supprimée).
+  removedAt       DateTime?
+
+  @@unique([source, key])
+}
+
+/// Changement de statut d'un chantier, constaté à la synchronisation.
+model BacklogEvent {
+  id     BigInt   @id @default(autoincrement())
+  source String
+  key    String
+  title  String
+  from   String?
+  to     String
+  at     DateTime @default(now())
+
+  @@index([source, at])
+}

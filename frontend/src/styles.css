@@ -200,6 +200,11 @@ button.tenant:hover { border-color: var(--muted); }
 .tenant-table td:first-child { width: 45%; }
 .tenant-table td.val { text-align: right; overflow-wrap: anywhere; }
 .tenant-fields { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; }
+.status-pill { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+.md-lite p { margin: 2px 0; font-size: 14px; overflow-wrap: anywhere; }
+.md-lite h4 { margin: 10px 0 4px; font-size: 14px; }
+.md-lite .md-li { padding-left: 8px; }
+.md-lite .md-gap { height: 6px; }
 .metric-alert { border-color: var(--status-warning); }
 
 .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }

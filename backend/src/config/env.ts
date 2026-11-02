@@ -36,6 +36,9 @@ export const env = {
   vapidPrivateKey: optional("VAPID_PRIVATE_KEY"),
   vapidSubject: optional("VAPID_SUBJECT"),
   renderApiKey: optional("RENDER_API_KEY"),
+  // Lecture des backlogs dans les dépôts GitHub (privés) : jeton en lecture
+  // seule sur le contenu des dépôts. Sans lui, seuls les dépôts publics sont lus.
+  githubToken: optional("GITHUB_TOKEN"),
   // Dépenses Claude (rapport de coûts de l'API Admin Anthropic) : clé Admin
   // (sk-ant-admin…), distincte des clés ordinaires des applis. Facultative.
   anthropicAdminKey: optional("ANTHROPIC_ADMIN_KEY"),
