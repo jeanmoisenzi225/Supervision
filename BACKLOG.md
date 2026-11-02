@@ -32,6 +32,8 @@ Protocole `/supervision` décrit dans `docs/integration.md`. Liste à valider av
 
 Fait (v0.10.0, 2026-11-02, « toute tâche d'admin pour l'ensemble des applis du parc applicatif ») : MGA v0.89.0 (8 actions), Procedia v0.16.0 (3 actions), Yiri 0.48.0 (7 actions), protocole signé sans variable à saisir. Site Autonova : reconstruction depuis MGA et boutons Render. My Family : à brancher dès sa mise en ligne.
 
+Fait (v0.11.0, 2026-11-02, « avoir les garages et leurs spécificités, trop en surface pour toutes les applis ») : onglet Clients — garages de MGA v0.90.0, comptes et vue d'ensemble de Procedia v0.17.0, abonnés de Yiri 0.49.0 ; sans données confidentielles.
+
 ## 4. Sécurité de l'accès
 
 - [x] Double authentification (code TOTP) pour le super administrateur (v0.3.0, 2026-10-31).

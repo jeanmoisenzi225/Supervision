@@ -72,6 +72,15 @@ Côté supervision : adresse d'administration connue par défaut pour MGA, Yiri 
 
 Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètres, résultat). Une action marquée `danger` affiche un avertissement.
 
+## 3 bis. Clients de l'appli
+
+Option `tenants` de `supervisionAdminRouter` (Node) ou de `supervision_fastapi_router` (Python) : `{ label, list, detail }`.
+
+- `GET /supervision/tenants` → `{ label: "Garages", items: [{ id, name, subtitle?, badges?, fields?: [{ label, value }] }] }`
+- `GET /supervision/tenants/:id` → `{ name, subtitle?, sections: [{ title, items: [{ label, value }] }] }` (404 si inconnu)
+
+**Règle** : caractéristiques, contacts professionnels, comptages et dates seulement. Jamais de montants (chiffre d'affaires, encaissements, factures), ni contenu de dossier, ni données des clients du client.
+
 ## 4. Render
 
 Seule saisie : `RENDER_API_KEY` sur le service `supervision` (Render › Account Settings › API Keys › Create API Key). Donne l'état du dernier déploiement et les boutons Redémarrer (services web) / Redéployer.

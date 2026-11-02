@@ -108,6 +108,25 @@ actionsRouter.get("/:key/actions", async (req, res) => {
  * en même temps, sans échéance, pour ne pas alerter sur une panne voulue.
  * Confirmation : le nom de l'appli doit être retapé (`confirm`).
  */
+/** Clients de l'appli (ex. garages de MGA) : liste, puis fiche détaillée. */
+actionsRouter.get("/:key/tenants", async (req, res) => {
+  const app = getApp(req.params.key);
+  if (!app.adminUrl || !app.adminToken) return res.json({ configured: false, label: null, items: [] });
+  try {
+    const r = await callApp<{ label: string | null; items: unknown[] }>(app, "/supervision/tenants");
+    res.json({ configured: true, label: r.label, items: r.items ?? [] });
+  } catch (err) {
+    const message = (err as Error).message;
+    res.json(/répondu 404/.test(message) ? { configured: true, notReady: true, label: null, items: [] } : { configured: true, label: null, items: [], error: message });
+  }
+});
+
+actionsRouter.get("/:key/tenants/:id", async (req, res) => {
+  const app = getApp(req.params.key);
+  if (!/^[\w.:@-]{1,100}$/.test(req.params.id)) throw new HttpError(400, "Identifiant invalide");
+  res.json(await callApp(app, `/supervision/tenants/${encodeURIComponent(req.params.id)}`));
+});
+
 actionsRouter.post("/:key/render/suspend-all", async (req, res) => {
   const app = getApp(req.params.key);
   const { confirm, reason } = z.object({ confirm: z.string(), reason: z.string().max(200).nullable().default(null) }).parse(req.body ?? {});

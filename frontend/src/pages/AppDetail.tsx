@@ -10,9 +10,10 @@ import { dateTime, pauseLabel, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 import { AdminPanel } from "./AdminPanel";
 import { JobsPanel } from "./JobsPanel";
+import { TenantsPanel } from "./TenantsPanel";
 import { ResourcesPanel } from "./ResourcesPanel";
 
-type Tab = "dispo" | "ressources" | "taches" | "journaux" | "alertes" | "admin";
+type Tab = "dispo" | "clients" | "ressources" | "taches" | "journaux" | "alertes" | "admin";
 
 interface ChecksData {
   hourly: { checkId: string; hour: string; total: number; ok: number; avgLatencyMs: number }[];
@@ -62,6 +63,9 @@ export function AppDetail() {
       <div className="tabs">
         <button className={tab === "dispo" ? "active" : ""} onClick={() => setTab("dispo")}>
           Disponibilité
+        </button>
+        <button className={tab === "clients" ? "active" : ""} onClick={() => setTab("clients")}>
+          Clients
         </button>
         <button className={tab === "ressources" ? "active" : ""} onClick={() => setTab("ressources")}>
           Ressources
@@ -163,6 +167,8 @@ export function AppDetail() {
             </p>
           </div>
         ))}
+
+      {tab === "clients" && <TenantsPanel app={app} />}
 
       {tab === "ressources" && <ResourcesPanel app={app} />}
 

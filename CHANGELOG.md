@@ -1,5 +1,16 @@
 # Journal des versions
 
+## v0.11.0 — 2026-11-02
+
+Demandé le 2026-11-02 : « avoir dans l'interface les différents garages ayant acheté l'outil, et pour chaque garage ses spécificités ; on reste trop en surface, pour toutes les applis — sans les infos confidentielles de chaque client (CA…) ».
+
+- **Onglet « Clients »** dans la fiche de chaque appli : la liste de ses clients (recherche au-delà de 6), puis la fiche détaillée de chacun, en sections.
+  - MGA : les **garages** (fiche, administrateurs et contacts, équipe par métier, clients et véhicules, activité en nombres, avis, site internet, écrans TV, paiement mobile configuré).
+  - Procedia : **vue d'ensemble du cabinet** et **comptes** (rôle, périmètre, activité) ; clients du cabinet comptés par secteur, jamais nommés.
+  - Yiri : **vue d'ensemble des abonnés** (par registre, mode, canal), **demandes en attente** et **abonnés** (statut, préférences, accès).
+- Jamais de montant (chiffre d'affaires, encaissements, factures) ni de contenu de dossier : seulement des caractéristiques, des comptages et des dates.
+- Protocole : `GET /supervision/tenants` et `/supervision/tenants/:id` (signés), option `tenants` des modules Node et Python.
+
 ## v0.10.0 — 2026-11-02
 
 - **Actions d'administration pour tout le parc** (onglet Administration de chaque appli) : MGA (notification de test, déconnexion d'un compte, code de réinitialisation, reconstruction du site, rappels de RDV, RDV manqués, actualités), Procedia (désactiver, réactiver, mot de passe temporaire), Yiri (statut, approuver, refuser, renvoyer quiz ou digest, maintenance). Chiffres clés de chaque appli.

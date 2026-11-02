@@ -255,6 +255,25 @@ export interface SupervisionAction {
   run: (params: Record<string, unknown>, by: string) => Promise<{ message?: string; data?: unknown } | void>;
 }
 
+/** Un client de l'appli (garage, compte, abonné…) dans la liste de la supervision. */
+export interface TenantSummary {
+  id: string;
+  name: string;
+  /** Ligne secondaire (ville, rôle…). */
+  subtitle?: string;
+  /** Étiquettes courtes (« Site publié », « Désactivé »…). */
+  badges?: string[];
+  /** Quelques chiffres clés affichés dans la liste. */
+  fields?: { label: string; value: string | number }[];
+}
+
+/** Fiche détaillée d'un client, en sections. */
+export interface TenantDetail {
+  name: string;
+  subtitle?: string;
+  sections: { title: string; items: { label: string; value: string | number }[] }[];
+}
+
 export interface SupervisionAdminOptions {
   /** Jeton d'envoi des journaux (SUPERVISION_INGEST_TOKEN) : la clé d'administration en est dérivée. */
   ingestToken?: string;
@@ -263,6 +282,12 @@ export interface SupervisionAdminOptions {
   actions: SupervisionAction[];
   /** Chiffres clés affichés dans la supervision (ex. nombre d'utilisateurs). */
   summary?: () => Promise<{ label: string; value: string | number; hint?: string }[]>;
+  /**
+   * Clients de l'appli (ex. les garages de MGA) : liste et fiche détaillée.
+   * Caractéristiques et activité seulement, jamais de données confidentielles
+   * du client (chiffre d'affaires, montants, contenu de ses dossiers).
+   */
+  tenants?: { label: string; list: () => Promise<TenantSummary[]>; detail: (id: string) => Promise<TenantDetail | null> };
 }
 
 // Types minimaux d'Express, pour ne pas imposer la dépendance à ce fichier.
@@ -314,6 +339,23 @@ export function supervisionAdminRouter<R extends RouterLike>(RouterFactory: () =
     "/summary",
     guard(async (_req, res) => {
       res.json({ metrics: options.summary ? await options.summary() : [] });
+    })
+  );
+
+  router.get(
+    "/tenants",
+    guard(async (_req, res) => {
+      if (!options.tenants) return res.json({ label: null, items: [] });
+      res.json({ label: options.tenants.label, items: await options.tenants.list() });
+    })
+  );
+
+  router.get(
+    "/tenants/:id",
+    guard(async (req, res) => {
+      const detail = options.tenants ? await options.tenants.detail(req.params.id) : null;
+      if (!detail) return res.status(404).json({ error: "Introuvable" });
+      res.json(detail);
     })
   );
 

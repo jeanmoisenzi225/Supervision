@@ -203,13 +203,16 @@ def canonical_body(raw: bytes) -> str:
     return json.dumps(json.loads(raw), separators=(",", ":"), ensure_ascii=False)
 
 
-def supervision_fastapi_router(actions: list[dict], summary=None, prefix: str = "/api/supervision"):
+def supervision_fastapi_router(actions: list[dict], summary=None, prefix: str = "/api/supervision", tenants: dict | None = None):
     """Routes /supervision/... pour FastAPI (protocole décrit dans docs/integration.md).
 
     actions : [{"id": "renvoyer-recap", "label": "Renvoyer le récap", "danger": False,
                 "description": "...", "params": [...], "run": fonction(params, by) -> dict|None}]
               (une fonction `run` peut être async).
     summary : fonction sans argument -> [{"label": "Abonnés", "value": 42}]
+    tenants : {"label": "Abonnés", "list": fonction() -> [ {id, name, subtitle?, badges?, fields?} ],
+               "detail": fonction(id) -> {name, subtitle?, sections: [{title, items: [{label, value}]}]} | None}
+              (caractéristiques et activité seulement, jamais de données confidentielles)
     Clé : SUPERVISION_ADMIN_TOKEN, sinon dérivée de SUPERVISION_INGEST_TOKEN.
     """
     import inspect
@@ -241,6 +244,21 @@ def supervision_fastapi_router(actions: list[dict], summary=None, prefix: str = 
     async def get_summary(request: FastAPIRequest):
         await check(request)
         return {"metrics": (await call(summary)) if summary else []}
+
+    @router.get("/tenants")
+    async def list_tenants(request: FastAPIRequest):
+        await check(request)
+        if not tenants:
+            return {"label": None, "items": []}
+        return {"label": tenants["label"], "items": await call(tenants["list"])}
+
+    @router.get("/tenants/{tenant_id}")
+    async def tenant_detail(tenant_id: str, request: FastAPIRequest):
+        await check(request)
+        detail = (await call(tenants["detail"], tenant_id)) if tenants else None
+        if not detail:
+            raise HTTPException(status_code=404, detail="Introuvable")
+        return detail
 
     @router.post("/actions/{action_id}")
     async def run_action(action_id: str, request: FastAPIRequest):
