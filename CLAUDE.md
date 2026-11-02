@@ -22,6 +22,12 @@
 - Pas de workflow GitHub Actions automatique sans l'accord du propriétaire (quota de minutes).
 - En local, toujours passer `DATABASE_URL` explicitement vers une base locale : l'environnement peut contenir une adresse de base de production.
 
+## Statuts du backlog (règle du 2026-11-02)
+
+La Supervision NJMDev relit `BACKLOG.md` toutes les 15 minutes et affiche le statut de chaque chantier. **À chaque évolution ou correction, mettre à jour dans le même commit le statut du chantier concerné** dans le titre de sa section :
+- ✅ terminé (avec la version, ex. « ✅ (v0.12.0) ») ; 🚧 en cours ; ⏸ en attente ; ❌ abandonné ; ℹ️ information (contexte, pas une tâche) ;
+- sans marqueur, le statut se déduit des cases à cocher (`- [x]` / `- [ ]`) : toutes cochées = terminé, quelques-unes = en cours, aucune = à faire.
+
 ## Git (décision du propriétaire du 2026-10-31)
 
 - Branches de travail nommées **`njmdev/<sujet>`** (jamais `claude/…`).
