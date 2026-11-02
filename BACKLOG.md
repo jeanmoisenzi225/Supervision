@@ -58,7 +58,7 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 
 - [x] Lecture des backlogs MGA, Procedia, Yiri (ROADMAP), My Family, Supervision.
 - [x] Historique des changements de statut.
-- [ ] Saisir `GITHUB_TOKEN` sur Render (propriétaire).
+- [x] `GITHUB_TOKEN` saisi sur Render (2026-11-02).
 
 ## 5. Idées pour la suite
 
