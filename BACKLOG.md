@@ -20,7 +20,7 @@ Une section par appli, dans son propre dépôt, avec sa propre version :
 - [ ] **Yiri Invest** suite : alertes métier dédiées (récap ou BOC non parti à l'heure).
 - [x] **Procedia** : disponibilité surveillée (v0.1.4, 2026-10-31).
 - [x] **Procedia** v0.15.0 (2026-11-01) : module Node, `mirrorConsole` + `captureProcessErrors`, erreurs 500 et 5xx prévues avec modèle de route (jamais l'objet d'erreur : données de clients). À saisir sur `procedia-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
-- [ ] **My Family** : à intégrer dès le premier backend.
+- [ ] **My Family** : à intégrer dès le premier backend.\n- [x] **EDEN Supervision** (2026-11-08) : disponibilité API, gateway et interface web ; reconnaissance des services Render `eden-sup-*` ; collecte des journaux backend Python via le module commun. EDEN SUP conserve sa mission de supervision métier pour EDEN Telecom, NJMDev Supervision supervise l’application EDEN comme service du parc.
 - [ ] **Site Autonova** : surveillé par son adresse ; échec de construction à remonter par MGA (publication du site).
 
 ## 3. Actions super administrateur par appli
