@@ -93,3 +93,7 @@ Catalogue dans `backend/src/config/apps.ts` (adresses de production par défaut)
 ## Backlog des applis
 
 `backend/src/modules/backlog/` : lecture des fichiers de backlog sur GitHub (API `contents`, jeton `GITHUB_TOKEN` en lecture seule), 30 s après le démarrage puis toutes les 15 minutes. `parse.ts` découpe le fichier en chantiers (`## N. Titre`, ou `### ÉPOPÉE` / `**CODE — Titre**` pour My Family) et déduit le statut des marqueurs (✅ terminé, 🚧 en cours, ⏸ en attente, ❌ abandonné, ℹ️ information, puis cases à cocher). Chaque changement de statut est enregistré dans `BacklogEvent`. Sources : `backend/src/modules/backlog/backlog.service.ts` (`BACKLOG_SOURCES`).
+
+## Contrôles de disponibilité EDEN
+
+EDEN est évalué à partir de deux contrôles actifs : l'API (`/api/v1/health`) et l'application web (`eden-sup-app`). L'ancien service `eden-sup-gateway` est suspendu et ne doit plus être une sonde de disponibilité. Les services Render `eden-sup-*` restent reconnus dans l'onglet Administration pour l'inventaire et les opérations d'hébergement. Lorsqu'un contrôle est retiré du catalogue, son alerte de panne ouverte est automatiquement résolue au démarrage du moniteur ; les résultats historiques restent conservés.

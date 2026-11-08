@@ -108,7 +108,6 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     renderNames: [/^eden-sup-/i],
     defaultChecks: [
       { id: "api", label: "API backend", url: "https://eden-sup-backend.onrender.com/api/v1/health", expect: "health" },
-      { id: "gateway", label: "Gateway", url: "https://eden-sup-gateway.onrender.com/", expect: "2xx" },
       { id: "app", label: "Application web", url: "https://eden-sup-app.onrender.com/", expect: "2xx" },
     ],
   },

@@ -68,3 +68,9 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - Alerte e-mail ou WhatsApp en plus des notifications push.
 - Seuil de lenteur (temps de réponse anormal) et certificats HTTPS proches de l'expiration.
 - Page d'état publique facultative.
+
+## 6. Fiabilité de la disponibilité EDEN 🚧
+
+- [x] Retirer le contrôle Gateway suspendu de la disponibilité EDEN ; conserver l'API backend et l'application web.
+- [x] Fermer automatiquement les alertes de panne associées aux contrôles supprimés, en conservant les résultats historiques.
+- [ ] Exécuter les tests, déployer et confirmer le statut « Opérationnel » dans le tableau de bord.
