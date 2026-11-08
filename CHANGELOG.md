@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.12.1 — 2026-11-08
+
+- **EDEN Supervision** : retrait du contrôle de disponibilité de l'ancien Gateway (`eden-sup-gateway`), désormais suspendu. Seuls l'API backend et l'application web active déterminent l'état opérationnel d'EDEN.
+- Fermeture automatique des alertes de panne liées à des contrôles retirés du catalogue, sans effacer l'historique des vérifications.
+
+
 ## v0.12.0 — 2026-11-02
 
 Demandé le 2026-11-02 : « des rubriques par application qui reprennent tout le backlog ; à chaque évolution, la tâche change de statut ».
