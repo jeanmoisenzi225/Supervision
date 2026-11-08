@@ -48,3 +48,5 @@ projects:
                 generateValue: true
               - key: MY_FAMILY_INGEST_TOKEN
                 generateValue: true
+              - key: EDEN_SUP_INGEST_TOKEN
+                generateValue: true
