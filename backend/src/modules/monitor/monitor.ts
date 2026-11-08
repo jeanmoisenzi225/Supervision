@@ -56,8 +56,25 @@ async function tick(): Promise<void> {
   }
 }
 
+async function resolveRemovedCheckAlerts(): Promise<void> {
+  for (const app of apps) {
+    const configured = new Set(app.checks.map((check) => check.id));
+    const activeAlerts = await prisma.alert.findMany({
+      where: { appKey: app.key, kind: "down", status: { in: ["open", "acknowledged"] } },
+      select: { fingerprint: true },
+    });
+    for (const alert of activeAlerts) {
+      const match = /^down:(.+)$/.exec(alert.fingerprint);
+      if (match && !configured.has(match[1])) {
+        await resolveAlert(app.key, alert.fingerprint, `${app.name} — contrôle retiré de la supervision`);
+      }
+    }
+  }
+}
+
 export function startMonitor(): void {
   if (!env.monitorEnabled) return;
+  void resolveRemovedCheckAlerts().catch((err) => console.error("[monitor] nettoyage des contrôles retirés", err));
   setTimeout(() => void tick(), 5_000);
   setInterval(() => void tick(), 15_000);
 }
