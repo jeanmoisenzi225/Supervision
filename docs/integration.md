@@ -1,6 +1,6 @@
 # Brancher une appli
 
-Préfixes de variables : `MGA`, `SITE_AUTONOVA`, `YIRI`, `MY_FAMILY`, `PROCEDIA`.
+Préfixes de variables : `MGA`, `SITE_AUTONOVA`, `YIRI`, `MY_FAMILY`, `PROCEDIA`, `EDEN_SUP`.
 
 ## 1. Disponibilité (rien à toucher dans l'appli)
 
@@ -12,7 +12,7 @@ Adresses surveillées par défaut (`backend/src/config/apps.ts`) :
 | Site Autonova | page d'accueil | 5 min |
 | Yiri Invest | `/manifest.json`, `/app` | 1 min |
 | My Family | aucune (pas encore en ligne) | 5 min |
-| Procedia | API `/api/health` (réveillée par la vérification, ~1 min), appli web | 30 min |
+| Procedia | API `/api/health` (réveillée par la vérification, ~1 min), appli web | 30 min |\n| EDEN Supervision | API backend, gateway, application web | 1 min |
 
 Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules au format `id|libellé|adresse` (une adresse contenant `health` est lue comme une route de santé). `<PREFIXE>_INTERVAL_SEC` change l'intervalle.
 
@@ -93,10 +93,10 @@ Les services de chaque appli sont **reconnus automatiquement** dans la liste des
 | Site Autonova | contient `autonova` | adresse surveillée |
 | Yiri Invest | contient `brvm` ou `yiri` | adresse surveillée |
 | My Family | contient `family` | adresse surveillée |
-| Procedia | `procedia-…` | adresses surveillées |
+| Procedia | `procedia-…` | adresses surveillées |\n| EDEN Supervision | `eden-sup-…` | adresses surveillées |
 
 Le service `supervision` n'est rattaché à aucune appli. Pour imposer une liste précise : `<PREFIXE>_RENDER_SERVICES` (identifiants `srv-…` séparés par des virgules), prioritaire sur la reconnaissance automatique.
 
 « Coupure du service » suspend tous les services reconnus pour l'appli (onglet Administration) : vérifier la liste affichée avant de confirmer.
 
-La clé API Render donne accès à tout le compte Render : elle ne se saisit que dans l'onglet Environment du service `supervision`, jamais ailleurs.
+Pour EDEN Supervision : définir `SUPERVISION_URL=https://supervision-20zi.onrender.com` et `SUPERVISION_INGEST_TOKEN` sur le backend EDEN avec la valeur de `EDEN_SUP_INGEST_TOKEN` du service `supervision`. Les journaux applicatifs sont envoyés à la Supervision NJMDev ; la supervision EDEN reste indépendante et continue de superviser les équipements de ses clients.\n\nLa clé API Render donne accès à tout le compte Render : elle ne se saisit que dans l'onglet Environment du service `supervision`, jamais ailleurs.
