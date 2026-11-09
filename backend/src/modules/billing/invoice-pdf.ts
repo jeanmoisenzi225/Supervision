@@ -228,7 +228,7 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   for (const commands of pages) {
     const stream = commands.join("\n");
     const streamId = add(`<< /Length ${Buffer.byteLength(stream, "ascii")} >>\nstream\n${stream}\nendstream`);
-    const pageId = add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> ${logoImageId ? `/XObject << /NJMDevLogo ${logoImageId} 0 R >>` : ""} >> /Contents ${streamId} 0 R >>`);
+    const pageId = add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> ${logoImageId ? `/XObject << /NJMDevLogo ${logoImageId} 0 R >>` : ""} >> /Contents ${streamId} 0 R >>`);
     pageIds.push(pageId);
   }
   objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
