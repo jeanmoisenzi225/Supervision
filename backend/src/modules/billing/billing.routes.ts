@@ -16,8 +16,9 @@ const clientSchema = z.object({
   billingAddress: z.string().trim().max(500).optional(),
   postalCode: z.string().trim().max(20).optional(),
   city: z.string().trim().max(120).optional(),
-  country: z.string().trim().max(100).default("France"),
-  siren: z.string().trim().max(20).optional(),
+  country: z.string().trim().max(100).default("Côte d’Ivoire"),
+  rccm: z.string().trim().max(60).optional(),
+  ncc: z.string().trim().max(40).optional(),
   vatNumber: z.string().trim().max(30).optional(),
   notes: z.string().trim().max(2000).optional(),
 });
@@ -27,11 +28,12 @@ const lineSchema = z.object({
   quantity: z.coerce.number().positive().max(1000000),
   unitPrice: z.coerce.number().min(0).max(100000000),
   discountPercent: z.coerce.number().min(0).max(100).default(0),
-  vatRate: z.coerce.number().min(0).max(100).default(20),
+  vatRate: z.coerce.number().min(0).max(100).default(0),
 });
 
 const invoiceSchema = z.object({
   clientId: z.string().min(1),
+  currency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
   issueDate: z.string().optional().nullable(),
   serviceDate: z.string().optional().nullable(),
   dueDate: z.string().optional().nullable(),
@@ -45,6 +47,15 @@ const profileSchema = z.object({
   phone: z.string().max(60).optional(),
   website: z.string().url().or(z.literal("")).optional(),
   paymentDetails: z.string().max(1000).optional(),
+  country: z.string().max(100).default("Côte d’Ivoire"),
+  legalName: z.string().max(180).optional(),
+  legalForm: z.enum(["entreprise_individuelle"]).optional(),
+  businessAddress: z.string().max(500).optional(),
+  rccm: z.string().max(60).optional(),
+  ncc: z.string().max(40).optional(),
+  taxRegime: z.string().max(100).optional(),
+  vatRegime: z.string().max(100).optional(),
+  defaultCurrency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
 });
 
 function dateOrNull(value?: string | null) {
@@ -54,28 +65,29 @@ function dateOrNull(value?: string | null) {
   return date;
 }
 
-function calculate(lines: z.infer<typeof lineSchema>[]) {
+function calculate(lines: z.infer<typeof lineSchema>[], currency: "XOF" | "EUR" | "USD") {
+  const precision = currency === "XOF" ? 0 : 2;
   const calculated = lines.map((line, position) => {
     const quantity = new Prisma.Decimal(line.quantity);
     const unitPrice = new Prisma.Decimal(line.unitPrice);
     const discount = new Prisma.Decimal(1).minus(new Prisma.Decimal(line.discountPercent).div(100));
-    const subtotal = quantity.mul(unitPrice).mul(discount).toDecimalPlaces(2);
-    const vatAmount = subtotal.mul(new Prisma.Decimal(line.vatRate).div(100)).toDecimalPlaces(2);
+    const subtotal = quantity.mul(unitPrice).mul(discount).toDecimalPlaces(precision);
+    const vatAmount = subtotal.mul(new Prisma.Decimal(line.vatRate).div(100)).toDecimalPlaces(precision);
     return {
       position, description: line.description, quantity, unitPrice,
       discountPercent: new Prisma.Decimal(line.discountPercent),
       vatRate: new Prisma.Decimal(line.vatRate), subtotal, vatAmount,
-      total: subtotal.plus(vatAmount).toDecimalPlaces(2),
+      total: subtotal.plus(vatAmount).toDecimalPlaces(precision),
     };
   });
-  const subtotal = calculated.reduce((sum, line) => sum.plus(line.subtotal), new Prisma.Decimal(0)).toDecimalPlaces(2);
-  const vatTotal = calculated.reduce((sum, line) => sum.plus(line.vatAmount), new Prisma.Decimal(0)).toDecimalPlaces(2);
-  return { lines: calculated, subtotal, vatTotal, total: subtotal.plus(vatTotal).toDecimalPlaces(2) };
+  const subtotal = calculated.reduce((sum, line) => sum.plus(line.subtotal), new Prisma.Decimal(0)).toDecimalPlaces(precision);
+  const vatTotal = calculated.reduce((sum, line) => sum.plus(line.vatAmount), new Prisma.Decimal(0)).toDecimalPlaces(precision);
+  return { lines: calculated, subtotal, vatTotal, total: subtotal.plus(vatTotal).toDecimalPlaces(precision) };
 }
 
 billingRouter.get("/profile", async (_req, res) => {
   const row = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
-  res.json(row ? JSON.parse(row.value) : { brandName: "NJMDev", contactEmail: "", phone: "", website: "", paymentDetails: "", legalProfileComplete: false });
+  res.json(row ? JSON.parse(row.value) : { brandName: "NJMDev", contactEmail: "", phone: "", website: "", paymentDetails: "", country: "Côte d’Ivoire", defaultCurrency: "XOF", legalProfileComplete: false });
 });
 
 billingRouter.put("/profile", async (req, res) => {
@@ -131,12 +143,12 @@ billingRouter.post("/invoices", async (req, res) => {
   const input = invoiceSchema.parse(req.body);
   const client = await prisma.billingClient.findFirst({ where: { id: input.clientId, archivedAt: null } });
   if (!client) throw new HttpError(400, "Sélectionne un client actif");
-  const totals = calculate(input.lines);
+  const totals = calculate(input.lines, input.currency);
   const invoice = await prisma.billingInvoice.create({
     data: {
-      clientId: client.id, status: "draft",
+      clientId: client.id, currency: input.currency, status: "draft",
       issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
-      dueDate: dateOrNull(input.dueDate), notes: input.notes,
+      dueDate: dateOrNull(input.dueDate), currency: input.currency, notes: input.notes,
       subtotal: totals.subtotal, vatTotal: totals.vatTotal, total: totals.total,
       lines: { create: totals.lines },
     },
