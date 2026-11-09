@@ -29,7 +29,7 @@ const enc = (value: string) => {
   const bytes: number[] = [];
   for (const char of value) {
     const code = char.codePointAt(0) ?? 63;
-    if (code <= 255) bytes.push(code);
+    if (code === 0x00a0 || code === 0x202f) bytes.push(32);\n    else if (code <= 255) bytes.push(code);
     else {
       const mapped: Record<number, number> = { 0x20ac: 128, 0x201a: 130, 0x0192: 131, 0x201e: 132, 0x2026: 133, 0x2020: 134, 0x2021: 135, 0x02c6: 136, 0x2030: 137, 0x0160: 138, 0x2039: 139, 0x0152: 140, 0x017d: 142, 0x2018: 145, 0x2019: 146, 0x201c: 147, 0x201d: 148, 0x2022: 149, 0x2013: 150, 0x2014: 151, 0x02dc: 152, 0x2122: 153, 0x0161: 154, 0x203a: 155, 0x0153: 156, 0x017e: 158, 0x0178: 159 };
       bytes.push(mapped[code] ?? 63);
