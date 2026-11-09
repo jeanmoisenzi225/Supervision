@@ -28,11 +28,12 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; onClose: () => void }) {
-  const precision = data.currency === "XOF" ? 0 : 2;
+  const factor = data.currency === "XOF" ? 1 : 100;
+  const round = (value: number) => Math.round(value * factor) / factor;
   const rows = data.lines.map((line) => {
-    const base = Number((line.quantity * line.unitPrice * (1 - line.discountPercent / 100)).toFixed(precision));
-    const vat = Number((base * line.vatRate / 100).toFixed(precision));
-    return { ...line, base, vat, total: Number((base + vat).toFixed(precision)) };
+    const base = round(line.quantity * line.unitPrice * (1 - line.discountPercent / 100));
+    const vat = round(base * line.vatRate / 100);
+    return { ...line, base, vat, total: round(base + vat) };
   });
   const subtotal = rows.reduce((sum, row) => sum + row.base, 0);
   const vatTotal = rows.reduce((sum, row) => sum + row.vat, 0);
