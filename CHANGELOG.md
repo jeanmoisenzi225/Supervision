@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.14.0 — 2026-11-09
+
+- Facturation adaptée au cadre NJMDev en Côte d’Ivoire : entreprise individuelle au nom propre, nom commercial distinct, RCCM/NCC.
+- XOF/FCFA comme devise par défaut ; devises XOF, EUR et USD prises en charge sur les brouillons.
+- Retrait des taux de TVA français préremplis : taux paramétrable, 0 % par défaut tant que le régime ivoirien n’est pas confirmé.
+- Préparation documentaire au dispositif DGI/FNE ; aucune émission officielle ni certification simulée.
+
+
 ## v0.13.0 — 2026-11-09
 
 - **Facturation NJMDev (première phase)** : nouvelle entrée Facturation dans la navigation, fiches clients (création, modification, archivage), brouillons de facture multi-lignes, remises et taux de TVA par ligne.
