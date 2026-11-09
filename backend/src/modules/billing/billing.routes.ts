@@ -3,7 +3,8 @@ import { z } from "zod";
 import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
-import { HttpError } from "../../utils/httpError";\nimport { generateDraftInvoicePdf } from "./invoice-pdf";
+import { HttpError } from "../../utils/httpError";
+import { generateDraftInvoicePdf } from "./invoice-pdf";
 
 export const billingRouter = asyncRouter();
 billingRouter.use(requireAdmin);
