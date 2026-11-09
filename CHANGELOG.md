@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.15.0 — 2026-11-09
+
+- Aperçu A4 des brouillons NJMDev avec identité commerciale et informations client, lignes, remises, TVA et totaux.
+- Export PDF de travail via la fonction d’impression du navigateur ; marquage permanent BROUILLON et rappel de l’absence de certification FNE.
+- La génération PDF serveur et le stockage durable restent différés aux documents officiellement émis.
+
 ## v0.14.1 — 2026-11-09
 
 - Correction de la conservation de la devise lors de la modification d’un brouillon et recalcul cohérent des montants selon XOF/EUR/USD.
