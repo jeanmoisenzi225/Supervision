@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NJMDEV_LOGO_BLACK } from "../assets/njmdevLogo";
 
 export type InvoicePreviewData = {
   reference: string;
@@ -47,7 +48,7 @@ export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; on
     <article className="invoice-print-root">
       <div className="invoice-print-sheet">
         <header className="invoice-preview-header">
-          <div><h1>{data.profile.brandName || "NJMDev"}</h1>
+          <div className="invoice-preview-brand"><img src={NJMDEV_LOGO_BLACK} alt="NJMDev" /><div className="invoice-preview-issuer"><h1>{data.profile.brandName || "NJMDev"}</h1>
             {data.profile.legalName && <p>{data.profile.legalName}</p>}
             {data.profile.businessAddress && <p>{data.profile.businessAddress}</p>}
             {data.profile.contactEmail && <p>{data.profile.contactEmail}</p>}
@@ -55,6 +56,7 @@ export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; on
             {data.profile.website && <p>{data.profile.website}</p>}
             {data.profile.rccm && <p>RCCM : {data.profile.rccm}</p>}
             {data.profile.ncc && <p>NCC : {data.profile.ncc}</p>}
+            </div>
           </div>
           <div className="invoice-preview-title"><span>BROUILLON</span><h2>FACTURE</h2><strong>{data.reference}</strong></div>
         </header>
