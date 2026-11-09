@@ -136,7 +136,14 @@ export function BillingPage() {
       <label>Téléphone<input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })}/></label>
       <label>Site internet<input value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })}/></label>
       <label>Informations de paiement<textarea rows={3} value={profile.paymentDetails} onChange={(e) => setProfile({ ...profile, paymentDetails: e.target.value })}/></label>
+      <h3>Identité légale (à compléter après immatriculation)</h3>
+      <label>Nom et prénoms de l’exploitant<input value={profile.legalName ?? ""} onChange={(e) => setProfile({ ...profile, legalName: e.target.value })}/></label>
+      <label>Adresse professionnelle en Côte d’Ivoire<input value={profile.businessAddress ?? ""} onChange={(e) => setProfile({ ...profile, businessAddress: e.target.value })}/></label>
+      <div className="row wrap"><label>RCCM<input value={profile.rccm ?? ""} onChange={(e) => setProfile({ ...profile, rccm: e.target.value })}/></label><label>NCC<input value={profile.ncc ?? ""} onChange={(e) => setProfile({ ...profile, ncc: e.target.value })}/></label></div>
+      <label>Régime fiscal (à confirmer)<input value={profile.taxRegime ?? ""} onChange={(e) => setProfile({ ...profile, taxRegime: e.target.value })}/></label>
+      <label>Régime de TVA (à confirmer)<input value={profile.vatRegime ?? ""} onChange={(e) => setProfile({ ...profile, vatRegime: e.target.value })}/></label>
+      <label>Devise par défaut<select value={profile.defaultCurrency ?? "XOF"} onChange={(e) => setProfile({ ...profile, defaultCurrency: e.target.value })}><option value="XOF">FCFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar US (USD)</option></select></label>
       <button className="primary" type="submit">Enregistrer</button>
-    </form><div className="banner banner-bad"><div><strong>Profil juridique à compléter ultérieurement</strong><span>Raison sociale, forme juridique, adresse officielle, RCCM, NCC et régime fiscal/TVA ivoiriens. L'émission restera désactivée.</span></div></div></section>}
+    </form><div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>Le profil légal et le régime fiscal ivoiriens doivent être vérifiés. L’émission FNE ne sera activée qu’après validation du parcours DGI applicable.</span></div></div></section>}
   </>;
 }
