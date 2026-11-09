@@ -38,12 +38,12 @@ const enc = (value: string) => {
   }
   return bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
 };
-const safe = (value: unknown) => String(value ?? "").replace(/[\\r\n\\t]+/g, " ").trim();
+const safe = (value: unknown) => String(value ?? "").replace(/[\r\n\t]+/g, " ").trim();
 const money = (value: Prisma.Decimal | number, currency: string) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: currency === "XOF" ? 0 : 2 }).format(Number(value));
 const date = (value: Date | null) => value ? new Intl.DateTimeFormat("fr-FR").format(value) : "—";
 const wrap = (value: string, max = 82) => {
-  const words = safe(value).split(/\\s+/);
+  const words = safe(value).split(/\s+/);
   const result: string[] = [];
   let current = "";
   for (const word of words) {
