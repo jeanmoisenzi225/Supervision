@@ -77,7 +77,8 @@ export async function apiBlob(path: string): Promise<Blob> {
   }
   return res.blob();
 }
-\nexport type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed" | "paused";
+
+export type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed" | "paused";
 
 export interface PauseInfo {
   until: string | null;
