@@ -8,22 +8,22 @@ La marque commerciale NJMDev peut être configurée dès maintenant. Elle est vo
 
 ## États et garde-fous
 
-- **Brouillon** : modifiable, sans numéro officiel ; aperçu A4 imprimable et export PDF depuis la boîte de dialogue du navigateur, clairement marqué « BROUILLON ». Le PDF exporté à ce stade est une copie de travail non archivée.
+- **Brouillon** : modifiable, sans numéro officiel ; aperçu A4 et génération PDF côté serveur à la demande. Le PDF est téléchargé directement par le navigateur, clairement marqué « BROUILLON », puis n’est pas conservé par le serveur.
 - **Émise** : uniquement lorsque le profil juridique est complet et validé ; numéro attribué à l'émission dans une transaction atomique.
 - **Payée / partiellement payée / en retard** : états calculés à partir des règlements et de l'échéance.
 - Une facture émise ne se modifie pas et son numéro n'est jamais réutilisé. Une correction ultérieure passe par le document rectificatif approprié.
 - Les données du vendeur et du client sont figées dans un instantané au moment de l'émission.
 - Les calculs définitifs sont effectués côté serveur avec des décimales exactes ; l'interface n'est qu'un aperçu.
-- Les PDF définitifs doivent être stockés dans un stockage durable. Le système de fichiers local du service Render n'est pas un stockage pérenne.
+- Aucun fichier PDF n’est actuellement archivé : ni stockage objet, ni système de fichiers Render. Un éventuel archivage des documents officiellement émis fera l’objet d’une décision et d’une évolution séparées.
 
 ## Parcours cible
 
 1. Configurer les éléments commerciaux NJMDev.
 2. Créer une fiche client.
 3. Saisir une facture avec dates, lignes, quantités, prix unitaires HT, remises et TVA.
-4. Enregistrer en brouillon, vérifier l'aperçu A4 et exporter une copie PDF de travail si nécessaire.
+4. Enregistrer en brouillon, vérifier l’aperçu A4 et télécharger le PDF de travail généré à la demande.
 5. Compléter le profil juridique et les mentions requises avant toute émission.
-6. Émettre, numéroter, figer les données et archiver le PDF.
+6. Émettre et numéroter après validation réglementaire ; l’archivage PDF n’est pas activé dans le périmètre actuel.
 7. Suivre les règlements et, ultérieurement, envoyer le document par e-mail.
 
 ## Architecture cible
