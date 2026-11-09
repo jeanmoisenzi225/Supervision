@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
-import { HttpError } from "../../utils/httpError";
+import { HttpError } from "../../utils/httpError";\nimport { generateDraftInvoicePdf } from "./invoice-pdf";
 
 export const billingRouter = asyncRouter();
 billingRouter.use(requireAdmin);
@@ -163,6 +163,24 @@ billingRouter.get("/invoices/:id", async (req, res) => {
   });
   if (!invoice) throw new HttpError(404, "Brouillon introuvable");
   res.json(invoice);
+});
+
+billingRouter.get("/invoices/:id/pdf", async (req, res) => {
+  const invoice = await prisma.billingInvoice.findUnique({
+    where: { id: req.params.id },
+    include: { client: true, lines: { orderBy: { position: "asc" } } },
+  });
+  if (!invoice) throw new HttpError(404, "Brouillon introuvable");
+  if (invoice.status !== "draft") throw new HttpError(409, "Le téléchargement PDF est réservé aux brouillons");
+  const setting = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
+  const profile = setting ? JSON.parse(setting.value) : {};
+  const pdf = generateDraftInvoicePdf(invoice, profile);
+  const filename = `NJMDev-brouillon-${invoice.id.slice(-8).toUpperCase()}.pdf`;
+  res.status(200)
+    .set("Content-Type", "application/pdf")
+    .set("Content-Disposition", `attachment; filename="${filename}"`)
+    .set("Cache-Control", "private, no-store")
+    .send(pdf);
 });
 
 billingRouter.put("/invoices/:id", async (req, res) => {
