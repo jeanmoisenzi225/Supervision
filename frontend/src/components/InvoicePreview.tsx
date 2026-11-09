@@ -42,7 +42,7 @@ export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; on
   return <div className="invoice-preview-overlay" role="dialog" aria-modal="true" aria-label="Aperçu A4 du brouillon">
     <div className="invoice-preview-toolbar no-print">
       <div><strong>Aperçu A4</strong><span>Document de travail — aucune émission officielle</span></div>
-      <div className="row wrap"><button onClick={() => window.print()} className="primary">Imprimer / Enregistrer en PDF</button><button onClick={onClose}>Fermer</button></div>
+      <div className="row wrap"><button onClick={() => window.print()} className="primary">Imprimer l’aperçu</button><button onClick={onClose}>Fermer</button></div>
     </div>
     <article className="invoice-print-root">
       <div className="invoice-print-sheet">
