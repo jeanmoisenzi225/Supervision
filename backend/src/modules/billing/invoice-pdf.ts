@@ -1,4 +1,6 @@
 import { Prisma } from "@prisma/client";
+import { deflateSync, inflateSync } from "node:zlib";
+import { NJMDEV_LOGO_PNG_BASE64 } from "./njmdev-logo";
 
 type PdfLine = {
   description: string;
@@ -21,6 +23,61 @@ type Profile = {
   brandName?: string; contactEmail?: string; phone?: string; website?: string; paymentDetails?: string;
   legalName?: string; businessAddress?: string; rccm?: string; ncc?: string;
 };
+
+type DecodedLogo = { width: number; height: number; rgb: Buffer; alpha: Buffer };
+function decodeNjmdevLogo(): DecodedLogo | null {
+  try {
+    const png = Buffer.from(NJMDEV_LOGO_PNG_BASE64, "base64");
+    if (png.toString("hex", 0, 8) !== "89504e470d0a1a0a") return null;
+    let width = 0, height = 0, bitDepth = 0, colorType = 0, interlace = 0;
+    const idat: Buffer[] = [];
+    for (let offset = 8; offset + 12 <= png.length;) {
+      const length = png.readUInt32BE(offset);
+      const type = png.toString("ascii", offset + 4, offset + 8);
+      const data = png.subarray(offset + 8, offset + 8 + length);
+      if (type === "IHDR") {
+        width = data.readUInt32BE(0); height = data.readUInt32BE(4);
+        bitDepth = data[8]; colorType = data[9]; interlace = data[12];
+      } else if (type === "IDAT") idat.push(data);
+      else if (type === "IEND") break;
+      offset += length + 12;
+    }
+    if (!width || !height || bitDepth !== 8 || colorType !== 6 || interlace !== 0 || !idat.length) return null;
+    const compressed = inflateSync(Buffer.concat(idat));
+    const stride = width * 4;
+    const rgba = Buffer.alloc(height * stride);
+    const paeth = (a: number, b: number, c: number) => {
+      const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+      return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+    };
+    for (let row = 0; row < height; row++) {
+      const input = row * (stride + 1), filter = compressed[input];
+      for (let col = 0; col < stride; col++) {
+        const raw = compressed[input + 1 + col];
+        const left = col >= 4 ? rgba[row * stride + col - 4] : 0;
+        const up = row > 0 ? rgba[(row - 1) * stride + col] : 0;
+        const upLeft = row > 0 && col >= 4 ? rgba[(row - 1) * stride + col - 4] : 0;
+        let value = raw;
+        if (filter === 1) value += left;
+        else if (filter === 2) value += up;
+        else if (filter === 3) value += Math.floor((left + up) / 2);
+        else if (filter === 4) value += paeth(left, up, upLeft);
+        else if (filter !== 0) return null;
+        rgba[row * stride + col] = value & 255;
+      }
+    }
+    const rgb = Buffer.alloc(width * height * 3), alpha = Buffer.alloc(width * height);
+    for (let pixel = 0; pixel < width * height; pixel++) {
+      rgb[pixel * 3] = rgba[pixel * 4];
+      rgb[pixel * 3 + 1] = rgba[pixel * 4 + 1];
+      rgb[pixel * 3 + 2] = rgba[pixel * 4 + 2];
+      alpha[pixel] = rgba[pixel * 4 + 3];
+    }
+    return { width, height, rgb: deflateSync(rgb), alpha: deflateSync(alpha) };
+  } catch {
+    return null;
+  }
+}
 
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
@@ -56,25 +113,32 @@ const wrap = (value: string, max = 82) => {
 };
 
 export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): Buffer {
+  const logo = decodeNjmdevLogo();
   const pages: string[][] = [[]];
   let y = 0;
   const page = () => pages[pages.length - 1];
   const text = (value: string, x: number, top: number, size = 9, bold = false) => {
     page().push(`BT /${bold ? "F2" : "F1"} ${size} Tf 1 0 0 1 ${x.toFixed(2)} ${(PAGE_H - top).toFixed(2)} Tm <${enc(value)}> Tj ET`);
   };
+  const drawLogo = (x: number, top: number, width: number) => {
+    if (!logo) return 0;
+    const height = width * logo.height / logo.width;
+    page().push(`q ${width.toFixed(2)} 0 0 ${height.toFixed(2)} ${x.toFixed(2)} ${(PAGE_H - top - height).toFixed(2)} cm /NJMDevLogo Do Q`);
+    return height;
+  };
   const line = (x1: number, top1: number, x2: number, top2: number) =>
     page().push(`0.78 G 0.6 w ${x1} ${(PAGE_H-top1).toFixed(2)} m ${x2} ${(PAGE_H-top2).toFixed(2)} l S 0 G`);
   const ensure = (height: number) => {
-    if (y + height > PAGE_H - 55) { pages.push([]); y = 48; text(profile.brandName || "NJMDev", MARGIN, 32, 10, true); text("BROUILLON — SUITE", PAGE_W - 150, 32, 9, true); }
+    if (y + height > PAGE_H - 55) { pages.push([]); y = 48; if (logo) drawLogo(MARGIN, 18, 72); else text(profile.brandName || "NJMDev", MARGIN, 32, 10, true); text("BROUILLON — SUITE", PAGE_W - 150, 32, 9, true); }
   };
   const paragraph = (value: string, x = MARGIN, max = 82, size = 9, leading = 13) => {
     for (const part of wrap(value, max)) { ensure(leading); text(part, x, y, size); y += leading; }
   };
 
   y = 48;
-  text(profile.brandName || "NJMDev", MARGIN, y, 22, true);
-  text("BROUILLON", PAGE_W - 130, y + 3, 12, true);
-  y += 20;
+  if (logo) y = 28 + drawLogo(MARGIN, 28, 112) + 8;
+  else { text(profile.brandName || "NJMDev", MARGIN, y, 22, true); y += 20; }
+  text("BROUILLON", PAGE_W - 130, 51, 12, true);
   if (profile.legalName) { paragraph(profile.legalName, MARGIN, 80); }
   if (profile.businessAddress) paragraph(profile.businessAddress, MARGIN, 80);
   if (profile.contactEmail) paragraph(profile.contactEmail, MARGIN, 80);
@@ -153,11 +217,18 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   const pagesId = add("");
   const fontRegularId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
   const fontBoldId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+  let logoImageId: number | null = null;
+  if (logo) {
+    const alphaStream = logo.alpha.toString("binary");
+    const alphaId = add(`<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode /Length ${logo.alpha.length} >>\\nstream\\n${alphaStream}\\nendstream`);
+    const rgbStream = logo.rgb.toString("binary");
+    logoImageId = add(`<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /SMask ${alphaId} 0 R /Length ${logo.rgb.length} >>\\nstream\\n${rgbStream}\\nendstream`);
+  }
   const pageIds: number[] = [];
   for (const commands of pages) {
     const stream = commands.join("\n");
     const streamId = add(`<< /Length ${Buffer.byteLength(stream, "ascii")} >>\nstream\n${stream}\nendstream`);
-    const pageId = add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${streamId} 0 R >>`);
+    const pageId = add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> ${logoImageId ? `/XObject << /NJMDevLogo ${logoImageId} 0 R >>` : ""} >> /Contents ${streamId} 0 R >>`);
     pageIds.push(pageId);
   }
   objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
