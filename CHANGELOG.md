@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.16.0 — 2026-11-09
+
+- Génération PDF côté serveur à la demande pour les brouillons enregistrés NJMDev.
+- Téléchargement direct depuis la liste des brouillons ; le PDF porte un marquage BROUILLON et ne reçoit aucun numéro officiel ni certification FNE.
+- Aucun fichier PDF n’est enregistré sur le serveur ou dans un stockage externe ; l’aperçu A4 reste disponible séparément.
+
+
 ## v0.15.0 — 2026-11-09
 
 - Aperçu A4 des brouillons NJMDev avec identité commerciale et informations client, lignes, remises, TVA et totaux.
