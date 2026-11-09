@@ -34,10 +34,13 @@ export function BillingPage() {
   }
   useEffect(() => { void refresh().catch((e) => setError(e.message)); }, []);
 
-  const totals = useMemo(() => lines.reduce((a, l) => {
-    const base = Math.round(l.quantity * l.unitPrice * (1 - l.discountPercent / 100) * 100) / 100;
-    a.ht += base; a.vat += Math.round(base * l.vatRate) / 100; return a;
-  }, { ht: 0, vat: 0 }), [lines]);
+  const totals = useMemo(() => {
+    const factor = currency === "XOF" ? 1 : 100;
+    return lines.reduce((a, l) => {
+      const base = Math.round(l.quantity * l.unitPrice * (1 - l.discountPercent / 100) * factor) / factor;
+      a.ht += base; a.vat += Math.round(base * l.vatRate * factor / 100) / factor; return a;
+    }, { ht: 0, vat: 0 });
+  }, [lines, currency]);
 
   function newDraft() {
     setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate("");
