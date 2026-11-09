@@ -86,7 +86,8 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [x] Gestion des clients et adresses ; archivage plutôt que suppression des clients déjà utilisés (v0.13.0).
 - [x] Création et gestion des brouillons, lignes, quantités, prix HT, remises et taux de TVA multiples (v0.13.0).
 - [x] Calculs monétaires exacts côté serveur, totaux HT, TVA et TTC (v0.13.0).
-- [ ] Prévisualisation et génération PDF A4 ; stockage durable des documents émis.
+- [x] Aperçu A4 des brouillons et export PDF via impression du navigateur (v0.15.0) ; document explicitement marqué BROUILLON.
+- [ ] Génération PDF serveur et stockage objet durable des documents émis (à réaliser avant activation de l'émission officielle).
 - [x] Cadrage pays Côte d’Ivoire, entreprise individuelle, devise XOF par défaut et prise en charge XOF/EUR/USD dans les brouillons (v0.14.0).
 - [ ] Profil légal ivoirien : identité de l’exploitant, nom commercial, adresse, RCCM, NCC, régime fiscal et régime TVA (à compléter après immatriculation).
 - [ ] Qualification du parcours FNE auprès de la DGI avant activation de l’émission.
