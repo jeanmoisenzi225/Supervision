@@ -4,7 +4,7 @@
 
 Le module Facturation est un espace privé de Supervision destiné à gérer les clients, préparer les factures, produire les documents PDF et suivre les règlements de l'activité NJMDev. Il s'agit d'un module interne au super-administrateur, pas d'une fonctionnalité multi-tenant vendue aux applications surveillées.
 
-La marque commerciale NJMDev peut être configurée dès maintenant. Elle est volontairement séparée de l'identité juridique du vendeur : aucune raison sociale, forme juridique, adresse officielle, immatriculation ou situation de TVA ne doit être inventée.
+La marque commerciale NJMDev peut être configurée dès maintenant. Elle est volontairement séparée de l'identité juridique du vendeur : aucune nom légal de l’entrepreneur, forme juridique, adresse officielle en Côte d’Ivoire, RCCM, NCC et régime de TVA ne doit être inventée.
 
 ## États et garde-fous
 
@@ -34,6 +34,14 @@ La marque commerciale NJMDev peut être configurée dès maintenant. Elle est vo
 - Calculs et transitions d'état validés côté serveur.
 - Génération PDF côté serveur ; stockage objet durable à sélectionner avant d'activer l'émission.
 - Envoi e-mail et connecteur de plateforme agréée séparés du cœur métier pour pouvoir changer de fournisseur.
+
+## Cadre NJMDev en Côte d’Ivoire
+
+NJMDev est prévu comme nom commercial d’une entreprise individuelle ivoirienne. Le vendeur légal sera la personne physique exploitante ; le nom commercial ne constitue pas une personne morale distincte. La devise par défaut est le franc CFA BCEAO (XOF), avec prise en charge de devises étrangères pour les clients internationaux. Le profil distingue RCCM, NCC, régime fiscal et régime de TVA. Aucun taux ni régime fiscal n’est présumé : ces paramètres seront renseignés après confirmation auprès de la DGI ou d’un conseil local.
+
+Les factures officielles devront suivre les exigences DGI/FNE effectivement applicables à l’entreprise individuelle et à son régime. Le module ne génère pas de numéro officiel ni de QR code de certification de sa propre initiative. Les brouillons restent clairement identifiés comme tels.
+
+L’activité est déclarée comme exploitée depuis la Côte d’Ivoire. La résidence personnelle du propriétaire en France justifie néanmoins une validation fiscale transfrontalière distincte avant le démarrage commercial.
 
 ## Phase initiale
 
