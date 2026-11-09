@@ -146,7 +146,7 @@ billingRouter.post("/invoices", async (req, res) => {
   const totals = calculate(input.lines, input.currency);
   const invoice = await prisma.billingInvoice.create({
     data: {
-      clientId: client.id, currency: input.currency, status: "draft",
+      clientId: client.id, status: "draft",
       issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
       dueDate: dateOrNull(input.dueDate), currency: input.currency, notes: input.notes,
       subtotal: totals.subtotal, vatTotal: totals.vatTotal, total: totals.total,
@@ -171,13 +171,13 @@ billingRouter.put("/invoices/:id", async (req, res) => {
   if (!existing || existing.status !== "draft") throw new HttpError(409, "Seuls les brouillons peuvent être modifiés");
   const client = await prisma.billingClient.findFirst({ where: { id: input.clientId, archivedAt: null } });
   if (!client) throw new HttpError(400, "Sélectionne un client actif");
-  const totals = calculate(input.lines);
+  const totals = calculate(input.lines, input.currency);
   const invoice = await prisma.$transaction(async (tx) => {
     await tx.billingInvoiceLine.deleteMany({ where: { invoiceId: existing.id } });
     return tx.billingInvoice.update({
       where: { id: existing.id },
       data: {
-        clientId: client.id, issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
+        clientId: client.id, currency: input.currency, issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
         dueDate: dateOrNull(input.dueDate), notes: input.notes,
         subtotal: totals.subtotal, vatTotal: totals.vatTotal, total: totals.total,
         lines: { create: totals.lines },
