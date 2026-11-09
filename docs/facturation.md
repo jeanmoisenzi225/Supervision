@@ -8,7 +8,7 @@ La marque commerciale NJMDev peut être configurée dès maintenant. Elle est vo
 
 ## États et garde-fous
 
-- **Brouillon** : modifiable, sans numéro officiel ; aperçu PDF clairement marqué « BROUILLON ».
+- **Brouillon** : modifiable, sans numéro officiel ; aperçu A4 imprimable et export PDF depuis la boîte de dialogue du navigateur, clairement marqué « BROUILLON ». Le PDF exporté à ce stade est une copie de travail non archivée.
 - **Émise** : uniquement lorsque le profil juridique est complet et validé ; numéro attribué à l'émission dans une transaction atomique.
 - **Payée / partiellement payée / en retard** : états calculés à partir des règlements et de l'échéance.
 - Une facture émise ne se modifie pas et son numéro n'est jamais réutilisé. Une correction ultérieure passe par le document rectificatif approprié.
@@ -21,7 +21,7 @@ La marque commerciale NJMDev peut être configurée dès maintenant. Elle est vo
 1. Configurer les éléments commerciaux NJMDev.
 2. Créer une fiche client.
 3. Saisir une facture avec dates, lignes, quantités, prix unitaires HT, remises et TVA.
-4. Enregistrer en brouillon et vérifier l'aperçu.
+4. Enregistrer en brouillon, vérifier l'aperçu A4 et exporter une copie PDF de travail si nécessaire.
 5. Compléter le profil juridique et les mentions requises avant toute émission.
 6. Émettre, numéroter, figer les données et archiver le PDF.
 7. Suivre les règlements et, ultérieurement, envoyer le document par e-mail.
@@ -32,7 +32,8 @@ La marque commerciale NJMDev peut être configurée dès maintenant. Elle est vo
 - Modèles Prisma dédiés : profil de facturation, clients, factures, lignes, règlements et événements.
 - Migration PostgreSQL versionnée.
 - Calculs et transitions d'état validés côté serveur.
-- Génération PDF côté serveur ; stockage objet durable à sélectionner avant d'activer l'émission.
+- Aperçu A4 rendu côté navigateur ; export PDF par la fonction d'impression du navigateur pour les seuls brouillons.
+- La génération PDF serveur et le stockage objet durable restent à mettre en place avant toute émission officielle ; aucun fichier local Render ne sera considéré comme archive.
 - Envoi e-mail et connecteur de plateforme agréée séparés du cœur métier pour pouvoir changer de fournisseur.
 
 ## Cadre NJMDev en Côte d’Ivoire
