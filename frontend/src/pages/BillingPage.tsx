@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
+import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null };
 type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number };
@@ -26,6 +27,7 @@ export function BillingPage() {
   const [currency, setCurrency] = useState("XOF");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [previewDoc, setPreviewDoc] = useState<InvoicePreviewData | null>(null);
 
   async function refresh() {
     const [c, i, p] = await Promise.all([api<Client[]>("/billing/clients"), api<Invoice[]>("/billing/invoices"), api<Profile>("/billing/profile")]);
@@ -80,6 +82,27 @@ export function BillingPage() {
     try { await api(`/billing/invoices/${id}`, { method: "DELETE" }); await refresh(); }
     catch (err) { setError((err as Error).message); }
   }
+
+  function previewCurrentDraft() {
+    const selectedClient = clients.find((item) => item.id === clientId);
+    if (!selectedClient) { setError("Sélectionne un client avant de prévisualiser."); return; }
+    setPreviewDoc({
+      reference: editingInvoice ? `BROUILLON-${editingInvoice.slice(-8).toUpperCase()}` : "BROUILLON NON ENREGISTRÉ",
+      client: selectedClient, profile, currency, issueDate, serviceDate, dueDate, notes, lines,
+    });
+  }
+  function previewSavedDraft(invoice: Invoice) {
+    setPreviewDoc({
+      reference: `BROUILLON-${invoice.id.slice(-8).toUpperCase()}`,
+      client: invoice.client, profile, currency: invoice.currency, issueDate: invoice.issueDate,
+      serviceDate: invoice.serviceDate, dueDate: invoice.dueDate, notes: invoice.notes ?? "",
+      lines: invoice.lines.map((line) => ({
+        description: line.description, quantity: Number(line.quantity), unitPrice: Number(line.unitPrice),
+        discountPercent: Number(line.discountPercent), vatRate: Number(line.vatRate),
+      })),
+    });
+  }
+
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
     try { await api("/billing/profile", { method: "PUT", body: profile }); setNotice("Paramètres commerciaux enregistrés."); }
@@ -93,7 +116,7 @@ export function BillingPage() {
     <div className="tabs">
       {([["invoices", `Brouillons (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
     </div>
-    {tab === "invoices" && <section className="card"><h3>Brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun brouillon enregistré.</p> : <div className="table-scroll"><table className="table"><thead><tr><td>Référence</td><td>Client</td><td>Date</td><td className="num">Total TTC estimé</td><td>Actions</td></tr></thead><tbody>{invoices.map((i) => <tr key={i.id}><td><strong>BROUILLON</strong><br/><span className="muted small">{i.id.slice(-8).toUpperCase()}</span></td><td>{i.client.name}</td><td>{new Date(i.createdAt).toLocaleDateString("fr-FR")}</td><td className="num">{money(i.total, i.currency)}</td><td><div className="row wrap"><button onClick={() => void editDraft(i)}>Modifier</button><button className="danger" onClick={() => void removeDraft(i.id)}>Supprimer</button></div></td></tr>)}</tbody></table></div>}</section>}
+    {tab === "invoices" && <section className="card"><h3>Brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun brouillon enregistré.</p> : <div className="table-scroll"><table className="table"><thead><tr><td>Référence</td><td>Client</td><td>Date</td><td className="num">Total TTC estimé</td><td>Actions</td></tr></thead><tbody>{invoices.map((i) => <tr key={i.id}><td><strong>BROUILLON</strong><br/><span className="muted small">{i.id.slice(-8).toUpperCase()}</span></td><td>{i.client.name}</td><td>{new Date(i.createdAt).toLocaleDateString("fr-FR")}</td><td className="num">{money(i.total, i.currency)}</td><td><div className="row wrap"><button onClick={() => previewSavedDraft(i)}>Aperçu A4</button><button onClick={() => void editDraft(i)}>Modifier</button><button className="danger" onClick={() => void removeDraft(i.id)}>Supprimer</button></div></td></tr>)}</tbody></table></div>}</section>}
     {tab === "clients" && <div className="grid">
       <section className="card"><h3>{editingClient ? "Modifier le client" : "Nouveau client"}</h3><form className="stack-small" onSubmit={saveClient}>
         <label>Type<select value={client.kind} onChange={(e) => setClient({ ...client, kind: e.target.value })}><option value="company">Entreprise</option><option value="individual">Particulier</option></select></label>
@@ -130,7 +153,7 @@ export function BillingPage() {
       <section className="card"><h3>Notes internes</h3><label>Notes<textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)}/></label>
         <div className="metrics"><div className="metric"><span className="muted small">HT estimé</span><strong className="metric-value">{money(totals.ht, currency)}</strong></div><div className="metric"><span className="muted small">TVA estimée</span><strong className="metric-value">{money(totals.vat, currency)}</strong></div><div className="metric"><span className="muted small">TTC estimé</span><strong className="metric-value">{money(totals.ht + totals.vat, currency)}</strong></div></div>
         <p className="muted small">Le serveur recalcule les montants avec des décimales exactes. Ce document reste un brouillon sans valeur de facture émise.</p>
-        <div className="row wrap"><button className="primary" type="submit" disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Enregistrer le brouillon</button><button type="button" onClick={() => setTab("invoices")}>Annuler</button></div>
+        <div className="row wrap"><button type="button" onClick={previewCurrentDraft} disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Aperçu A4</button><button className="primary" type="submit" disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Enregistrer le brouillon</button><button type="button" onClick={() => setTab("invoices")}>Annuler</button></div>
       </section>
     </form>}
     {tab === "settings" && <section className="card"><h3>Identité commerciale</h3><p className="muted small">Informations de marque uniquement, indépendantes de la future identité juridique.</p><form className="stack-small" onSubmit={saveProfile}>
@@ -148,5 +171,6 @@ export function BillingPage() {
       <label>Devise par défaut<select value={profile.defaultCurrency ?? "XOF"} onChange={(e) => setProfile({ ...profile, defaultCurrency: e.target.value })}><option value="XOF">FCFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar US (USD)</option></select></label>
       <button className="primary" type="submit">Enregistrer</button>
     </form><div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>Le profil légal et le régime fiscal ivoiriens doivent être vérifiés. L’émission FNE ne sera activée qu’après validation du parcours DGI applicable.</span></div></div></section>}
+    {previewDoc && <InvoicePreview data={previewDoc} onClose={() => setPreviewDoc(null)} />}
   </>;
 }
