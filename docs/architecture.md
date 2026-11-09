@@ -36,6 +36,10 @@ L'API tourne en continu : elle interroge les applis selon leur intervalle (boucl
 | `BacklogEvent` | Changement de statut d'un chantier (ancien, nouveau, date) ; ancien vide = nouveau chantier |
 | `Setting` | Réglages générés par le serveur : clés des notifications (`vapid`), créées au premier démarrage si `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` ne sont pas définies |
 
+## Module de facturation NJMDev
+
+Les routes `/api/billing/*` sont protégées par `requireAdmin`. Elles couvrent le profil commercial, les clients et les brouillons de facture. Les montants sont recalculés côté serveur avec `Prisma.Decimal`. Les brouillons n'ont pas de numéro officiel ; les routes d'émission ne sont pas encore disponibles. Les modèles `BillingClient`, `BillingInvoice` et `BillingInvoiceLine` sont créés par la migration `20261109000000_billing_drafts`.
+
 ## Règles d'alerte
 
 - **Panne** (`down`, critique) : ouverte au 2ᵉ échec consécutif d'une adresse (`ALERT_AFTER_FAILURES`), refermée automatiquement dès qu'elle répond. Un échec = code hors 2xx, pas de réponse dans le délai (15 s ; 90 s pour un service gratuit en veille) ou, pour une adresse « health », un JSON `status` autre que ok/healthy/up/pass.
