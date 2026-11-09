@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { api } from "../lib/api";
+import { api, apiBlob } from "../lib/api";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null };
@@ -72,6 +72,22 @@ export function BillingPage() {
     setLines(i.lines.map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), discountPercent: Number(l.discountPercent), vatRate: Number(l.vatRate) })));
     setTab("new");
   }
+  async function downloadPdf(invoice: Invoice) {
+    setError(""); setNotice("");
+    try {
+      const blob = await apiBlob(`/billing/invoices/${invoice.id}/pdf`);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `NJMDev-brouillon-${invoice.id.slice(-8).toUpperCase()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      setNotice("PDF du brouillon généré. Aucun fichier n'est archivé sur le serveur.");
+    } catch (err) { setError((err as Error).message); }
+  }
+
   async function archiveClient(id: string) {
     if (!window.confirm("Archiver ce client ? Les documents existants seront conservés.")) return;
     try { await api(`/billing/clients/${id}/archive`, { method: "POST" }); await refresh(); }
@@ -116,7 +132,7 @@ export function BillingPage() {
     <div className="tabs">
       {([["invoices", `Brouillons (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
     </div>
-    {tab === "invoices" && <section className="card"><h3>Brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun brouillon enregistré.</p> : <div className="table-scroll"><table className="table"><thead><tr><td>Référence</td><td>Client</td><td>Date</td><td className="num">Total TTC estimé</td><td>Actions</td></tr></thead><tbody>{invoices.map((i) => <tr key={i.id}><td><strong>BROUILLON</strong><br/><span className="muted small">{i.id.slice(-8).toUpperCase()}</span></td><td>{i.client.name}</td><td>{new Date(i.createdAt).toLocaleDateString("fr-FR")}</td><td className="num">{money(i.total, i.currency)}</td><td><div className="row wrap"><button onClick={() => previewSavedDraft(i)}>Aperçu A4</button><button onClick={() => void editDraft(i)}>Modifier</button><button className="danger" onClick={() => void removeDraft(i.id)}>Supprimer</button></div></td></tr>)}</tbody></table></div>}</section>}
+    {tab === "invoices" && <section className="card"><h3>Brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun brouillon enregistré.</p> : <div className="table-scroll"><table className="table"><thead><tr><td>Référence</td><td>Client</td><td>Date</td><td className="num">Total TTC estimé</td><td>Actions</td></tr></thead><tbody>{invoices.map((i) => <tr key={i.id}><td><strong>BROUILLON</strong><br/><span className="muted small">{i.id.slice(-8).toUpperCase()}</span></td><td>{i.client.name}</td><td>{new Date(i.createdAt).toLocaleDateString("fr-FR")}</td><td className="num">{money(i.total, i.currency)}</td><td><div className="row wrap"><button onClick={() => previewSavedDraft(i)}>Aperçu A4</button><button onClick={() => void downloadPdf(i)}>Télécharger PDF</button><button onClick={() => void editDraft(i)}>Modifier</button><button className="danger" onClick={() => void removeDraft(i.id)}>Supprimer</button></div></td></tr>)}</tbody></table></div>}</section>}
     {tab === "clients" && <div className="grid">
       <section className="card"><h3>{editingClient ? "Modifier le client" : "Nouveau client"}</h3><form className="stack-small" onSubmit={saveClient}>
         <label>Type<select value={client.kind} onChange={(e) => setClient({ ...client, kind: e.target.value })}><option value="company">Entreprise</option><option value="individual">Particulier</option></select></label>
