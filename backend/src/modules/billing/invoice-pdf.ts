@@ -37,7 +37,7 @@ const enc = (value: string) => {
   }
   return bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("").toUpperCase();
 };
-const safe = (value: unknown) => String(value ?? "").replace(/[\\r\\n\\t]+/g, " ").trim();
+const safe = (value: unknown) => String(value ?? "").replace(/[\\r\n\\t]+/g, " ").trim();
 const money = (value: Prisma.Decimal | number, currency: string) =>
   new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: currency === "XOF" ? 0 : 2 }).format(Number(value));
 const date = (value: Date | null) => value ? new Intl.DateTimeFormat("fr-FR").format(value) : "—";
@@ -153,22 +153,22 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   const fontBoldId = add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
   const pageIds: number[] = [];
   for (const commands of pages) {
-    const stream = commands.join("\\n");
-    const streamId = add(`<< /Length ${Buffer.byteLength(stream, "ascii")} >>\\nstream\\n${stream}\\nendstream`);
+    const stream = commands.join("\n");
+    const streamId = add(`<< /Length ${Buffer.byteLength(stream, "ascii")} >>\nstream\n${stream}\nendstream`);
     const pageId = add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${streamId} 0 R >>`);
     pageIds.push(pageId);
   }
   objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
   objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map((id) => id + " 0 R").join(" ")}] /Count ${pageIds.length} >>`;
-  let output = "%PDF-1.4\\n%âãÏÓ\\n";
+  let output = "%PDF-1.4\n%âãÏÓ\n";
   const offsets = [0];
   objects.forEach((body, index) => {
     offsets.push(Buffer.byteLength(output, "binary"));
-    output += `${index + 1} 0 obj\\n${body}\\nendobj\\n`;
+    output += `${index + 1} 0 obj\n${body}\nendobj\n`;
   });
   const xref = Buffer.byteLength(output, "binary");
-  output += `xref\\n0 ${objects.length + 1}\\n0000000000 65535 f \\n`;
-  for (const offset of offsets.slice(1)) output += offset.toString().padStart(10, "0") + " 00000 n \\n";
-  output += `trailer\\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\\nstartxref\\n${xref}\\n%%EOF`;
+  output += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const offset of offsets.slice(1)) output += offset.toString().padStart(10, "0") + " 00000 n \n";
+  output += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF`;
   return Buffer.from(output, "binary");
 }
