@@ -74,3 +74,20 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - [x] Retirer le contrôle Gateway suspendu de la disponibilité EDEN ; conserver l'API backend et l'application web.
 - [x] Fermer automatiquement les alertes de panne associées aux contrôles supprimés, en conservant les résultats historiques.
 - [ ] Exécuter les tests, déployer et confirmer le statut « Opérationnel » dans le tableau de bord.
+
+## 7. Module Facturation NJMDev 🚧
+
+Objectif : intégrer à Supervision un espace privé de gestion commerciale et de facturation pour l'activité NJMDev, sans dépendre d'une structure juridique qui n'est pas encore constituée.
+
+- [ ] Paramètres commerciaux (marque, logo, coordonnées de contact et de paiement), distincts de l'identité juridique du vendeur.
+- [ ] Configuration juridique différée : raison sociale, forme juridique, adresse, SIREN/SIRET, TVA et mentions applicables ; bloquer l'émission officielle tant que les données requises ne sont pas validées.
+- [ ] Gestion des clients et adresses ; archivage plutôt que suppression des clients déjà utilisés.
+- [ ] Création et gestion des brouillons, lignes, quantités, prix HT, remises et taux de TVA multiples.
+- [ ] Calculs monétaires exacts côté serveur, totaux HT, TVA et TTC.
+- [ ] Prévisualisation et génération PDF A4 ; stockage durable des documents émis.
+- [ ] Numérotation chronologique continue et atomique à l'émission ; instantané des identités vendeur/client ; facture émise non modifiable.
+- [ ] Historique, téléchargement PDF, suivi des paiements et journal des événements.
+- [ ] Envoi e-mail traçable (phase ultérieure).
+- [ ] Préparer l'intégration à une plateforme agréée pour la facturation électronique ; ne pas assimiler un PDF envoyé par e-mail à une facture électronique conforme.
+- [ ] Tests : calculs multi-TVA, concurrence de numérotation, immutabilité, autorisations et PDF.
+- [ ] Documentation, migrations et déploiement vérifiés.
