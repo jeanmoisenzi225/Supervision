@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.13.0 — 2026-11-09
+
+- **Facturation NJMDev (première phase)** : nouvelle entrée Facturation dans la navigation, fiches clients (création, modification, archivage), brouillons de facture multi-lignes, remises et taux de TVA par ligne.
+- Calculs HT, TVA et TTC effectués côté serveur avec des décimales exactes ; seules les factures en brouillon sont modifiables ou supprimables.
+- Paramètres commerciaux NJMDev séparés de l'identité juridique ; émission officielle explicitement désactivée tant que le vendeur n'est pas juridiquement configuré.
+- Nouvelle migration PostgreSQL ; routes `/api/billing` protégées par le super-administrateur.
+
+
 ## v0.12.1 — 2026-11-08
 
 - **EDEN Supervision** : retrait du contrôle de disponibilité de l'ancien Gateway (`eden-sup-gateway`), désormais suspendu. Seuls l'API backend et l'application web active déterminent l'état opérationnel d'EDEN.
