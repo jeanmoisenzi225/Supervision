@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api } from "../lib/api";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; siren: string | null; vatNumber: string | null };
@@ -42,7 +42,7 @@ export function BillingPage() {
     setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setServiceDate(""); setDueDate("");
     setIssueDate(new Date().toISOString().slice(0, 10)); setTab("new");
   }
-  async function saveClient(e: React.FormEvent) {
+  async function saveClient(e: FormEvent) {
     e.preventDefault(); setError(""); setNotice("");
     try {
       const saved = await api<Client>(editingClient ? `/billing/clients/${editingClient}` : "/billing/clients", { method: editingClient ? "PUT" : "POST", body: client });
@@ -52,7 +52,7 @@ export function BillingPage() {
   function startClientEdit(c: Client) {
     setEditingClient(c.id); setClient({ kind: c.kind, name: c.name, email: c.email ?? "", phone: c.phone ?? "", billingAddress: c.billingAddress ?? "", postalCode: c.postalCode ?? "", city: c.city ?? "", country: c.country, siren: c.siren ?? "", vatNumber: c.vatNumber ?? "" }); setTab("clients");
   }
-  async function saveDraft(e: React.FormEvent) {
+  async function saveDraft(e: FormEvent) {
     e.preventDefault(); setError(""); setNotice("");
     try {
       const body = { clientId, issueDate: issueDate || null, serviceDate: serviceDate || null, dueDate: dueDate || null, notes, lines };
@@ -76,7 +76,7 @@ export function BillingPage() {
     try { await api(`/billing/invoices/${id}`, { method: "DELETE" }); await refresh(); }
     catch (err) { setError((err as Error).message); }
   }
-  async function saveProfile(e: React.FormEvent) {
+  async function saveProfile(e: FormEvent) {
     e.preventDefault();
     try { await api("/billing/profile", { method: "PUT", body: profile }); setNotice("Paramètres commerciaux enregistrés."); }
     catch (err) { setError((err as Error).message); }
