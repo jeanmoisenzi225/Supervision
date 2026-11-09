@@ -120,7 +120,7 @@ export function BillingPage() {
           <label>Qté<input type="number" min="0.001" step="0.001" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, quantity: Number(e.target.value) } : x))}/></label>
           <label>Prix HT<input type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, unitPrice: Number(e.target.value) } : x))}/></label>
           <label>Remise %<input type="number" min="0" max="100" step="0.01" value={l.discountPercent} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, discountPercent: Number(e.target.value) } : x))}/></label>
-          <label>TVA<select value={l.vatRate} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, vatRate: Number(e.target.value) } : x))}><option value="0">0 %</option><option value="1">1 %</option><option value="5">5 %</option><option value="10">10 %</option><option value="18">18 %</option></select></label>
+          <label>TVA %<input type="number" min="0" max="100" step="0.01" value={l.vatRate} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, vatRate: Number(e.target.value) } : x))}/></label>
           {lines.length > 1 && <button type="button" className="danger" onClick={() => setLines(lines.filter((_, j) => j !== n))}>Retirer</button>}
         </div>)}
       </section>
