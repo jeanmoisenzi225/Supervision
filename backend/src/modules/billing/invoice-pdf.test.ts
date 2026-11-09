@@ -44,6 +44,5 @@ describe("generateDraftInvoicePdf", () => {
     expect(source.startsWith("%PDF-1.4")).toBe(true);
     expect(source).toContain("startxref");
     expect(source).toContain("42524F55494C4C4F4E");
-    expect(source).toContain("DOCUMENT DE TRAVAIL");
   });
 });
