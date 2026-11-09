@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.14.1 — 2026-11-09
+
+- Correction de la conservation de la devise lors de la modification d’un brouillon et recalcul cohérent des montants selon XOF/EUR/USD.
+
+
 ## v0.14.0 — 2026-11-09
 
 - Facturation adaptée au cadre NJMDev en Côte d’Ivoire : entreprise individuelle au nom propre, nom commercial distinct, RCCM/NCC.
