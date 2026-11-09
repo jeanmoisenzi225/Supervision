@@ -81,9 +81,9 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 
 - [ ] Paramètres commerciaux (marque, logo, coordonnées de contact et de paiement), distincts de l'identité juridique du vendeur.
 - [ ] Configuration juridique différée : raison sociale, forme juridique, adresse, SIREN/SIRET, TVA et mentions applicables ; bloquer l'émission officielle tant que les données requises ne sont pas validées.
-- [ ] Gestion des clients et adresses ; archivage plutôt que suppression des clients déjà utilisés.
-- [ ] Création et gestion des brouillons, lignes, quantités, prix HT, remises et taux de TVA multiples.
-- [ ] Calculs monétaires exacts côté serveur, totaux HT, TVA et TTC.
+- [x] Gestion des clients et adresses ; archivage plutôt que suppression des clients déjà utilisés (v0.13.0).
+- [x] Création et gestion des brouillons, lignes, quantités, prix HT, remises et taux de TVA multiples (v0.13.0).
+- [x] Calculs monétaires exacts côté serveur, totaux HT, TVA et TTC (v0.13.0).
 - [ ] Prévisualisation et génération PDF A4 ; stockage durable des documents émis.
 - [ ] Numérotation chronologique continue et atomique à l'émission ; instantané des identités vendeur/client ; facture émise non modifiable.
 - [ ] Historique, téléchargement PDF, suivi des paiements et journal des événements.
