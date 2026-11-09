@@ -122,8 +122,9 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   for (const item of invoice.lines) {
     const descLines = wrap(item.description, 42);
     const height = Math.max(16, descLines.length * 11);
+    const previousPageCount = pages.length;
     ensure(height + 8);
-    if (y === 61) header();
+    if (pages.length > previousPageCount) header();
     descLines.forEach((part, index) => text(part, columns[0] + 2, y + index * 11, 7.5));
     text(safe(item.quantity.toString()), columns[1] + 2, y, 7.5);
     text(money(item.unitPrice, invoice.currency), columns[2] + 2, y, 7.2);
