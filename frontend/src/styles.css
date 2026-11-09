@@ -218,3 +218,16 @@ button.tenant:hover { border-color: var(--muted); }
   .nav { order: 3; flex-basis: 100%; flex-wrap: wrap; }
   .content { padding: 12px; }
 }
+
+
+/* Facturation : formulaires denses mais lisibles sur mobile. */
+.table-scroll { width: 100%; overflow-x: auto; }
+.table-scroll .table { min-width: 650px; }
+.invoice-line { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(4, minmax(90px, 1fr)) auto; gap: 8px; align-items: end; padding: 10px 0; border-top: 1px solid var(--border); }
+.invoice-line label { min-width: 0; }
+.invoice-line input, .invoice-line select { width: 100%; min-width: 0; }
+.invoice-line .line-description { min-width: 180px; }
+@media (max-width: 760px) {
+  .invoice-line { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .invoice-line .line-description { grid-column: 1 / -1; }
+}
