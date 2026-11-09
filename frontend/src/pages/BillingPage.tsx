@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
+import { NJMDEV_LOGO_WHITE } from "../assets/njmdevLogo";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null };
 type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number };
@@ -126,7 +127,7 @@ export function BillingPage() {
   }
 
   return <>
-    <div className="page-head"><div><h1>Facturation NJMDev</h1><p className="muted small">Répertoire clients et préparation des factures.</p></div><button className="primary" onClick={newDraft}>+ Nouveau brouillon</button></div>
+    <div className="page-head"><div className="billing-page-brand"><img src={NJMDEV_LOGO_WHITE} alt="NJMDev" /><div><h1>Facturation NJMDev</h1><p className="muted small">Répertoire clients et préparation des factures.</p></div></div><button className="primary" onClick={newDraft}>+ Nouveau brouillon</button></div>
     <div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>La structure juridique et le régime de TVA ne sont pas encore configurés. Aucun numéro de facture ne sera attribué.</span></div></div>
     {notice && <p className="success small">{notice}</p>}{error && <p className="error small">{error}</p>}
     <div className="tabs">
