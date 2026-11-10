@@ -121,6 +121,24 @@ actionsRouter.get("/:key/tenants", async (req, res) => {
   }
 });
 
+/** Historique des imports de documents (Procedia) : relayé depuis la route signée `/supervision/reports/imports`. */
+actionsRouter.get("/:key/imports", async (req, res) => {
+  const app = getApp(req.params.key);
+  if (!app.adminUrl || !app.adminToken) return res.json({ configured: false });
+  const qs = new URLSearchParams();
+  for (const k of ["status", "limit", "before"] as const) {
+    const v = req.query[k];
+    if (typeof v === "string" && /^[\w:.\-]{1,40}$/.test(v)) qs.set(k, v);
+  }
+  try {
+    const r = await callApp<Record<string, unknown>>(app, `/supervision/reports/imports${qs.size ? `?${qs}` : ""}`);
+    res.json({ configured: true, ...r });
+  } catch (err) {
+    const message = (err as Error).message;
+    res.json(/répondu 404/.test(message) ? { configured: true, notReady: true } : { configured: true, error: message });
+  }
+});
+
 actionsRouter.get("/:key/tenants/:id", async (req, res) => {
   const app = getApp(req.params.key);
   if (!/^[\w.:@-]{1,100}$/.test(req.params.id)) throw new HttpError(400, "Identifiant invalide");

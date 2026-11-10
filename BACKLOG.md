@@ -74,3 +74,8 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - [x] Retirer le contrôle Gateway suspendu de la disponibilité EDEN ; conserver l'API backend et l'application web.
 - [x] Fermer automatiquement les alertes de panne associées aux contrôles supprimés, en conservant les résultats historiques.
 - [ ] Exécuter les tests, déployer et confirmer le statut « Opérationnel » dans le tableau de bord.
+
+## 7. Historique des imports de Procedia 🚧 (v0.13.0)
+
+- Demande (propriétaire, 2026-11-10) : voir dans la Supervision tout l'historique des imports, succès, échecs et causes.
+- Fait : route `GET /api/apps/:key/imports` et onglet « Imports » (Procedia). Passe en ✅ quand Procedia v0.51.0 est en ligne et l'onglet vérifié.

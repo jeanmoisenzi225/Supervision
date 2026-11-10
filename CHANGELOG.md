@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.13.0 — 2026-11-10
+
+- **Onglet « Imports » de Procedia** : historique de tous les imports de documents (réussis, en échec avec la cause classée, en cours), filtres et pagination, relayé depuis la route signée `reports/imports` de Procedia (v0.51.0). Alerte visuelle tant qu'un import est en cours, pour ne pas mettre en ligne à ce moment.
+
 ## v0.12.1 — 2026-11-08
 
 - **EDEN Supervision** : retrait du contrôle de disponibilité de l'ancien Gateway (`eden-sup-gateway`), désormais suspendu. Seuls l'API backend et l'application web active déterminent l'état opérationnel d'EDEN.

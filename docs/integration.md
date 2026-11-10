@@ -77,6 +77,7 @@ Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètre
 Option `tenants` de `supervisionAdminRouter` (Node) ou de `supervision_fastapi_router` (Python) : `{ label, list, detail }`.
 
 - `GET /supervision/tenants` → `{ label: "Garages", items: [{ id, name, subtitle?, badges?, fields?: [{ label, value }] }] }`
+- `GET /supervision/reports/:name?…` (option `reports`) : rapports en lecture seule propres à l'appli ; Procedia expose `imports` (historique des imports : `{ totals, running, items, next }`).
 - `GET /supervision/tenants/:id` → `{ name, subtitle?, sections: [{ title, items: [{ label, value }] }] }` (404 si inconnu)
 
 **Règle** : caractéristiques, contacts professionnels, comptages et dates seulement. Jamais de montants (chiffre d'affaires, encaissements, factures), ni contenu de dossier, ni données des clients du client.
