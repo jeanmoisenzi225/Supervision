@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.13.1 — 2026-11-10
+
+- **Correction** : l'onglet « Imports » répondait « 401 Non autorisé » ; la signature des appels vers les applis ignore désormais les paramètres d'adresse (`?limit=…`), comme la vérification côté appli.
+
 ## v0.13.0 — 2026-11-10
 
 - **Onglet « Imports » de Procedia** : historique de tous les imports de documents (réussis, en échec avec la cause classée, en cours), filtres et pagination, relayé depuis la route signée `reports/imports` de Procedia (v0.51.0). Alerte visuelle tant qu'un import est en cours, pour ne pas mettre en ligne à ce moment.

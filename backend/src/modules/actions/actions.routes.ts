@@ -24,7 +24,8 @@ async function callApp<T>(app: AppTarget, path: string, init: RequestInit = {}):
   const method = (init.method ?? "GET").toUpperCase();
   const payload = typeof init.body === "string" ? init.body : "";
   const timestamp = Date.now();
-  const relPath = path.replace(/^\/supervision/, "");
+  // La signature porte sur le chemin seul, sans les paramètres d'adresse (?limit=…), comme la vérification côté appli.
+  const relPath = path.replace(/^\/supervision/, "").split("?")[0];
   const res = await fetch(`${app.adminUrl}${path}`, {
     ...init,
     method,
