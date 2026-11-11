@@ -127,7 +127,7 @@ actionsRouter.get("/:key/imports", async (req, res) => {
   const app = getApp(req.params.key);
   if (!app.adminUrl || !app.adminToken) return res.json({ configured: false });
   const qs = new URLSearchParams();
-  for (const k of ["status", "limit", "before"] as const) {
+  for (const k of ["status", "limit", "before", "client"] as const) {
     const v = req.query[k];
     if (typeof v === "string" && /^[\w:.\-]{1,40}$/.test(v)) qs.set(k, v);
   }

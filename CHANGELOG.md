@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.14.0 — 2026-11-11
+
+- **Onglet « Imports » de Procedia : comparaison par client.** Demandé : « 291 procédures pour BNI dans l'outil, la sup n'en rapporte que 139, pourquoi ? ». L'onglet affiche maintenant les fichiers importés **et les procédures qu'ils ont créées**, la **date de début du suivi**, et un tableau **par client** : procédures dans l'outil, dont importées, autres (saisies, dupliquées ou importées avant la conservation de l'origine), imports suivis. Touchez un client pour filtrer l'historique (nécessite Procedia v0.57.0).
+
 ## v0.13.1 — 2026-11-10
 
 - **Correction** : l'onglet « Imports » répondait « 401 Non autorisé » ; la signature des appels vers les applis ignore désormais les paramètres d'adresse (`?limit=…`), comme la vérification côté appli.

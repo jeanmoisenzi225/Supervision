@@ -218,3 +218,8 @@ button.tenant:hover { border-color: var(--muted); }
   .nav { order: 3; flex-basis: 100%; flex-wrap: wrap; }
   .content { padding: 12px; }
 }
+
+/* Imports par client (v0.14.0) */
+.table-scroll { overflow-x: auto; }
+button.client-link { background: none; border: none; padding: 0; font: inherit; color: var(--info); text-decoration: underline; cursor: pointer; text-align: left; }
+tr.selected td { background: var(--surface-2); }
