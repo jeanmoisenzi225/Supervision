@@ -223,3 +223,22 @@ button.tenant:hover { border-color: var(--muted); }
 .table-scroll { overflow-x: auto; }
 button.client-link { background: none; border: none; padding: 0; font: inherit; color: var(--info); text-decoration: underline; cursor: pointer; text-align: left; }
 tr.selected td { background: var(--surface-2); }
+
+/* NJMDev : marque et menu général (v0.15.0) */
+.brand-mark { display: inline-flex; align-items: center; gap: 10px; }
+.brand-name { font-weight: 800; letter-spacing: 0.02em; }
+.brand-module { font-weight: 500; color: var(--muted); padding-left: 8px; border-left: 1px solid var(--border); }
+.home-head { display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top) + 16px) 16px 12px; border-bottom: 1px solid var(--border); }
+.home-head .brand-name { font-size: 1.6rem; }
+.home-intro { margin: 4px 0 16px; }
+.modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.module-card { display: flex; gap: 14px; align-items: flex-start; color: inherit; text-decoration: none; transition: border-color 0.15s; }
+a.module-card:hover { border-color: var(--accent); }
+.module-card.disabled { opacity: 0.45; filter: grayscale(1); cursor: not-allowed; }
+.module-icon { flex: none; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); }
+.module-body { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.module-body strong { font-size: 1.1rem; }
+.module-status.ok { color: var(--ok); }
+.module-status.bad { color: var(--bad); }
+.login-card h1 { font-weight: 800; }
+.login-card img { align-self: center; }

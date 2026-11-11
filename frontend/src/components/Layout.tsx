@@ -1,23 +1,24 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { APP_VERSION } from "../version";
+import { Brand } from "./Brand";
 
+/** Cadre du module NJM Supervision : marque NJMDev (retour au menu général) et navigation du module. */
 export function Layout({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="shell">
       <header className="topbar">
-        <NavLink to="/" className="brand">
-          <img src="/favicon.svg" alt="" width={28} height={28} />
-          Supervision
+        <NavLink to="/" className="brand" title="Menu NJMDev">
+          <Brand module="Supervision" />
         </NavLink>
         <nav className="nav">
-          <NavLink to="/" end>
+          <NavLink to="/supervision" end>
             Tableau de bord
           </NavLink>
-          <NavLink to="/alertes">Alertes</NavLink>
-          <NavLink to="/journaux">Journaux</NavLink>
-          <NavLink to="/backlog">Backlog</NavLink>
-          <NavLink to="/claude">Claude</NavLink>
-          <NavLink to="/reglages">Réglages</NavLink>
+          <NavLink to="/supervision/alertes">Alertes</NavLink>
+          <NavLink to="/supervision/journaux">Journaux</NavLink>
+          <NavLink to="/supervision/backlog">Backlog</NavLink>
+          <NavLink to="/supervision/claude">Claude</NavLink>
+          <NavLink to="/supervision/reglages">Réglages</NavLink>
         </nav>
         <button className="link" onClick={onLogout}>
           Déconnexion
@@ -26,7 +27,7 @@ export function Layout({ onLogout }: { onLogout: () => void }) {
       <main className="content">
         <Outlet />
       </main>
-      <footer className="footer">Supervision v{APP_VERSION}</footer>
+      <footer className="footer">NJMDev · NJM Supervision · v{APP_VERSION}</footer>
     </div>
   );
 }

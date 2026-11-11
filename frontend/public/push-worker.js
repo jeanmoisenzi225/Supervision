@@ -4,10 +4,10 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch (e) {
-    data = { title: "Supervision", body: event.data ? event.data.text() : "" };
+    data = { title: "NJMDev", body: event.data ? event.data.text() : "" };
   }
   event.waitUntil(
-    self.registration.showNotification(data.title || "Supervision", {
+    self.registration.showNotification(data.title || "NJMDev", {
       body: data.body || "",
       tag: data.tag,
       renotify: Boolean(data.tag),

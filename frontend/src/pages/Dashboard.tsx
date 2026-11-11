@@ -29,7 +29,7 @@ export function Dashboard() {
       {error && <p className="error">{error}</p>}
       <div className="grid">
         {apps.map((app) => (
-          <Link key={app.key} to={`/applis/${app.key}`} className={`card app-card status-${app.status}`}>
+          <Link key={app.key} to={`/supervision/applis/${app.key}`} className={`card app-card status-${app.status}`}>
             <div className="app-card-head">
               <h2>{app.name}</h2>
               <StatusBadge status={app.status} />

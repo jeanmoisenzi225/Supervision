@@ -38,8 +38,8 @@ export function Login({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="login">
       <form className="card login-card" onSubmit={submit}>
-        <img src="/favicon.svg" alt="" width={56} height={56} />
-        <h1>Supervision</h1>
+        <img src="/brand/njmdev-white.png" alt="" height={48} style={{ width: "auto" }} />
+        <h1>NJMDev</h1>
         <p className="muted">Accès réservé au super administrateur</p>
         {!needCode ? (
           <>

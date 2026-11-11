@@ -43,7 +43,7 @@ export function AppDetail() {
 
   return (
     <>
-      <Link to="/" className="back">
+      <Link to="/supervision" className="back">
         ← Tableau de bord
       </Link>
       <div className="page-head">

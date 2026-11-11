@@ -1,6 +1,8 @@
-# Supervision
+# NJMDev — NJM Supervision
 
-Tableau de bord unique pour superviser tous nos projets :
+**NJMDev** est l'application de pilotage de NJMDev (logo NJMDev, `frontend/public/brand/`). À l'ouverture, un menu général propose ses modules : **NJM Supervision** (ce tableau de bord, disponible) et **NJM Website** (à venir, grisé). Le dépôt garde son nom `Supervision`.
+
+NJM Supervision : tableau de bord unique pour superviser tous nos projets :
 
 | Appli | Ce qui est surveillé |
 |---|---|

@@ -84,3 +84,9 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 
 - Constat (propriétaire, 2026-11-11) : 291 procédures pour BNI dans Procedia, 139 imports dans la Supervision. Les 139 sont des fichiers (un fichier peut créer plusieurs procédures), tous clients confondus, suivis seulement depuis le 2026-11-10 ; les procédures saisies ou dupliquées ne sont pas des imports.
 - Fait : onglet « Imports » avec procédures créées, date de début du suivi, tableau par client (procédures dans l'outil, dont importées, autres, imports suivis) et filtre par client. Passe en ✅ quand Procedia v0.57.0 est en ligne.
+
+## 9. NJMDev : menu général et modules ✅ (v0.15.0)
+
+- Demande (propriétaire, 2026-11-11) : l'application globale s'appelle **NJMDev**, avec le logo NJMDev. À l'entrée, un menu général ; module disponible : **NJM Supervision** (l'outil actuel) ; **NJM Website** grisé pour l'instant.
+- Fait : nom et logo NJMDev (repris du dépôt MGA, `frontend/public/brand/`), menu général `/`, module sous `/supervision`, redirection des anciennes adresses.
+- [ ] NJM Website : à définir.

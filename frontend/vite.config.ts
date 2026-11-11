@@ -11,11 +11,11 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["favicon.svg", "icon-192.png", "icon-512.png"],
+      includeAssets: ["favicon.png", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "brand/njmdev-white.png"],
       manifest: {
-        name: "Supervision",
-        short_name: "Supervision",
-        description: "Supervision de MGA, du site Autonova, de Yiri Invest, de My Family et de Procedia",
+        name: "NJMDev",
+        short_name: "NJMDev",
+        description: "NJMDev : supervision de MGA, du site Autonova, de Yiri Invest, de My Family et de Procedia",
         lang: "fr",
         start_url: "/",
         display: "standalone",

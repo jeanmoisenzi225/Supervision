@@ -17,6 +17,8 @@
 
 Un seul service Render (`supervision`) : l'API sert aussi l'interface construite (`frontend/dist`), à la même adresse. Toute adresse hors `/api` renvoie l'interface.
 
+Interface (v0.15.0) : l'application s'appelle **NJMDev** (logo NJMDev repris de MGA, `frontend/public/brand/njmdev-white.png` ; icônes de l'écran d'accueil générées depuis ce logo). `/` = menu général des modules (`pages/Home.tsx`) : **NJM Supervision** (avec l'état d'ensemble) et **NJM Website** (grisé, à venir). Le module Supervision est sous `/supervision` (`/supervision/applis/:key`, `/supervision/alertes`, `/journaux`, `/backlog`, `/claude`, `/reglages`) ; les anciennes adresses (`/alertes?id=…`, `/applis/…`, etc.) redirigent vers leur équivalent, pour les notifications déjà reçues. Les notifications ouvrent `/supervision/alertes`.
+
 L'API tourne en continu : elle interroge les applis selon leur intervalle (boucle toutes les 15 s, vérification lancée quand l'intervalle de l'appli est écoulé, jamais deux en même temps pour une même appli).
 
 ## Données (`backend/prisma/schema.prisma`)

@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.15.0 — 2026-11-11
+
+Demandé le 2026-11-11 : « l'application globale s'appelle NJMDev ; en entrant, on arrive sur un menu général ; seule fonctionnalité disponible : NJM Supervision ; NJM Website grisé pour l'instant ; logo NJMDev ».
+
+- **L'appli devient NJMDev** : nom (onglet, écran d'accueil du téléphone, notifications), **logo NJMDev** officiel (celui de MGA « Powered by NJMDev ») sur l'écran de connexion, dans l'en-tête et comme icône de l'appli installée.
+- **Menu général** à l'ouverture : carte **NJM Supervision** (avec l'état d'ensemble : tout fonctionne ou applis en difficulté, alertes) et carte **NJM Website** grisée (« Bientôt »).
+- Le module Supervision passe sous `/supervision/…` ; le logo de l'en-tête ramène au menu général. Les anciennes adresses et les notifications déjà reçues continuent de fonctionner (redirection).
+- Sur iPhone, l'icône de l'appli installée ne change qu'en la réinstallant (supprimer l'icône, puis Partager › Sur l'écran d'accueil).
+
 ## v0.14.0 — 2026-11-11
 
 - **Onglet « Imports » de Procedia : comparaison par client.** Demandé : « 291 procédures pour BNI dans l'outil, la sup n'en rapporte que 139, pourquoi ? ». L'onglet affiche maintenant les fichiers importés **et les procédures qu'ils ont créées**, la **date de début du suivi**, et un tableau **par client** : procédures dans l'outil, dont importées, autres (saisies, dupliquées ou importées avant la conservation de l'origine), imports suivis. Touchez un client pour filtrer l'historique (nécessite Procedia v0.57.0).
