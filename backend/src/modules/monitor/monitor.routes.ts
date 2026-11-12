@@ -115,9 +115,12 @@ monitorRouter.get("/apps/:key/checks", async (req, res) => {
   });
 });
 
+/** Actualisation demandée par l'utilisateur (geste de glissement) : l'interface envoie `X-Refresh: 1` pour ne pas attendre les mémoires tampons. */
+const wantsFresh = (req: { header(name: string): string | undefined }) => req.header("x-refresh") === "1";
+
 monitorRouter.get("/apps/:key/resources", async (req, res) => {
   const { range } = z.object({ range: z.enum(Object.keys(RANGES) as [RangeKey, ...RangeKey[]]).default("24h") }).parse(req.query);
-  res.json({ range, ...(await getAppResources(getApp(req.params.key), range)) });
+  res.json({ range, ...(await getAppResources(getApp(req.params.key), range, wantsFresh(req))) });
 });
 
 monitorRouter.get("/apps/:key/jobs", async (req, res) => {
@@ -151,8 +154,8 @@ monitorRouter.post("/backlog/:source/sync", async (req, res) => {
   }
 });
 
-monitorRouter.get("/claude/costs", async (_req, res) => {
-  res.json(await getCosts());
+monitorRouter.get("/claude/costs", async (req, res) => {
+  res.json(await getCosts(wantsFresh(req)));
 });
 
 monitorRouter.post("/apps/:key/diagnostic", async (req, res) => {

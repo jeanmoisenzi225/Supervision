@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { PullToRefresh } from "./components/PullToRefresh";
 import { getToken, setToken } from "./lib/api";
 import { AlertsPage } from "./pages/AlertsPage";
 import { AppDetail } from "./pages/AppDetail";
@@ -30,6 +31,7 @@ export function App() {
 
   return (
     <BrowserRouter>
+      <PullToRefresh />
       <Routes>
         <Route index element={<Home onLogout={logout} />} />
         <Route

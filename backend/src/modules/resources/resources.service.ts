@@ -167,16 +167,17 @@ async function checkLatency(app: AppTarget, start: Date, resolution: number) {
   return app.checks.map((c) => ({ id: c.id, label: c.label, points: bucketLatency(rows.filter((r) => r.checkId === c.id), resolution) }));
 }
 
-/** Ressources d'une appli sur une période (gardées 2 minutes en mémoire). */
-export async function getAppResources(app: AppTarget, range: RangeKey) {
+/** Ressources d'une appli sur une période (gardées 2 minutes en mémoire ; `fresh` : actualisation demandée par l'utilisateur, sans attendre). */
+export async function getAppResources(app: AppTarget, range: RangeKey, fresh = false) {
   if (!env.renderApiKey) {
     const { hours, resolution } = RANGES[range];
     return { configured: false, services: [], databases: [], checks: await checkLatency(app, new Date(Date.now() - hours * 3600_000), resolution) };
   }
+  if (fresh) cache.delete(`${app.key}:${range}`);
   return cached(`${app.key}:${range}`, 2 * 60_000, async () => {
     const { hours, resolution } = RANGES[range];
     const start = new Date(Date.now() - hours * 3600_000);
-    const [ids, pgs] = await Promise.all([resolveServiceIds(app), listPostgres().catch(() => [])]);
+    const [ids, pgs] = await Promise.all([resolveServiceIds(app), listPostgres(fresh).catch(() => [])]);
     const services = (await Promise.all(ids.map((id) => serviceResources(id, start, resolution).catch(() => null)))).filter(
       (s): s is ServiceResources => s !== null
     );

@@ -90,3 +90,9 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - Demande (propriétaire, 2026-11-11) : l'application globale s'appelle **NJMDev**, avec le logo NJMDev. À l'entrée, un menu général ; module disponible : **NJM Supervision** (l'outil actuel) ; **NJM Website** grisé pour l'instant.
 - Fait : nom et logo NJMDev (repris du dépôt MGA, `frontend/public/brand/`), menu général `/`, module sous `/supervision`, redirection des anciennes adresses.
 - [ ] NJM Website : à définir.
+
+## 10. Actualisation par glissement 🚧 (v0.16.0)
+
+- Demande (propriétaire, 2026-11-12) : un geste pour actualiser la Supervision en glissant du haut vers le bas. Cas déclencheur : après l'agrandissement de la base de Procedia (1 → 5 Go), la Supervision affichait toujours 1 Go (mémoires tampons de 2 et 10 minutes).
+- Fait : geste « tirer pour actualiser » sur toutes les pages ; l'actualisation manuelle contourne les mémoires tampons du serveur (en-tête `X-Refresh`). Vérifié avec un navigateur à écran tactile émulé (glissement court sans effet, glissement long : un rechargement avec l'en-tête).
+- [ ] Vérification par le propriétaire sur téléphone, puis passage en ✅.

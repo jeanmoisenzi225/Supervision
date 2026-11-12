@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.16.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « on rajoute un geste de glisser pour l'actualisation de la sup, du haut vers le bas » (la taille du disque de la base Procedia restait affichée à 1 Go après son agrandissement, faute d'actualisation).
+
+- **Tirer pour actualiser** : en haut d'une page, glisser vers le bas puis relâcher recharge les données affichées (une pastille « Tirer pour actualiser » / « Relâcher pour actualiser » / « Actualisation… » accompagne le geste). Disponible partout dans l'appli, y compris sur l'appli installée sur téléphone. Un glissement court ne fait rien ; une zone qui défile déjà (liste, tableau) garde son défilement.
+- **Données vraiment fraîches** : l'actualisation manuelle envoie `X-Refresh: 1` ; le serveur ignore alors ses mémoires tampons (ressources Render : 2 minutes, liste des bases Render : 10 minutes, dépenses Claude : 10 minutes) et relit les sources. L'actualisation automatique garde ses délais.
+
 ## v0.15.0 — 2026-11-11
 
 Demandé le 2026-11-11 : « l'application globale s'appelle NJMDev ; en entrant, on arrive sur un menu général ; seule fonctionnalité disponible : NJM Supervision ; NJM Website grisé pour l'instant ; logo NJMDev ».

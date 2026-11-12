@@ -134,9 +134,9 @@ export interface PostgresSummary {
 
 let pgCache: { at: number; list: PostgresSummary[] } | null = null;
 
-/** Bases PostgreSQL du compte Render (gardées 10 minutes en mémoire). */
-export async function listPostgres(): Promise<PostgresSummary[]> {
-  if (pgCache && Date.now() - pgCache.at < 10 * 60_000) return pgCache.list;
+/** Bases PostgreSQL du compte Render (gardées 10 minutes en mémoire ; `fresh` relit Render sans attendre). */
+export async function listPostgres(fresh = false): Promise<PostgresSummary[]> {
+  if (!fresh && pgCache && Date.now() - pgCache.at < 10 * 60_000) return pgCache.list;
   const rows = await renderFetch<({ postgres: Record<string, unknown> } | Record<string, unknown>)[]>("/postgres?limit=100");
   const list = rows.map((row) => {
     const p = ("postgres" in row ? row.postgres : row) as Record<string, unknown>;

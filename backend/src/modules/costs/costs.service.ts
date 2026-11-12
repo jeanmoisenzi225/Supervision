@@ -105,12 +105,12 @@ export function summarize(buckets: CostBucket[], now = new Date(), workspaceName
 
 let cache: { at: number; data: CostSummary } | null = null;
 
-/** Dépenses des 31 derniers jours (gardées 10 minutes en mémoire). */
-export async function getCosts(): Promise<CostSummary> {
+/** Dépenses des 31 derniers jours (gardées 10 minutes en mémoire ; `fresh` relit Anthropic sans attendre). */
+export async function getCosts(fresh = false): Promise<CostSummary> {
   const empty = { monthToDateUsd: 0, todayUsd: 0, yesterdayUsd: 0, daily: [], byModel: [], byWorkspace: [] };
   const budgetUsd = env.claudeMonthlyBudgetUsd || null;
   if (!env.anthropicAdminKey) return { configured: false, budgetUsd, ...empty };
-  if (cache && Date.now() - cache.at < 10 * 60_000) return cache.data;
+  if (!fresh && cache && Date.now() - cache.at < 10 * 60_000) return cache.data;
   try {
     const now = new Date();
     const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 30 * 86_400_000);

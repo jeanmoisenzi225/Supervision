@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { onRefreshRequested } from "./refresh";
 
 /** Charge des données puis les rafraîchit à intervalle régulier (onglet visible seulement). */
 export function usePolling<T>(load: () => Promise<T>, intervalMs: number, deps: unknown[] = []) {
@@ -25,8 +26,10 @@ export function usePolling<T>(load: () => Promise<T>, intervalMs: number, deps: 
     }, intervalMs);
     const onVisible = () => document.visibilityState === "visible" && void refresh();
     document.addEventListener("visibilitychange", onVisible);
+    const stopListening = onRefreshRequested(() => void refresh());
     return () => {
       clearInterval(timer);
+      stopListening();
       document.removeEventListener("visibilitychange", onVisible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
