@@ -1,0 +1,49 @@
+# Module Facturation NJMDev
+
+## Intention et périmètre
+
+Le module Facturation est un espace privé de Supervision destiné à gérer les clients, préparer les factures, produire les documents PDF et suivre les règlements de l'activité NJMDev. Il s'agit d'un module interne au super-administrateur, pas d'une fonctionnalité multi-tenant vendue aux applications surveillées.
+
+La marque commerciale NJMDev peut être configurée dès maintenant. Elle est volontairement séparée de l'identité juridique du vendeur : aucune nom légal de l’entrepreneur, forme juridique, adresse officielle en Côte d’Ivoire, RCCM, NCC et régime de TVA ne doit être inventée.
+
+## États et garde-fous
+
+- **Brouillon** : modifiable, sans numéro officiel ; aperçu A4 et génération PDF côté serveur à la demande. Le PDF est téléchargé directement par le navigateur, clairement marqué « BROUILLON », puis n’est pas conservé par le serveur.
+- **Émise** : uniquement lorsque le profil juridique est complet et validé ; numéro attribué à l'émission dans une transaction atomique.
+- **Payée / partiellement payée / en retard** : états calculés à partir des règlements et de l'échéance.
+- Une facture émise ne se modifie pas et son numéro n'est jamais réutilisé. Une correction ultérieure passe par le document rectificatif approprié.
+- Les données du vendeur et du client sont figées dans un instantané au moment de l'émission.
+- Les calculs définitifs sont effectués côté serveur avec des décimales exactes ; l'interface n'est qu'un aperçu.
+- Aucun fichier PDF n’est actuellement archivé : ni stockage objet, ni système de fichiers Render. Un éventuel archivage des documents officiellement émis fera l’objet d’une décision et d’une évolution séparées.
+
+## Parcours cible
+
+1. Configurer les éléments commerciaux NJMDev.
+2. Créer une fiche client.
+3. Saisir une facture avec dates, lignes, quantités, prix unitaires HT, remises et TVA.
+4. Enregistrer en brouillon, vérifier l’aperçu A4 et télécharger le PDF de travail généré à la demande.
+5. Compléter le profil juridique et les mentions requises avant toute émission.
+6. Émettre et numéroter après validation réglementaire ; l’archivage PDF n’est pas activé dans le périmètre actuel.
+7. Suivre les règlements et, ultérieurement, envoyer le document par e-mail.
+
+## Architecture cible
+
+- API Express protégée par `requireAdmin`, sous un préfixe dédié `/api/billing`.
+- Modèles Prisma dédiés : profil de facturation, clients, factures, lignes, règlements et événements.
+- Migration PostgreSQL versionnée.
+- Calculs et transitions d'état validés côté serveur.
+- Aperçu A4 rendu côté navigateur ; export PDF par la fonction d'impression du navigateur pour les seuls brouillons.
+- La génération PDF serveur et le stockage objet durable restent à mettre en place avant toute émission officielle ; aucun fichier local Render ne sera considéré comme archive.
+- Envoi e-mail et connecteur de plateforme agréée séparés du cœur métier pour pouvoir changer de fournisseur.
+
+## Cadre NJMDev en Côte d’Ivoire
+
+NJMDev est prévu comme nom commercial d’une entreprise individuelle ivoirienne. Le vendeur légal sera la personne physique exploitante ; le nom commercial ne constitue pas une personne morale distincte. La devise par défaut est le franc CFA BCEAO (XOF), avec prise en charge de devises étrangères pour les clients internationaux. Le profil distingue RCCM, NCC, régime fiscal et régime de TVA. Aucun taux ni régime fiscal n’est présumé : ces paramètres seront renseignés après confirmation auprès de la DGI ou d’un conseil local.
+
+Les factures officielles devront suivre les exigences DGI/FNE effectivement applicables à l’entreprise individuelle et à son régime. Le module ne génère pas de numéro officiel ni de QR code de certification de sa propre initiative. Les brouillons restent clairement identifiés comme tels.
+
+L’activité est déclarée comme exploitée depuis la Côte d’Ivoire. La résidence personnelle du propriétaire en France justifie néanmoins une validation fiscale transfrontalière distincte avant le démarrage commercial.
+
+## Phase initiale
+
+La première phase doit rendre utilisables les clients et les brouillons, avec calculs et aperçu. Tant que l'identité juridique n'est pas renseignée, l'interface doit afficher explicitement que l'émission officielle est désactivée. Les factures de démonstration ne doivent jamais recevoir de numéro ressemblant à un numéro officiel.

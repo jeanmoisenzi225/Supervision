@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { actionsRouter } from "./modules/actions/actions.routes";
 import { alertsRouter } from "./modules/alerts/alerts.routes";
 import { authRouter } from "./modules/auth/auth.routes";
+import { billingRouter } from "./modules/billing/billing.routes";
 import { ingestRouter, logsRouter } from "./modules/logs/logs.routes";
 import { monitorRouter } from "./modules/monitor/monitor.routes";
 import { pushRouter } from "./modules/push/push.routes";
@@ -41,6 +42,7 @@ export function createApp() {
   app.use("/api/logs", logsRouter);
   app.use("/api/apps", actionsRouter);
   app.use("/api/push", pushRouter);
+  app.use("/api/billing", billingRouter);
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Route inconnue" }));
 

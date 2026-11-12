@@ -57,6 +57,29 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   return data as T;
 }
 
+
+export async function apiBlob(path: string): Promise<Blob> {
+  const token = getToken();
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}/api${path}`, {
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError(0, "Serveur de supervision injoignable");
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({})) as { error?: string; totpRequired?: boolean };
+    if (res.status === 401 && path !== "/auth/login" && !data.totpRequired && !path.startsWith("/auth/2fa")) {
+      setToken(null);
+      window.dispatchEvent(new Event("supervision:logout"));
+    }
+    throw new ApiError(res.status, data.error ?? `Erreur ${res.status}`, data);
+  }
+  return res.blob();
+}
+
 export type AppStatus = "ok" | "degraded" | "down" | "unknown" | "not_deployed" | "paused";
 
 export interface PauseInfo {

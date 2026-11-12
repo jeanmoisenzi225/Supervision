@@ -253,3 +253,84 @@ html, body { overscroll-behavior-y: contain; }
 .ptr-busy .ptr-icon { animation: ptr-spin 0.8s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ptr-busy .ptr-icon { animation: none; } }
+
+
+/* Facturation : formulaires denses mais lisibles sur mobile. */
+.invoice-table-scroll { width: 100%; overflow-x: auto; }
+.invoice-table-scroll .table { min-width: 650px; }
+.invoice-line { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(4, minmax(90px, 1fr)) auto; gap: 8px; align-items: end; padding: 10px 0; border-top: 1px solid var(--border); }
+.invoice-line label { min-width: 0; }
+.invoice-line input, .invoice-line select { width: 100%; min-width: 0; }
+.invoice-line .line-description { min-width: 180px; }
+@media (max-width: 760px) {
+  .invoice-line { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .invoice-line .line-description { grid-column: 1 / -1; }
+}
+
+
+/* Aperçu A4 des brouillons : feuille indépendante de l'interface sombre. */
+.invoice-preview-overlay { position: fixed; inset: 0; z-index: 50; overflow: auto; background: #0b1120; padding: 16px; }
+.invoice-preview-toolbar { max-width: 980px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; color: #e2e8f0; }
+.invoice-preview-toolbar > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.invoice-preview-toolbar span { color: #94a3b8; font-size: 13px; }
+.invoice-print-root { color: #172033; font: 10pt/1.45 Arial, Helvetica, sans-serif; }
+.invoice-print-sheet { width: 210mm; min-height: 297mm; margin: 0 auto 24px; padding: 17mm 16mm; background: #fff; box-shadow: 0 8px 32px rgba(0,0,0,.35); }
+.invoice-preview-header { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 18px; border-bottom: 2px solid #243247; }
+.invoice-preview-header h1 { color: #172033; font-size: 22pt; margin: 0 0 6px; }
+.invoice-preview-header p, .invoice-preview-parties p, .invoice-preview-payment p, .invoice-preview-notes p { margin: 2px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.invoice-preview-title { text-align: right; min-width: 190px; }
+.invoice-preview-title > span { display: inline-block; padding: 5px 10px; border: 2px solid #b45309; color: #92400e; font-weight: 800; letter-spacing: .12em; transform: rotate(-3deg); }
+.invoice-preview-title h2 { color: #172033; font-size: 19pt; margin: 14px 0 4px; }
+.invoice-preview-title strong { overflow-wrap: anywhere; }
+.invoice-preview-parties { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; margin: 24px 0; }
+.invoice-preview-parties h3, .invoice-preview-notes h3, .invoice-preview-payment h3 { color: #64748b; font-size: 8pt; letter-spacing: .08em; margin: 0 0 8px; }
+.invoice-preview-dates { display: grid; gap: 8px; align-content: start; }
+.invoice-preview-field { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid #e2e8f0; }
+.invoice-preview-field span { color: #64748b; }
+.invoice-preview-field strong { text-align: right; overflow-wrap: anywhere; }
+.invoice-preview-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 9pt; }
+.invoice-preview-table th { background: #edf2f7; color: #243247; text-align: left; font-size: 8pt; }
+.invoice-preview-table th, .invoice-preview-table td { padding: 9px 7px; border-bottom: 1px solid #dbe2ea; vertical-align: top; }
+.invoice-preview-table td { overflow-wrap: anywhere; }
+.invoice-preview-table .right { text-align: right; white-space: nowrap; }
+.invoice-preview-bottom { display: grid; grid-template-columns: 1fr 270px; gap: 24px; margin-top: 22px; }
+.invoice-preview-totals { border-top: 2px solid #243247; padding-top: 8px; }
+.invoice-preview-totals .invoice-preview-field:last-child { font-size: 12pt; border-bottom: 0; padding-top: 10px; }
+.invoice-preview-payment { margin-top: 26px; padding-top: 12px; border-top: 1px solid #dbe2ea; }
+.invoice-preview-footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #cbd5e1; color: #64748b; font-size: 8pt; text-align: center; }
+.invoice-preview-footer strong { color: #92400e; letter-spacing: .06em; }
+.invoice-preview-footer p { margin: 5px 0; }
+@media (max-width: 760px) {
+  .invoice-preview-overlay { padding: 8px; }
+  .invoice-print-sheet { width: 100%; min-height: 0; padding: 22px 16px; }
+  .invoice-preview-header { flex-direction: column; }
+  .invoice-preview-title { text-align: left; }
+  .invoice-preview-parties, .invoice-preview-bottom { grid-template-columns: 1fr; }
+  .invoice-preview-table { font-size: 8pt; }
+  .invoice-preview-table th, .invoice-preview-table td { padding: 6px 3px; }
+}
+@page { size: A4; margin: 0; }
+@media print {
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  body * { visibility: hidden !important; }
+  .invoice-print-root, .invoice-print-root * { visibility: visible !important; }
+  .invoice-preview-overlay { position: static !important; inset: auto !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+  .invoice-preview-toolbar, .no-print { display: none !important; }
+  .invoice-print-root { position: absolute !important; left: 0 !important; top: 0 !important; width: 210mm !important; }
+  .invoice-print-sheet { width: 210mm !important; min-height: 297mm !important; margin: 0 !important; padding: 17mm 16mm !important; box-shadow: none !important; }
+  .invoice-preview-table tr, .invoice-preview-field { break-inside: avoid; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
+
+
+/* Identité NJMDev dans le module de facturation et ses documents. */
+.billing-page-brand { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.billing-page-brand img { display: block; width: 116px; max-height: 74px; height: auto; object-fit: contain; flex: 0 0 auto; }
+.billing-page-brand h1 { margin: 0 0 3px; }
+.invoice-preview-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.invoice-preview-brand > img { display: block; width: 132px; max-height: 82px; height: auto; object-fit: contain; }
+.invoice-preview-issuer h1 { margin: 0 0 5px; font-size: 13pt; }
+@media (max-width: 640px) {
+  .billing-page-brand { gap: 9px; }
+  .billing-page-brand img { width: 88px; max-height: 58px; }
+}

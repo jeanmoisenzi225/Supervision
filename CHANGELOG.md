@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.18.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « rajouter le module de facturation sur la prod de la supervision ».
+
+- **Module Facturation NJMDev** (branche `njmdev/facturation`, jusqu'ici sur le service de test `supervision-staging`) ajouté à la production : fiches clients, brouillons de facture (lignes, quantités, prix HT, remises, TVA), aperçu A4, PDF « BROUILLON » avec le logo NJMDev, calculs exacts côté serveur, devise XOF par défaut (XOF, EUR, USD). Émission officielle désactivée tant que le profil légal n'est pas renseigné. Nouvelles tables PostgreSQL (clients, factures, lignes), migration appliquée au démarrage.
+- La page de coûts estimés par appli (v0.17.0, ex-« Facturation ») devient **« Coûts »** (`/supervision/couts`, route `GET /api/hosting-costs`) : le nom « Facturation » revient au module de facturation des clients.
+- Historique de la branche fusionnée (numérotation propre à la branche, avant fusion) : voir ci-dessous.
+
 ## v0.17.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « intégrer la facturation par application ».
@@ -57,6 +65,39 @@ Demandé le 2026-11-11 : « l'application globale s'appelle NJMDev ; en entrant,
 ## v0.13.0 — 2026-11-10
 
 - **Onglet « Imports » de Procedia** : historique de tous les imports de documents (réussis, en échec avec la cause classée, en cours), filtres et pagination, relayé depuis la route signée `reports/imports` de Procedia (v0.51.0). Alerte visuelle tant qu'un import est en cours, pour ne pas mettre en ligne à ce moment.
+
+### Historique de la branche « facturation » avant fusion (numéros de version de la branche)
+
+#### Branche facturation, v0.16.0 — 2026-11-09
+
+- Génération PDF côté serveur à la demande pour les brouillons enregistrés NJMDev.
+- Téléchargement direct depuis la liste des brouillons ; le PDF porte un marquage BROUILLON et ne reçoit aucun numéro officiel ni certification FNE.
+- Aucun fichier PDF n’est enregistré sur le serveur ou dans un stockage externe ; l’aperçu A4 reste disponible séparément.
+
+#### Branche facturation, v0.15.0 — 2026-11-09
+
+- Aperçu A4 des brouillons NJMDev avec identité commerciale et informations client, lignes, remises, TVA et totaux.
+- Export PDF de travail via la fonction d’impression du navigateur ; marquage permanent BROUILLON et rappel de l’absence de certification FNE.
+- La génération PDF serveur et le stockage durable restent différés aux documents officiellement émis.
+
+#### Branche facturation, v0.14.1 — 2026-11-09
+
+- Correction de la conservation de la devise lors de la modification d’un brouillon et recalcul cohérent des montants selon XOF/EUR/USD.
+
+#### Branche facturation, v0.14.0 — 2026-11-09
+
+- Facturation adaptée au cadre NJMDev en Côte d’Ivoire : entreprise individuelle au nom propre, nom commercial distinct, RCCM/NCC.
+- XOF/FCFA comme devise par défaut ; devises XOF, EUR et USD prises en charge sur les brouillons.
+- Retrait des taux de TVA français préremplis : taux paramétrable, 0 % par défaut tant que le régime ivoirien n’est pas confirmé.
+- Préparation documentaire au dispositif DGI/FNE ; aucune émission officielle ni certification simulée.
+
+#### Branche facturation, v0.13.0 — 2026-11-09
+
+- **Facturation NJMDev (première phase)** : nouvelle entrée Facturation dans la navigation, fiches clients (création, modification, archivage), brouillons de facture multi-lignes, remises et taux de TVA par ligne.
+- Calculs HT, TVA et TTC effectués côté serveur avec des décimales exactes ; seules les factures en brouillon sont modifiables ou supprimables.
+- Paramètres commerciaux NJMDev séparés de l'identité juridique ; émission officielle explicitement désactivée tant que le vendeur n'est pas juridiquement configuré.
+- Nouvelle migration PostgreSQL ; routes `/api/billing` protégées par le super-administrateur.
+
 
 ## v0.12.1 — 2026-11-08
 

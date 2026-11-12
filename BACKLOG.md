@@ -20,7 +20,8 @@ Une section par appli, dans son propre dépôt, avec sa propre version :
 - [ ] **Yiri Invest** suite : alertes métier dédiées (récap ou BOC non parti à l'heure).
 - [x] **Procedia** : disponibilité surveillée (v0.1.4, 2026-10-31).
 - [x] **Procedia** v0.15.0 (2026-11-01) : module Node, `mirrorConsole` + `captureProcessErrors`, erreurs 500 et 5xx prévues avec modèle de route (jamais l'objet d'erreur : données de clients). À saisir sur `procedia-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
-- [ ] **My Family** : à intégrer dès le premier backend.\n- [x] **EDEN Supervision** (2026-11-08) : disponibilité API, gateway et interface web ; reconnaissance des services Render `eden-sup-*` ; collecte des journaux backend Python via le module commun. EDEN SUP conserve sa mission de supervision métier pour EDEN Telecom, NJMDev Supervision supervise l’application EDEN comme service du parc.
+- [ ] **My Family** : à intégrer dès le premier backend.
+- [x] **EDEN Supervision** (2026-11-08) : disponibilité API, gateway et interface web ; reconnaissance des services Render `eden-sup-*` ; collecte des journaux backend Python via le module commun. EDEN SUP conserve sa mission de supervision métier pour EDEN Telecom, NJMDev Supervision supervise l’application EDEN comme service du parc.
 - [ ] **Site Autonova** : surveillé par son adresse ; échec de construction à remonter par MGA (publication du site).
 
 ## 3. Actions super administrateur par appli
@@ -97,13 +98,37 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - Fait : geste « tirer pour actualiser » sur toutes les pages ; l'actualisation manuelle contourne les mémoires tampons du serveur (en-tête `X-Refresh`). Vérifié avec un navigateur à écran tactile émulé (glissement court sans effet, glissement long : un rechargement avec l'en-tête).
 - [ ] Vérification par le propriétaire sur téléphone, puis passage en ✅.
 
-## 10. Procedia en offre payante Render ✅ (v0.16.5)
+## 11. Procedia en offre payante Render ✅ (v0.16.5)
 
 - Constat (2026-11-12) : API `procedia-backend` en Starter, base `procedia-db` payante (5 Go). Vérification passée de 30 minutes à 1 minute, mentions de l'offre gratuite retirées, tableau des offres d'hébergement ajouté à `docs/deploiement.md`.
 - [ ] Ménage : base de test `supervision-staging-db` (gratuite) expire le 2026-12-09.
 
-## 11. Coûts par application ✅ (v0.17.0, renommée « Coûts » en v0.18.0)
+## 12. Coûts par application ✅ (v0.17.0, renommée « Coûts » en v0.18.0)
 
 - Demande (propriétaire, 2026-11-12) : intégrer la facturation par application. Render n'expose pas sa facturation par l'API : estimation d'après les offres et les tarifs publics (relevés le 2026-11-12), plus les dépenses Claude du mois par espace de travail.
 - [ ] Vérifier le rattachement des espaces de travail Claude (nom contenant le nom de l'appli) dès que la clé Admin Anthropic est lue ; sinon `<APPLI>_CLAUDE_WORKSPACE`.
 - [ ] Idée : historique mensuel des coûts, alerte de budget par appli, montants en francs CFA.
+
+## 13. Module Facturation NJMDev 🚧 (fusionné en production en v0.18.0)
+
+Cadre confirmé : entreprise individuelle en Côte d’Ivoire, au nom propre de l’exploitant, avec NJMDev comme nom commercial. Devise par défaut XOF, devises internationales possibles. Régime fiscal et régime de TVA à confirmer ; émission officielle soumise aux exigences DGI/FNE applicables. Le propriétaire réside actuellement en France : la situation transfrontalière devra être validée avant émission.
+
+Objectif : intégrer à Supervision un espace privé de gestion commerciale et de facturation pour l'activité NJMDev, sans dépendre d'une structure juridique qui n'est pas encore constituée.
+
+- [ ] Paramètres commerciaux (marque, logo, coordonnées de contact et de paiement), distincts de l'identité juridique du vendeur.
+- [ ] Configuration juridique différée : nom légal de l’exploitant, entreprise individuelle, adresse en Côte d’Ivoire, RCCM, NCC, régime fiscal, régime TVA et mentions DGI/FNE ; bloquer l'émission officielle tant que les données requises ne sont pas validées.
+- [x] Gestion des clients et adresses ; archivage plutôt que suppression des clients déjà utilisés (v0.13.0).
+- [x] Création et gestion des brouillons, lignes, quantités, prix HT, remises et taux de TVA multiples (v0.13.0).
+- [x] Calculs monétaires exacts côté serveur, totaux HT, TVA et TTC (v0.13.0).
+- [x] Aperçu A4 des brouillons et export PDF via impression du navigateur (v0.15.0) ; document explicitement marqué BROUILLON.
+- [x] Génération PDF côté serveur à la demande pour les brouillons enregistrés, téléchargement direct sans archivage ni stockage externe (v0.16.0).
+- [ ] Archivage durable des PDF : hors périmètre actuel, à reconsidérer uniquement si une conservation des documents émis est décidée.
+- [x] Cadrage pays Côte d’Ivoire, entreprise individuelle, devise XOF par défaut et prise en charge XOF/EUR/USD dans les brouillons (v0.14.0).
+- [ ] Profil légal ivoirien : identité de l’exploitant, nom commercial, adresse, RCCM, NCC, régime fiscal et régime TVA (à compléter après immatriculation).
+- [ ] Qualification du parcours FNE auprès de la DGI avant activation de l’émission.
+- [ ] Numérotation chronologique continue et atomique à l'émission ; instantané des identités vendeur/client ; facture émise non modifiable.
+- [ ] Historique, suivi des paiements et journal des événements.
+- [ ] Envoi e-mail traçable (phase ultérieure).
+- [ ] Préparer l'intégration à une plateforme agréée pour la facturation électronique ; ne pas assimiler un PDF envoyé par e-mail à une facture électronique conforme.
+- [ ] Tests : calculs multi-TVA, concurrence de numérotation, immutabilité, autorisations et PDF.
+- [ ] Documentation, migrations et déploiement vérifiés.

@@ -6,6 +6,7 @@ import { getToken, setToken } from "./lib/api";
 import { AlertsPage } from "./pages/AlertsPage";
 import { AppDetail } from "./pages/AppDetail";
 import { BacklogPage } from "./pages/BacklogPage";
+import { BillingPage } from "./pages/BillingPage";
 import { CostsPage } from "./pages/CostsPage";
 import { ClaudePage } from "./pages/ClaudePage";
 import { Dashboard } from "./pages/Dashboard";
@@ -47,6 +48,7 @@ export function App() {
           <Route path="journaux" element={<LogsPage />} />
           <Route path="claude" element={<ClaudePage />} />
           <Route path="couts" element={<CostsPage />} />
+          <Route path="facturation" element={<BillingPage />} />
           <Route path="backlog" element={<BacklogPage />} />
           <Route path="reglages" element={<Settings />} />
           <Route path="*" element={<Navigate to="/supervision" replace />} />
