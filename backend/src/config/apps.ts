@@ -116,15 +116,13 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     envPrefix: "PROCEDIA",
     name: "Procedia",
     description: "Modélisation et test des processus métier (Catalys Consulting)",
-    // Offre gratuite Render : chaque vérification réveille le service, qui
-    // reste alors éveillé 15 minutes. Un intervalle long évite de consommer
-    // tout le quota mensuel d'heures gratuites (voir docs/integration.md).
-    intervalSec: 1800,
-    sleepsWhenIdle: true,
+    // Offre payante Render (Starter, constatée le 2026-11-12) : le service ne
+    // s'endort plus, vérification chaque minute comme MGA et Yiri Invest.
+    // (Offre gratuite avant : 30 min, service réveillé par la vérification.)
+    intervalSec: 60,
     defaultAdminUrl: "https://procedia-backend.onrender.com/api",
     renderNames: [/^procedia-/],
     defaultChecks: [
-      // L'API dort hors usage : c'est elle que la vérification réveille.
       { id: "api", label: "API", url: "https://procedia-backend.onrender.com/api/health", expect: "health" },
       { id: "app", label: "Appli web", url: "https://procedia-frontend.onrender.com/", expect: "2xx" },
     ],

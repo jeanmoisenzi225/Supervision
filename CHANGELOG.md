@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.16.5 — 2026-11-12
+
+- **Procedia en offre payante Render** (API Starter, base payante, constaté via l'API Render) : vérification **chaque minute** au lieu de 30 minutes, plus de délai de réveil (délai d'attente des appels ramené à 30 s, seuil de lenteur du diagnostic à 5 s, mentions « service gratuit mis en veille » retirées pour Procedia). Documentation mise à jour : hébergement des applis (offres Render constatées), règle de réveil de l'offre gratuite devenue historique.
+
 ## v0.16.4 — 2026-11-12
 
 - **Icône de l'appli installée** : l'iPhone gardait l'ancienne icône (électrocardiogramme) en mémoire, sous le même nom de fichier. Les icônes NJMDev ont de nouveaux noms (`njmdev-*.png`), ce qui oblige le téléphone à les recharger à la réinstallation.

@@ -96,3 +96,8 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - Demande (propriétaire, 2026-11-12) : un geste pour actualiser la Supervision en glissant du haut vers le bas. Cas déclencheur : après l'agrandissement de la base de Procedia (1 → 5 Go), la Supervision affichait toujours 1 Go (mémoires tampons de 2 et 10 minutes).
 - Fait : geste « tirer pour actualiser » sur toutes les pages ; l'actualisation manuelle contourne les mémoires tampons du serveur (en-tête `X-Refresh`). Vérifié avec un navigateur à écran tactile émulé (glissement court sans effet, glissement long : un rechargement avec l'en-tête).
 - [ ] Vérification par le propriétaire sur téléphone, puis passage en ✅.
+
+## 10. Procedia en offre payante Render ✅ (v0.16.5)
+
+- Constat (2026-11-12) : API `procedia-backend` en Starter, base `procedia-db` payante (5 Go). Vérification passée de 30 minutes à 1 minute, mentions de l'offre gratuite retirées, tableau des offres d'hébergement ajouté à `docs/deploiement.md`.
+- [ ] Ménage : base de test `supervision-staging-db` (gratuite) expire le 2026-12-09.

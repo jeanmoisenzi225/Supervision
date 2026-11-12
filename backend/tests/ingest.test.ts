@@ -42,11 +42,14 @@ describe("configuration des applis", () => {
       { id: "url2", label: "url2", url: "https://b.com/", expect: "2xx" },
     ]);
   });
-  it("donne un délai long aux services mis en veille", () => {
-    const env: Record<string, string> = { PROCEDIA_URLS: "api|API|https://p.onrender.com/api/health", PROCEDIA_INGEST_TOKEN: "t" };
-    const procedia = buildApps((n) => env[n] ?? "").find((a) => a.key === "procedia")!;
-    expect(procedia.checks[0].timeoutMs).toBe(90_000);
-    expect(procedia.ingestToken).toBe("t");
+  it("donne un délai long aux services mis en veille (offre gratuite)", () => {
+    const env: Record<string, string> = { YIRI_URLS: "api|API|https://p.onrender.com/api/health", YIRI_INGEST_TOKEN: "t" };
+    const apps = buildApps((n) => env[n] ?? "");
+    const sleeping = apps.find((a) => a.sleepsWhenIdle);
+    // Aucune appli n'est en offre gratuite depuis le passage de Procedia en Starter : le délai long ne vaut que pour sleepsWhenIdle.
+    expect(sleeping).toBeUndefined();
+    expect(apps.find((a) => a.key === "yiri")!.checks[0].timeoutMs).toBe(15_000);
+    expect(apps.find((a) => a.key === "yiri")!.ingestToken).toBe("t");
   });
 });
 
@@ -66,14 +69,15 @@ describe("sujet des notifications", async () => {
 });
 
 describe("adresses par défaut", () => {
-  it("surveille Procedia sans variable, avec le délai d'un service en veille", () => {
+  it("surveille Procedia sans variable, chaque minute (offre payante, service qui ne s'endort plus)", () => {
     const procedia = buildApps(() => "").find((a) => a.key === "procedia")!;
     expect(procedia.checks.map((c) => c.url)).toEqual([
       "https://procedia-backend.onrender.com/api/health",
       "https://procedia-frontend.onrender.com/",
     ]);
-    expect(procedia.checks.every((c) => c.timeoutMs === 90_000)).toBe(true);
-    expect(procedia.intervalSec).toBe(1800);
+    expect(procedia.sleepsWhenIdle).toBe(false);
+    expect(procedia.checks.every((c) => c.timeoutMs === 15_000)).toBe(true);
+    expect(procedia.intervalSec).toBe(60);
   });
 });
 

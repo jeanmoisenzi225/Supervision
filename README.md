@@ -10,7 +10,7 @@ NJM Supervision : tableau de bord unique pour superviser tous nos projets :
 | **Site Autonova** | Site vitrine (alimenté par MGA) |
 | **Yiri Invest** | Serveur de l'agent WhatsApp et appli web |
 | **My Family** | À brancher dès la mise en ligne |
-| **Procedia** | API (offre gratuite Render, vérifiée toutes les 30 min) et appli web |
+| **Procedia** | API (offre payante Render, vérifiée chaque minute) et appli web |
 
 ## Ce que fait l'appli
 

@@ -12,11 +12,12 @@ Adresses surveillées par défaut (`backend/src/config/apps.ts`) :
 | Site Autonova | page d'accueil | 5 min |
 | Yiri Invest | `/manifest.json`, `/app` | 1 min |
 | My Family | aucune (pas encore en ligne) | 5 min |
-| Procedia | API `/api/health` (réveillée par la vérification, ~1 min), appli web | 30 min |\n| EDEN Supervision | API backend, gateway, application web | 1 min |
+| Procedia | API `/api/health`, appli web | 1 min |
+| EDEN Supervision | API backend, gateway, application web | 1 min |
 
 Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules au format `id|libellé|adresse` (une adresse contenant `health` est lue comme une route de santé). `<PREFIXE>_INTERVAL_SEC` change l'intervalle.
 
-**Procedia (offre gratuite Render)** : chaque vérification réveille le service, qui reste ensuite éveillé 15 minutes. Avec une vérification toutes les 30 min, il est éveillé environ la moitié du temps, soit ~360 h par mois sur les 750 h gratuites du compte (partagées entre tous les services gratuits). Ne pas descendre sous 30 min sans passer Procedia en Starter.
+**Procedia (offre payante Render depuis le 2026-11-12)** : l'API tourne en Starter (0,5 processeur, 512 Mo) et ne s'endort plus ; la base `procedia-db` est une base payante (disque de 5 Go). La vérification passe donc à 1 minute, sans délai de réveil. Avant, l'offre gratuite mettait le service en veille après 15 minutes d'inactivité : chaque vérification le réveillait, d'où un intervalle de 30 minutes pour ne pas consommer les 750 h gratuites du compte. L'option `sleepsWhenIdle` du catalogue (`backend/src/config/apps.ts`) reste disponible pour une appli en offre gratuite.
 
 ## 2. Journaux et alertes
 
