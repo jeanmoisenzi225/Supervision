@@ -4,12 +4,17 @@ import { api, type AppOverview } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
 import { APP_VERSION } from "../version";
 
-/** Menu général de NJMDev : un module par carte (NJM Supervision ouvert, NJM Website à venir). */
+/** Menu général de NJMDev : un module par carte (NJM Supervision et NJM Facturation ouverts, NJM Website à venir). */
 export function Home({ onLogout }: { onLogout: () => void }) {
   const { data } = usePolling(() => api<{ apps: AppOverview[] }>("/overview"), 30_000);
   const apps = data?.apps ?? [];
   const watched = apps.filter((a) => a.status !== "not_deployed" && a.status !== "paused");
   const down = watched.filter((a) => a.status === "down" || a.status === "degraded");
+  const { data: billing } = usePolling(
+    () => Promise.all([api<unknown[]>("/billing/clients"), api<unknown[]>("/billing/invoices")]).then(([c, i]) => ({ clients: c.length, invoices: i.length })),
+    60_000
+  );
+  const billingSummary = !billing ? "Chargement…" : `${billing.clients} client(s) · ${billing.invoices} facture(s) prévisionnelle(s) ou brouillon(s)`;
   const alerts = apps.reduce((n, a) => n + a.openAlerts, 0);
   const summary = !data ? "Chargement…" : down.length ? `${down.length} appli(s) en difficulté · ${alerts} alerte(s)` : `Tout fonctionne · ${watched.length} appli(s) · ${alerts} alerte(s)`;
 
@@ -34,6 +39,19 @@ export function Home({ onLogout }: { onLogout: () => void }) {
               <strong>NJM Supervision</strong>
               <span className="small muted">Disponibilité, alertes, journaux, ressources, clients, backlog et administration de toutes les applis.</span>
               <span className={`small module-status ${down.length ? "bad" : data ? "ok" : ""}`}>{summary}</span>
+            </span>
+          </Link>
+          <Link to="/facturation" className="card module-card">
+            <span className="module-icon">
+              <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" fill="none" stroke="#6366f1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 3h9l4 4v14H6z" />
+                <path d="M15 3v4h4M9 12h7M9 16h7M9 8h3" />
+              </svg>
+            </span>
+            <span className="module-body">
+              <strong>NJM Facturation</strong>
+              <span className="small muted">Clients, factures prévisionnelles d'après les coûts d'hébergement, lignes libres, aperçu et PDF.</span>
+              <span className="small module-status">{billingSummary}</span>
             </span>
           </Link>
           <div className="card module-card disabled" aria-disabled="true">

@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.20.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « comme NJM Supervision, on crée un module NJM Facturation qui va gérer la facturation ».
+
+- **Nouveau module « NJM Facturation »** dans le menu général de NJMDev, à côté de NJM Supervision (et de NJM Website, encore grisé) : carte avec le nombre de clients et de factures, cadre propre (en-tête « NJMDev | Facturation », retour au menu par le logo), adresse `/facturation`.
+- La page Facturation quitte la navigation de NJM Supervision (qui garde « Coûts ») ; l'ancienne adresse `/supervision/facturation` redirige vers le nouveau module.
+- Liste des factures en cartes (aperçu, PDF, modification, suppression accessibles sur téléphone sans défilement horizontal).
+
 ## v0.19.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « à partir du module facturation, on facture chaque client ; facture prévisionnelle d'après les coûts, la vraie facture une fois que Render nous a facturé ; lignes libres pour les coûts de développement, la main d'œuvre, l'e-mail… ; lignes d'hébergement récupérées telles quelles mais modifiables ».

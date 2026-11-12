@@ -109,7 +109,7 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - [ ] Vérifier le rattachement des espaces de travail Claude (nom contenant le nom de l'appli) dès que la clé Admin Anthropic est lue ; sinon `<APPLI>_CLAUDE_WORKSPACE`.
 - [ ] Idée : historique mensuel des coûts, alerte de budget par appli, montants en francs CFA.
 
-## 13. Module Facturation NJMDev 🚧 (fusionné en production en v0.18.0)
+## 13. Module Facturation NJMDev 🚧 (en production depuis v0.18.0 ; module « NJM Facturation » du menu NJMDev depuis v0.20.0)
 
 Cadre confirmé : entreprise individuelle en Côte d’Ivoire, au nom propre de l’exploitant, avec NJMDev comme nom commercial. Devise par défaut XOF, devises internationales possibles. Régime fiscal et régime de TVA à confirmer ; émission officielle soumise aux exigences DGI/FNE applicables. Le propriétaire réside actuellement en France : la situation transfrontalière devra être validée avant émission.
 

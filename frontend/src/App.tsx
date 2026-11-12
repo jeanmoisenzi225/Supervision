@@ -6,6 +6,7 @@ import { getToken, setToken } from "./lib/api";
 import { AlertsPage } from "./pages/AlertsPage";
 import { AppDetail } from "./pages/AppDetail";
 import { BacklogPage } from "./pages/BacklogPage";
+import { BillingLayout } from "./components/BillingLayout";
 import { BillingPage } from "./pages/BillingPage";
 import { CostsPage } from "./pages/CostsPage";
 import { ClaudePage } from "./pages/ClaudePage";
@@ -48,10 +49,14 @@ export function App() {
           <Route path="journaux" element={<LogsPage />} />
           <Route path="claude" element={<ClaudePage />} />
           <Route path="couts" element={<CostsPage />} />
-          <Route path="facturation" element={<BillingPage />} />
+          <Route path="facturation" element={<Navigate to="/facturation" replace />} />
           <Route path="backlog" element={<BacklogPage />} />
           <Route path="reglages" element={<Settings />} />
           <Route path="*" element={<Navigate to="/supervision" replace />} />
+        </Route>
+        <Route path="facturation" element={<BillingLayout onLogout={logout} />}>
+          <Route index element={<BillingPage />} />
+          <Route path="*" element={<Navigate to="/facturation" replace />} />
         </Route>
         {/* Anciennes adresses (avant NJMDev, v0.15.0) : notifications déjà reçues, favoris. */}
         {["applis/*", "alertes", "journaux", "claude", "backlog", "reglages"].map((p) => (

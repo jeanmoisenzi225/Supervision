@@ -1,5 +1,7 @@
 # Module Facturation NJMDev
 
+> Depuis la v0.20.0, la facturation est un **module à part entière de NJMDev**, « NJM Facturation » (`/facturation`, carte du menu général), au même titre que NJM Supervision. La page de coûts par appli, utilisée pour les factures prévisionnelles, reste dans NJM Supervision sous le nom « Coûts ».
+
 ## Intention et périmètre
 
 Le module Facturation est un espace privé de Supervision destiné à gérer les clients, préparer les factures, produire les documents PDF et suivre les règlements de l'activité NJMDev. Il s'agit d'un module interne au super-administrateur, pas d'une fonctionnalité multi-tenant vendue aux applications surveillées.
