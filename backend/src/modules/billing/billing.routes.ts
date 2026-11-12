@@ -6,6 +6,7 @@ import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { getHostingCosts } from "../hosting/hosting.service";
 import { forecastLines } from "./forecast";
+import { isAbsurdRate, usdRate } from "./fx";
 import { generateDraftInvoicePdf } from "./invoice-pdf";
 
 export const billingRouter = asyncRouter();
@@ -226,6 +227,8 @@ const forecastSchema = z.object({
   appKeys: z.array(z.string().regex(/^[a-z0-9-]{1,40}$/)).max(20).optional(),
   currency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
   usdRate: z.coerce.number().positive().max(1000000).optional(),
+  /** Date du document (AAAA-MM-JJ) : taux de ce jour quand le taux n'est pas saisi. */
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(),
   includeClaude: z.boolean().default(true),
 });
 
@@ -239,10 +242,33 @@ billingRouter.post("/forecast-lines", async (req, res) => {
     appKeys = client.appKeys;
   }
   if (!appKeys?.length) throw new HttpError(400, "Aucune appli n'est rattachée à ce client : coche-les dans sa fiche (onglet Clients).");
-  if (input.currency !== "USD" && !input.usdRate) throw new HttpError(400, "Indique le taux de conversion (1 dollar = combien dans la devise du document).");
+  // Taux : saisi, sinon repris automatiquement (BCE) ; un taux saisi très éloigné du marché est refusé (erreur d'unité).
+  let rate = input.usdRate ?? 1;
+  let rateInfo = input.currency === "USD" ? "dollars, sans conversion" : "saisi";
+  if (input.currency !== "USD") {
+    const ref = await usdRate(input.currency, input.date).catch(() => null);
+    if (!input.usdRate) {
+      if (!ref) throw new HttpError(502, "Taux de change indisponible : saisis le taux (1 dollar = combien dans la devise du document).");
+      rate = ref.rate;
+      rateInfo = `${ref.source}, ${ref.date}`;
+    } else if (ref && isAbsurdRate(input.usdRate, ref.rate)) {
+      throw new HttpError(400, `Le taux saisi (${input.usdRate}) est très éloigné du taux du marché (${ref.rate}) : vérifie l'unité (1 dollar = combien de ${input.currency === "XOF" ? "FCFA" : "euros"}).`);
+    }
+  }
   const costs = await getHostingCosts();
   if (!costs.renderConfigured) throw new HttpError(400, "Clé API Render non configurée : les coûts d'hébergement ne sont pas disponibles.");
   const apps = costs.apps.filter((a) => appKeys!.includes(a.key));
-  const result = forecastLines(apps, input.currency, input.usdRate ?? 1, input.includeClaude);
-  res.json({ ...result, apps: apps.map((a) => a.name), missingApps: appKeys.filter((k) => !apps.some((a) => a.key === k)), pricesAsOf: costs.pricesAsOf });
+  const result = forecastLines(apps, input.currency, rate, input.includeClaude);
+  res.json({ ...result, rate, rateInfo, apps: apps.map((a) => a.name), missingApps: appKeys.filter((k) => !apps.some((a) => a.key === k)), pricesAsOf: costs.pricesAsOf });
+});
+
+/** Taux de change du jour (ou de la date du document) : dollars → devise, repris de la BCE. */
+billingRouter.get("/fx", async (req, res) => {
+  const currency = z.enum(["XOF", "EUR", "USD"]).parse(req.query.currency);
+  const date = typeof req.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date) ? req.query.date : null;
+  try {
+    res.json(await usdRate(currency, date));
+  } catch (err) {
+    throw new HttpError(502, (err as Error).message);
+  }
 });

@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.21.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « la conversion crée une facture fausse, récupère les taux de conversion automatiquement ». Cause : un taux saisi dans la mauvaise unité (655,957, qui est le nombre de FCFA pour un euro, saisi comme « dollars pour un euro ») donnait 8 724 € au lieu d'environ 12 €.
+
+- **Taux de change repris automatiquement** (BCE via Frankfurter, fichier de la BCE en secours), à la date du document ; FCFA déduit de l'euro (parité fixe 1 € = 655,957 FCFA). Le champ « taux » est prérempli, indique sa source et sa date, et reste modifiable (« Reprendre le taux du marché »). L'import fonctionne sans rien saisir.
+- **Garde-fou** : un taux saisi à plus de 50 % du taux du marché est signalé en rouge à l'écran et refusé à l'import (« vérifie l'unité »).
+- Route `GET /api/billing/fx` ; le résultat de l'import indique le taux et sa source.
+- Une facture enregistrée avec un mauvais taux doit être réimportée (« Importer l'hébergement du client ») : les lignes importées sont remplacées.
+
 ## v0.20.1 — 2026-11-12
 
 - **Import de l'hébergement d'un client** (cas d'Autonova Group) : le résultat s'affiche désormais **à côté du bouton** (le message d'erreur était en haut de page, hors de vue sur téléphone). Message explicite quand il n'y a rien à importer (postes gratuits, par exemple le site statique : rattacher aussi MGA au client), rappel des applis rattachées au client, et raison du bouton grisé (client ou taux manquant).

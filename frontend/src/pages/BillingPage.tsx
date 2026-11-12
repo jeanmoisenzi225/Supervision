@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null; appKeys?: string[] };
 type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number; source?: string | null };
-type ForecastResponse = { lines: Line[]; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string };
+type Fx = { currency: string; rate: number; date: string | null; source: string };
+type ForecastResponse = { rate?: number; rateInfo?: string; lines: Line[]; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string };
 type AppRef = { key: string; name: string };
 type Invoice = { id: string; currency: string; kind?: string; period?: string | null; usdRate?: string | null; number: string | null; status: string; clientId: string; client: Client; createdAt: string; issueDate: string | null; serviceDate: string | null; dueDate: string | null; notes: string | null; subtotal: string; vatTotal: string; total: string; lines: Array<Line & { id: string; subtotal: string; vatAmount: string; total: string }> };
 type Profile = { brandName: string; contactEmail: string; phone: string; website: string; paymentDetails: string; country?: string; legalName?: string; legalForm?: string; businessAddress?: string; rccm?: string; ncc?: string; taxRegime?: string; vatRegime?: string; defaultCurrency?: string };
@@ -36,6 +37,12 @@ export function BillingPage() {
   const [kind, setKind] = useState("forecast");
   const [period, setPeriod] = useState(currentMonth());
   const [usdRate, setUsdRate] = useState("");
+  /** Taux de change du marché (BCE) pour la devise et la date du document ; le champ « taux » le reprend tant qu'on ne l'a pas modifié. */
+  const [fx, setFx] = useState<Fx | null>(null);
+  const [fxError, setFxError] = useState("");
+  const [rateAuto, setRateAuto] = useState(true);
+  const rateAutoRef = useRef(true);
+  rateAutoRef.current = rateAuto;
   const [includeClaude, setIncludeClaude] = useState(true);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   /** Résultat de l'import, affiché à côté du bouton (le bandeau du haut de page est hors de vue sur téléphone). */
@@ -48,6 +55,15 @@ export function BillingPage() {
     if (!clientId && c.length) setClientId(c[0].id);
   }
   useEffect(() => { void refresh().catch((e) => setError(e.message)); }, []);
+  useEffect(() => {
+    setFx(null); setFxError("");
+    if (tab !== "new" || currency === "USD") return;
+    let stale = false;
+    api<Fx>(`/billing/fx?currency=${currency}${issueDate ? `&date=${issueDate}` : ""}`)
+      .then((r) => { if (stale) return; setFx(r); if (rateAutoRef.current) setUsdRate(String(r.rate)); })
+      .catch((e) => { if (!stale) setFxError((e as Error).message); });
+    return () => { stale = true; };
+  }, [tab, currency, issueDate]);
 
   const totals = useMemo(() => {
     const factor = currency === "XOF" ? 1 : 100;
@@ -58,7 +74,7 @@ export function BillingPage() {
   }, [lines, currency]);
 
   function newDraft() {
-    setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate(""); setKind("forecast"); setPeriod(currentMonth()); setImportWarnings([]); setImportMsg(null);
+    setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate(""); setKind("forecast"); setPeriod(currentMonth()); setImportWarnings([]); setImportMsg(null); setRateAuto(true); setUsdRate("");
     setIssueDate(new Date().toISOString().slice(0, 10)); setTab("new");
   }
   async function saveClient(e: FormEvent) {
@@ -81,7 +97,7 @@ export function BillingPage() {
   }
   async function editDraft(i: Invoice) {
     setEditingInvoice(i.id); setClientId(i.clientId); setCurrency(i.currency || "XOF"); setIssueDate(i.issueDate?.slice(0, 10) ?? "");
-    setKind(i.kind ?? "forecast"); setPeriod(i.period ?? currentMonth()); setUsdRate(i.usdRate ? String(Number(i.usdRate)) : ""); setImportWarnings([]);
+    setKind(i.kind ?? "forecast"); setPeriod(i.period ?? currentMonth()); setUsdRate(i.usdRate ? String(Number(i.usdRate)) : ""); setRateAuto(!i.usdRate); setImportWarnings([]);
     setServiceDate(i.serviceDate?.slice(0, 10) ?? ""); setDueDate(i.dueDate?.slice(0, 10) ?? ""); setNotes(i.notes ?? "");
     setLines(i.lines.map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), discountPercent: Number(l.discountPercent), vatRate: Number(l.vatRate), source: (l as Line).source ?? null })));
     setTab("new");
@@ -139,7 +155,7 @@ export function BillingPage() {
   async function importHosting() {
     setError(""); setNotice(""); setImportWarnings([]); setImportMsg(null);
     try {
-      const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId, currency, usdRate: currency !== "USD" && usdRate ? Number(usdRate) : undefined, includeClaude } });
+      const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId, currency, usdRate: currency !== "USD" && usdRate && !rateAuto ? Number(usdRate) : undefined, date: issueDate || undefined, includeClaude } });
       const kept = lines.filter((l) => l.source !== "hosting" && l.source !== "claude" && (l.description.trim() || l.unitPrice));
       const next = [...r.lines, ...kept];
       setLines(next.length ? next : [blankLine()]);
@@ -147,7 +163,7 @@ export function BillingPage() {
       setImportMsg(
         r.lines.length === 0
           ? { ok: false, text: `Aucune ligne à importer pour ${r.apps.join(", ") || "ce client"} : ${r.skippedFree ? `${r.skippedFree} poste(s) gratuit(s) (par exemple un site statique), non repris. ` : "aucun coût trouvé. "}Si son hébergement doit être facturé, rattachez-lui aussi l'appli qui le porte (MGA pour Autonova Group) : onglet Clients › Modifier.` }
-          : { ok: true, text: `${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ")} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.skippedFree ? `, ${r.skippedFree} poste(s) gratuit(s) non repris` : ""}). Modifiables ligne par ligne.` }
+          : { ok: true, text: `${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ")} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.rate && currency !== "USD" ? `, taux 1 $ = ${r.rate} ${currency === "XOF" ? "FCFA" : "€"} (${r.rateInfo})` : ""}${r.skippedFree ? `, ${r.skippedFree} poste(s) gratuit(s) non repris` : ""}). Modifiables ligne par ligne.` }
       );
     } catch (err) { setImportMsg({ ok: false, text: (err as Error).message }); }
   }
@@ -206,7 +222,12 @@ export function BillingPage() {
       </section>
       <section className="card"><h3>Hébergement et IA des applis du client</h3>
         <p className="muted small">Reprend, tels quels, les coûts de la page « Coûts » des applis rattachées au client (onglet Clients). Les lignes importées restent modifiables, et les coûts sont des estimations : la facture définitive sera établie après la facture de Render.</p>
-        {currency !== "USD" && <label>Taux de conversion : 1 dollar (USD) = … {currency === "XOF" ? "FCFA" : "euro(s)"}<input type="number" min="0" step="0.0001" placeholder={currency === "XOF" ? "ex. 600" : "ex. 0,92"} value={usdRate} onChange={(e) => setUsdRate(e.target.value)}/></label>}
+        {currency !== "USD" && <>
+          <label>Taux de conversion : 1 dollar (USD) = … {currency === "XOF" ? "FCFA" : "euro(s)"}<input type="number" min="0" step="0.0001" value={usdRate} onChange={(e) => { setUsdRate(e.target.value); setRateAuto(false); }}/></label>
+          {fx && <p className="small muted">Taux de marché repris automatiquement : 1 $ = {fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} {currency === "XOF" ? "FCFA" : "€"} ({fx.source}{fx.date ? `, ${new Date(fx.date).toLocaleDateString("fr-FR")}` : ""}).{rateAuto ? " Modifiable." : <> <button type="button" onClick={() => { setRateAuto(true); setUsdRate(String(fx.rate)); }}>Reprendre le taux du marché</button></>}</p>}
+          {fxError && <p className="small">⚠️ {fxError}</p>}
+          {fx && Number(usdRate) > 0 && (Number(usdRate) > fx.rate * 1.5 || Number(usdRate) < fx.rate / 1.5) && <p className="error small">⚠️ Ce taux s'éloigne fortement du taux de marché ({fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })}) : vérifiez l'unité (1 dollar = combien de {currency === "XOF" ? "FCFA" : "euros"}).</p>}
+        </>}
         <label className="row"><input type="checkbox" checked={includeClaude} onChange={(e) => setIncludeClaude(e.target.checked)}/> Inclure les dépenses Claude du mois en cours</label>
         {(() => {
           const c = clients.find((x) => x.id === clientId);
@@ -214,8 +235,7 @@ export function BillingPage() {
           const names = (c.appKeys ?? []).map((k) => (k === "njmdev" ? "NJMDev" : catalog.find((x) => x.key === k)?.name ?? k));
           return names.length ? <p className="small muted">Applis rattachées à {c.name} : {names.join(", ")}.</p> : <p className="small">⚠️ Aucune appli n'est rattachée à {c.name} : onglet Clients › Modifier › « Applis dont l'hébergement est facturé à ce client ».</p>;
         })()}
-        {currency !== "USD" && !Number(usdRate) && <p className="small">⚠️ Saisissez le taux de conversion ci-dessus pour activer l'import.</p>}
-        <div className="row wrap"><button type="button" onClick={() => void importHosting()} disabled={!clientId || (currency !== "USD" && !Number(usdRate))}>Importer l'hébergement du client</button></div>
+        <div className="row wrap"><button type="button" onClick={() => void importHosting()} disabled={!clientId || (currency !== "USD" && !Number(usdRate) && !fx)}>Importer l'hébergement du client</button></div>
         {importMsg && <p className={importMsg.ok ? "success small" : "error small"} role="status">{importMsg.text}</p>}
         {importWarnings.map((w) => <p key={w} className="small">⚠️ {w}</p>)}
       </section>
