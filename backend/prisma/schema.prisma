@@ -257,6 +257,8 @@ model BillingInvoiceLine {
   vatRate         Decimal        @default(0) @db.Decimal(5, 2)
   /// Origine de la ligne : « hosting » ou « claude » (importée des coûts, modifiable), « free » (ligne libre).
   source          String?
+  /// Montant d'origine en dollars d'une ligne importée des coûts : la ligne se recalcule quand le taux change (v0.23.0).
+  usdAmount       Decimal?       @db.Decimal(14, 4)
   subtotal        Decimal        @db.Decimal(14, 2)
   vatAmount       Decimal        @db.Decimal(14, 2)
   total           Decimal        @db.Decimal(14, 2)

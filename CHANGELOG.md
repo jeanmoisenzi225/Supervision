@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.23.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « quand je modifie le taux après l'import, les montants doivent s'ajuster automatiquement en bas ».
+
+- **Les lignes importées suivent le taux** : changer le taux (ou la devise) recalcule aussitôt leurs prix, et les totaux HT, TVA et TTC du bas suivent. Chaque ligne importée garde son montant d'origine en dollars, enregistré avec la facture : la facture rouverte se recalcule aussi.
+- Une ligne dont on modifie le prix à la main n'est plus recalculée (mention « prix modifié à la main ») ; les lignes libres ne changent jamais.
+- Changer de devise repart du taux retenu de la nouvelle devise.
+- Migration `20261112150000_billing_usd_amount` (montant en dollars des lignes importées).
+
 ## v0.22.0 — 2026-11-12
 
 Décidé le 2026-11-12 : « dans notre cas on va facturer 1 $ = 1 € ».

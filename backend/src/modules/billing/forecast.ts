@@ -16,6 +16,8 @@ export interface ForecastLine {
   discountPercent: number;
   vatRate: number;
   source: "hosting" | "claude";
+  /** Montant d'origine en dollars : sert à recalculer la ligne si le taux change. */
+  usd: number;
 }
 
 export interface ForecastResult {
@@ -49,12 +51,12 @@ export function forecastLines(apps: Pick<BillingApp, "name" | "render" | "claude
         continue;
       }
       const what = l.kind === "disk" ? `${l.name} (${l.plan})` : `${KIND_LABEL[l.kind]} ${l.name} (offre ${l.plan})`;
-      lines.push({ description: `${app.name} — hébergement : ${what}`, quantity: 1, unitPrice: convertUsd(l.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "hosting" });
+      lines.push({ description: `${app.name} — hébergement : ${what}`, quantity: 1, unitPrice: convertUsd(l.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "hosting", usd: l.usd });
     }
     if (includeClaude) {
       for (const w of app.claude.workspaces) {
         if (w.usd <= 0) continue;
-        lines.push({ description: `${app.name} — intelligence artificielle (Claude) : espace « ${w.workspace} », dépenses du mois en cours`, quantity: 1, unitPrice: convertUsd(w.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "claude" });
+        lines.push({ description: `${app.name} — intelligence artificielle (Claude) : espace « ${w.workspace} », dépenses du mois en cours`, quantity: 1, unitPrice: convertUsd(w.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "claude", usd: w.usd });
       }
     }
   }

@@ -35,6 +35,7 @@ const lineSchema = z.object({
   discountPercent: z.coerce.number().min(0).max(100).default(0),
   vatRate: z.coerce.number().min(0).max(100).default(0),
   source: z.enum(["hosting", "claude", "free"]).nullish(),
+  usd: z.coerce.number().min(0).max(100000000).nullish(),
 });
 
 const invoiceSchema = z.object({
@@ -94,7 +95,7 @@ function calculate(lines: z.infer<typeof lineSchema>[], currency: "XOF" | "EUR" 
     return {
       position, description: line.description, quantity, unitPrice,
       discountPercent: new Prisma.Decimal(line.discountPercent),
-      vatRate: new Prisma.Decimal(line.vatRate), source: line.source ?? null, subtotal, vatAmount,
+      vatRate: new Prisma.Decimal(line.vatRate), source: line.source ?? null, usdAmount: line.usd == null ? null : new Prisma.Decimal(line.usd), subtotal, vatAmount,
       total: subtotal.plus(vatAmount).toDecimalPlaces(precision),
     };
   });

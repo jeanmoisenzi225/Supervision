@@ -3,7 +3,8 @@ import { api, apiBlob } from "../lib/api";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null; appKeys?: string[] };
-type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number; source?: string | null };
+/** `usd` : montant d'origine en dollars d'une ligne importée des coûts ; la ligne se recalcule quand le taux change, tant qu'on ne modifie pas son prix à la main. */
+type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number; source?: string | null; usd?: number | null };
 type Fx = { currency: string; rate: number; date: string | null; source: string; mode?: string };
 type ForecastResponse = { rate?: number; rateInfo?: string; lines: Line[]; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string };
 type AppRef = { key: string; name: string };
@@ -64,6 +65,23 @@ export function BillingPage() {
       .catch((e) => { if (!stale) setFxError((e as Error).message); });
     return () => { stale = true; };
   }, [tab, currency, issueDate, profile.fxMode]);
+  /** Les lignes importées des coûts suivent le taux : si on le change, leurs prix sont recalculés (le total en bas suit). */
+  useEffect(() => {
+    const rate = currency === "USD" ? 1 : Number(usdRate);
+    if (!(rate > 0)) return;
+    const factor = currency === "XOF" ? 1 : 100;
+    setLines((ls) => {
+      let changed = false;
+      const next = ls.map((l) => {
+        if (l.usd == null || (l.source !== "hosting" && l.source !== "claude")) return l;
+        const price = Math.round(l.usd * rate * factor) / factor;
+        if (price === l.unitPrice) return l;
+        changed = true;
+        return { ...l, unitPrice: price };
+      });
+      return changed ? next : ls;
+    });
+  }, [usdRate, currency]);
 
   const totals = useMemo(() => {
     const factor = currency === "XOF" ? 1 : 100;
@@ -99,7 +117,7 @@ export function BillingPage() {
     setEditingInvoice(i.id); setClientId(i.clientId); setCurrency(i.currency || "XOF"); setIssueDate(i.issueDate?.slice(0, 10) ?? "");
     setKind(i.kind ?? "forecast"); setPeriod(i.period ?? currentMonth()); setUsdRate(i.usdRate ? String(Number(i.usdRate)) : ""); setRateAuto(!i.usdRate); setImportWarnings([]);
     setServiceDate(i.serviceDate?.slice(0, 10) ?? ""); setDueDate(i.dueDate?.slice(0, 10) ?? ""); setNotes(i.notes ?? "");
-    setLines(i.lines.map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), discountPercent: Number(l.discountPercent), vatRate: Number(l.vatRate), source: (l as Line).source ?? null })));
+    setLines(i.lines.map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), discountPercent: Number(l.discountPercent), vatRate: Number(l.vatRate), source: (l as Line).source ?? null, usd: (l as { usdAmount?: string | null }).usdAmount == null ? null : Number((l as { usdAmount?: string | null }).usdAmount) })));
     setTab("new");
   }
   async function downloadPdf(invoice: Invoice) {
@@ -216,7 +234,7 @@ export function BillingPage() {
       <section className="card"><h3>{editingInvoice ? "Modifier le document" : "Créer une facture prévisionnelle"}</h3>
         <label>Client<select required value={clientId} onChange={(e) => setClientId(e.target.value)}><option value="">Sélectionner un client</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
         {clients.length === 0 && <p className="muted small">Crée d'abord une fiche client.</p>}
-        <label>Devise<select value={currency} onChange={(e) => setCurrency(e.target.value)}><option value="XOF">FCFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar US (USD)</option></select></label>
+        <label>Devise<select value={currency} onChange={(e) => { setCurrency(e.target.value); setRateAuto(true); setUsdRate(""); }}><option value="XOF">FCFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar US (USD)</option></select></label>
         <div className="row wrap"><label>Nature<select value={kind} onChange={(e) => setKind(e.target.value)}><option value="forecast">Facture prévisionnelle</option><option value="draft">Brouillon de facture</option></select></label><label>Mois concerné<input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}/></label></div>
         <div className="row wrap"><label>Date du document<input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)}/></label><label>Date de prestation<input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)}/></label><label>Échéance souhaitée<input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}/></label></div>
       </section>
@@ -242,9 +260,9 @@ export function BillingPage() {
       <section className="card"><div className="page-head"><h3>Prestations</h3><button type="button" onClick={() => setLines([...lines, blankLine()])}>+ Ajouter une ligne</button></div>
         <div className="row wrap"><span className="muted small">Ligne libre :</span>{FREE_LINES.map((d) => <button type="button" key={d} onClick={() => addFreeLine(d)}>{d}</button>)}</div>
         {lines.map((l, n) => <div className="invoice-line" key={n}>
-          <label className="line-description">Description{l.source === "hosting" || l.source === "claude" ? <span className="muted small"> · importée des coûts</span> : null}<input required value={l.description} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, description: e.target.value } : x))}/></label>
+          <label className="line-description">Description{l.source === "hosting" || l.source === "claude" ? <span className="muted small"> · importée des coûts{l.usd != null ? " (suit le taux)" : " (prix modifié à la main)"}</span> : null}<input required value={l.description} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, description: e.target.value } : x))}/></label>
           <label>Qté<input type="number" min="0.001" step="0.001" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, quantity: Number(e.target.value) } : x))}/></label>
-          <label>Prix HT<input type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, unitPrice: Number(e.target.value) } : x))}/></label>
+          <label>Prix HT<input type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, unitPrice: Number(e.target.value), usd: null } : x))}/></label>
           <label>Remise %<input type="number" min="0" max="100" step="0.01" value={l.discountPercent} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, discountPercent: Number(e.target.value) } : x))}/></label>
           <label>TVA %<input type="number" min="0" max="100" step="0.01" value={l.vatRate} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, vatRate: Number(e.target.value) } : x))}/></label>
           {lines.length > 1 && <button type="button" className="danger" onClick={() => setLines(lines.filter((_, j) => j !== n))}>Retirer</button>}
