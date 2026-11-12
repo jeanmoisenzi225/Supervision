@@ -5,7 +5,7 @@ import { getCosts, type CostSummary } from "../costs/costs.service";
 import { DB_STORAGE_USD_PER_GB, DISK_USD_PER_GB, PRICES_AS_OF, PRICES_SOURCE, computeUsd, postgresUsd } from "./prices";
 
 /**
- * Facturation par appli (v0.17.0) : estimation mensuelle de l'hébergement Render
+ * Coûts d'hébergement par appli (v0.17.0, page « Coûts » depuis la v0.18.0) : estimation mensuelle de l'hébergement Render
  * (offres des services et des bases, tarifs publics : voir prices.ts) et dépenses
  * Claude du mois en cours (rapport de coûts Anthropic, par espace de travail).
  */
@@ -58,7 +58,7 @@ type Target = Pick<AppTarget, "key" | "name" | "renderMatch" | "claudeWorkspaces
 const NJMDEV: Target = { key: "njmdev", name: "NJMDev (Supervision)", renderMatch: { names: [/^supervision/i], hosts: [] }, claudeWorkspaces: [/njm|supervision/i] };
 
 /** Assemble la facturation par appli (fonction pure, testée). `other` regroupe ce qu'aucune appli ne revendique. */
-export function buildBilling(apps: Target[], services: ServiceSummary[], dbs: PostgresSummary[], costs: Pick<CostSummary, "byWorkspace">) {
+export function buildHostingCosts(apps: Target[], services: ServiceSummary[], dbs: PostgresSummary[], costs: Pick<CostSummary, "byWorkspace">) {
   const targets = [...apps, NJMDEV];
   const takenServices = new Set<string>();
   const takenDbs = new Set<string>();
@@ -100,11 +100,11 @@ export function buildBilling(apps: Target[], services: ServiceSummary[], dbs: Po
   };
 }
 
-export async function getBilling(fresh = false) {
+export async function getHostingCosts(fresh = false) {
   const base = { pricesAsOf: PRICES_AS_OF, pricesSource: PRICES_SOURCE, currency: "USD" };
   const costs = await getCosts(fresh);
   const claude = { configured: costs.configured, error: costs.error, monthToDateUsd: costs.monthToDateUsd };
   if (!env.renderApiKey) return { ...base, renderConfigured: false, claude, apps: [], totals: { renderUsd: 0, claudeUsd: 0, totalUsd: 0, unknown: 0 } };
   const [services, dbs] = await Promise.all([listServices(fresh), listPostgres(fresh)]);
-  return { ...base, renderConfigured: true, claude, ...buildBilling(apps, services, dbs, costs) };
+  return { ...base, renderConfigured: true, claude, ...buildHostingCosts(apps, services, dbs, costs) };
 }

@@ -27,15 +27,15 @@ interface Billing {
 const usd = (v: number) => `${v.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
 const KIND: Record<Line["kind"], string> = { service: "Service", database: "Base de données", disk: "Stockage" };
 
-/** Page « Facturation » : coût mensuel estimé de chaque appli (hébergement Render, offres actuelles) et dépenses Claude du mois. */
-export function BillingPage() {
-  const { data, error } = usePolling(() => api<Billing>("/billing"), 10 * 60_000);
+/** Page « Coûts » : coût mensuel estimé de chaque appli (hébergement Render, offres actuelles) et dépenses Claude du mois. */
+export function CostsPage() {
+  const { data, error } = usePolling(() => api<Billing>("/hosting-costs"), 10 * 60_000);
 
   return (
     <>
-      <h1>Facturation</h1>
+      <h1>Coûts</h1>
       <p className="muted small">
-        Coût par appli : l'<strong>hébergement Render</strong> est une estimation mensuelle calculée d'après les offres actuelles de chaque service et base (tarifs publics de Render
+        Coût d'hébergement et d'IA par appli : l'<strong>hébergement Render</strong> est une estimation mensuelle calculée d'après les offres actuelles de chaque service et base (tarifs publics de Render
         relevés le {data ? new Date(data.pricesAsOf).toLocaleDateString("fr-FR") : "…"}) ; les <strong>dépenses Claude</strong> sont réelles, pour le mois en cours. Render ne
         fournit pas sa facturation à la Supervision : la facture exacte se lit dans Render › Billing (bande passante, minutes de construction et forfait de l'espace de travail ne sont
         pas comptés ici).
@@ -64,7 +64,7 @@ export function BillingPage() {
           </div>
           {data.claude.error && <p className="error small">{data.claude.error}</p>}
           {data.totals.unknown > 0 && (
-            <p className="small">⚠️ {data.totals.unknown} ligne(s) d'une offre Render inconnue de la table des tarifs : non comptée(s). À ajouter dans <code>billing/prices.ts</code>.</p>
+            <p className="small">⚠️ {data.totals.unknown} ligne(s) d'une offre Render inconnue de la table des tarifs : non comptée(s). À ajouter dans <code>hosting/prices.ts</code>.</p>
           )}
           {data.apps.map((app) => (
             <section key={app.key} className="card">

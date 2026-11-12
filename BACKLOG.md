@@ -102,7 +102,7 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - Constat (2026-11-12) : API `procedia-backend` en Starter, base `procedia-db` payante (5 Go). Vérification passée de 30 minutes à 1 minute, mentions de l'offre gratuite retirées, tableau des offres d'hébergement ajouté à `docs/deploiement.md`.
 - [ ] Ménage : base de test `supervision-staging-db` (gratuite) expire le 2026-12-09.
 
-## 11. Facturation par application ✅ (v0.17.0)
+## 11. Coûts par application ✅ (v0.17.0, renommée « Coûts » en v0.18.0)
 
 - Demande (propriétaire, 2026-11-12) : intégrer la facturation par application. Render n'expose pas sa facturation par l'API : estimation d'après les offres et les tarifs publics (relevés le 2026-11-12), plus les dépenses Claude du mois par espace de travail.
 - [ ] Vérifier le rattachement des espaces de travail Claude (nom contenant le nom de l'appli) dès que la clé Admin Anthropic est lue ; sinon `<APPLI>_CLAUDE_WORKSPACE`.

@@ -6,7 +6,7 @@ import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { getPause, pauseApp, resumeApp } from "../pause/pause.service";
-import { getBilling } from "../billing/billing.service";
+import { getHostingCosts } from "../hosting/hosting.service";
 import { getCosts } from "../costs/costs.service";
 import { listJobs } from "../jobs/jobs.service";
 import { BACKLOG_SOURCES, backlogItem, backlogOf, backlogOverview, recentEvents, syncSource } from "../backlog/backlog.service";
@@ -155,8 +155,8 @@ monitorRouter.post("/backlog/:source/sync", async (req, res) => {
   }
 });
 
-monitorRouter.get("/billing", async (req, res) => {
-  res.json(await getBilling(wantsFresh(req)));
+monitorRouter.get("/hosting-costs", async (req, res) => {
+  res.json(await getHostingCosts(wantsFresh(req)));
 });
 
 monitorRouter.get("/claude/costs", async (req, res) => {

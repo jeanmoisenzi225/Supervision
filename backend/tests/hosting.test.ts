@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildApps } from "../src/config/apps";
-import { buildBilling, renderLines } from "../src/modules/billing/billing.service";
-import { computeUsd, postgresUsd } from "../src/modules/billing/prices";
+import { buildHostingCosts, renderLines } from "../src/modules/hosting/hosting.service";
+import { computeUsd, postgresUsd } from "../src/modules/hosting/prices";
 import type { PostgresSummary, ServiceSummary } from "../src/modules/actions/render";
 
 const svc = (name: string, type: string, plan: string | null, extra: Partial<ServiceSummary> = {}): ServiceSummary => ({ id: `srv-${name}`, name, url: null, type, plan, suspended: false, diskGB: null, ...extra });
@@ -24,7 +24,7 @@ describe("tarifs Render", () => {
   });
 });
 
-describe("facturation par appli", () => {
+describe("coûts par appli", () => {
   // Inventaire constaté sur Render le 2026-11-12.
   const services = [
     svc("procedia-backend", "web_service", "0.5c-512mb"),
@@ -38,7 +38,7 @@ describe("facturation par appli", () => {
   ];
   const dbs = [db("procedia-db", "0.1c-256mb", 5), db("garage-db", "0.1c-256mb", 1), db("supervision-db", "basic_256mb", 15), db("supervision-staging-db", "free", 1)];
   const costs = { byWorkspace: [{ workspace: "Procedia", usd: 12.5 }, { workspace: "MGA", usd: 3.25 }, { workspace: "Autre espace", usd: 1 }] };
-  const bill = buildBilling(buildApps(() => ""), services, dbs, costs);
+  const bill = buildHostingCosts(buildApps(() => ""), services, dbs, costs);
   const app = (key: string) => bill.apps.find((a) => a.key === key)!;
 
   it("estime Procedia : API Starter + base payante + stockage (1,5 $)", () => {
@@ -66,12 +66,12 @@ describe("facturation par appli", () => {
     expect(bill.apps.find((a) => a.key === "other")!.render.lines).toEqual([]);
   });
   it("rattache à « non rattaché » un service qu'aucune appli ne revendique", () => {
-    const b = buildBilling(buildApps(() => ""), [svc("inconnu", "web_service", "starter")], [], { byWorkspace: [] });
+    const b = buildHostingCosts(buildApps(() => ""), [svc("inconnu", "web_service", "starter")], [], { byWorkspace: [] });
     expect(b.apps.find((a) => a.key === "other")!.render.usd).toBe(7);
   });
   it("signale une offre inconnue sans l'inventer", () => {
     const lines = renderLines([svc("x", "web_service", "2c-99g")], []);
     expect(lines[0].usd).toBeNull();
-    expect(buildBilling([{ key: "a", name: "A", renderMatch: { names: [/^x$/], hosts: [] }, claudeWorkspaces: [] }], [svc("x", "web_service", "2c-99g")], [], { byWorkspace: [] }).totals.unknown).toBe(1);
+    expect(buildHostingCosts([{ key: "a", name: "A", renderMatch: { names: [/^x$/], hosts: [] }, claudeWorkspaces: [] }], [svc("x", "web_service", "2c-99g")], [], { byWorkspace: [] }).totals.unknown).toBe(1);
   });
 });
