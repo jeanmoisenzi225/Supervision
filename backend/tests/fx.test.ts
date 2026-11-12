@@ -6,6 +6,18 @@ afterEach(() => {
   clearFxCache();
 });
 
+describe("parité commerciale 1 $ = 1 €", () => {
+  it("facture les dollars un pour un en euros, et au cours fixe de l'euro en FCFA, sans appel réseau", async () => {
+    const spy = vi.fn();
+    vi.stubGlobal("fetch", spy);
+    expect(await usdRate("EUR", null, "parity")).toMatchObject({ rate: 1, date: null });
+    expect(await usdRate("XOF", null, "parity")).toMatchObject({ rate: XOF_PER_EUR });
+    expect((await usdRate("USD", null, "parity")).rate).toBe(1);
+    expect(spy).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+});
+
 describe("taux de change automatiques", () => {
   it("lit la réponse de Frankfurter et le fichier XML de la BCE", () => {
     expect(parseFrankfurter({ amount: 1, base: "USD", date: "2026-11-11", rates: { EUR: 0.89871 } })).toEqual({ eurPerUsd: 0.89871, date: "2026-11-11" });

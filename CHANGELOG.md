@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.22.0 — 2026-11-12
+
+Décidé le 2026-11-12 : « dans notre cas on va facturer 1 $ = 1 € ».
+
+- **Parité commerciale 1 $ = 1 €** par défaut pour convertir les coûts d'hébergement et Claude d'une facture prévisionnelle : en euros, les montants de Render sont repris tels quels (13,30 $ → 13,30 €) ; en FCFA, au cours fixe de l'euro (1 $ = 655,957 FCFA). Aucun appel à un service de change dans ce mode.
+- **Réglage** dans Paramètres : « Conversion des coûts », parité commerciale (par défaut) ou taux de marché (BCE, v0.21.0). Le taux reste modifiable sur chaque facture ; le garde-fou contre les taux hors d'unité s'applique au taux retenu.
+
 ## v0.21.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « la conversion crée une facture fausse, récupère les taux de conversion automatiquement ». Cause : un taux saisi dans la mauvaise unité (655,957, qui est le nombre de FCFA pour un euro, saisi comme « dollars pour un euro ») donnait 8 724 € au lieu d'environ 12 €.

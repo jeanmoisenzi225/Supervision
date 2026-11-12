@@ -4,11 +4,11 @@ import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePr
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null; appKeys?: string[] };
 type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number; source?: string | null };
-type Fx = { currency: string; rate: number; date: string | null; source: string };
+type Fx = { currency: string; rate: number; date: string | null; source: string; mode?: string };
 type ForecastResponse = { rate?: number; rateInfo?: string; lines: Line[]; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string };
 type AppRef = { key: string; name: string };
 type Invoice = { id: string; currency: string; kind?: string; period?: string | null; usdRate?: string | null; number: string | null; status: string; clientId: string; client: Client; createdAt: string; issueDate: string | null; serviceDate: string | null; dueDate: string | null; notes: string | null; subtotal: string; vatTotal: string; total: string; lines: Array<Line & { id: string; subtotal: string; vatAmount: string; total: string }> };
-type Profile = { brandName: string; contactEmail: string; phone: string; website: string; paymentDetails: string; country?: string; legalName?: string; legalForm?: string; businessAddress?: string; rccm?: string; ncc?: string; taxRegime?: string; vatRegime?: string; defaultCurrency?: string };
+type Profile = { brandName: string; contactEmail: string; phone: string; website: string; paymentDetails: string; country?: string; legalName?: string; legalForm?: string; businessAddress?: string; rccm?: string; ncc?: string; taxRegime?: string; vatRegime?: string; defaultCurrency?: string; fxMode?: string };
 const blankClient = () => ({ kind: "company", name: "", email: "", phone: "", billingAddress: "", postalCode: "", city: "", country: "Côte d’Ivoire", rccm: "", ncc: "", vatNumber: "", appKeys: [] as string[] });
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 const FREE_LINES = ["Développement et évolutions", "Main d'œuvre", "Messagerie e-mail", "Support et maintenance"];
@@ -63,7 +63,7 @@ export function BillingPage() {
       .then((r) => { if (stale) return; setFx(r); if (rateAutoRef.current) setUsdRate(String(r.rate)); })
       .catch((e) => { if (!stale) setFxError((e as Error).message); });
     return () => { stale = true; };
-  }, [tab, currency, issueDate]);
+  }, [tab, currency, issueDate, profile.fxMode]);
 
   const totals = useMemo(() => {
     const factor = currency === "XOF" ? 1 : 100;
@@ -224,9 +224,9 @@ export function BillingPage() {
         <p className="muted small">Reprend, tels quels, les coûts de la page « Coûts » des applis rattachées au client (onglet Clients). Les lignes importées restent modifiables, et les coûts sont des estimations : la facture définitive sera établie après la facture de Render.</p>
         {currency !== "USD" && <>
           <label>Taux de conversion : 1 dollar (USD) = … {currency === "XOF" ? "FCFA" : "euro(s)"}<input type="number" min="0" step="0.0001" value={usdRate} onChange={(e) => { setUsdRate(e.target.value); setRateAuto(false); }}/></label>
-          {fx && <p className="small muted">Taux de marché repris automatiquement : 1 $ = {fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} {currency === "XOF" ? "FCFA" : "€"} ({fx.source}{fx.date ? `, ${new Date(fx.date).toLocaleDateString("fr-FR")}` : ""}).{rateAuto ? " Modifiable." : <> <button type="button" onClick={() => { setRateAuto(true); setUsdRate(String(fx.rate)); }}>Reprendre le taux du marché</button></>}</p>}
+          {fx && <p className="small muted">{fx.mode === "market" ? "Taux de marché repris automatiquement" : "Taux de facturation retenu"} : 1 $ = {fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} {currency === "XOF" ? "FCFA" : "€"} ({fx.source}{fx.date ? `, ${new Date(fx.date).toLocaleDateString("fr-FR")}` : ""}).{rateAuto ? " Modifiable." : <> <button type="button" onClick={() => { setRateAuto(true); setUsdRate(String(fx.rate)); }}>Reprendre le taux retenu</button></>}</p>}
           {fxError && <p className="small">⚠️ {fxError}</p>}
-          {fx && Number(usdRate) > 0 && (Number(usdRate) > fx.rate * 1.5 || Number(usdRate) < fx.rate / 1.5) && <p className="error small">⚠️ Ce taux s'éloigne fortement du taux de marché ({fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })}) : vérifiez l'unité (1 dollar = combien de {currency === "XOF" ? "FCFA" : "euros"}).</p>}
+          {fx && Number(usdRate) > 0 && (Number(usdRate) > fx.rate * 1.5 || Number(usdRate) < fx.rate / 1.5) && <p className="error small">⚠️ Ce taux s'éloigne fortement du taux retenu ({fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })}) : vérifiez l'unité (1 dollar = combien de {currency === "XOF" ? "FCFA" : "euros"}).</p>}
         </>}
         <label className="row"><input type="checkbox" checked={includeClaude} onChange={(e) => setIncludeClaude(e.target.checked)}/> Inclure les dépenses Claude du mois en cours</label>
         {(() => {
@@ -268,6 +268,7 @@ export function BillingPage() {
       <div className="row wrap"><label>RCCM<input value={profile.rccm ?? ""} onChange={(e) => setProfile({ ...profile, rccm: e.target.value })}/></label><label>NCC<input value={profile.ncc ?? ""} onChange={(e) => setProfile({ ...profile, ncc: e.target.value })}/></label></div>
       <label>Régime fiscal (à confirmer)<input value={profile.taxRegime ?? ""} onChange={(e) => setProfile({ ...profile, taxRegime: e.target.value })}/></label>
       <label>Régime de TVA (à confirmer)<input value={profile.vatRegime ?? ""} onChange={(e) => setProfile({ ...profile, vatRegime: e.target.value })}/></label>
+      <label>Conversion des coûts d'hébergement (dollars → devise du document)<select value={profile.fxMode ?? "parity"} onChange={(e) => setProfile({ ...profile, fxMode: e.target.value })}><option value="parity">Parité commerciale : 1 $ = 1 € (1 $ = 655,957 FCFA)</option><option value="market">Taux de marché (BCE, à la date du document)</option></select></label>
       <label>Devise par défaut<select value={profile.defaultCurrency ?? "XOF"} onChange={(e) => setProfile({ ...profile, defaultCurrency: e.target.value })}><option value="XOF">FCFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar US (USD)</option></select></label>
       <button className="primary" type="submit">Enregistrer</button>
     </form><div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>Le profil légal et le régime fiscal ivoiriens doivent être vérifiés. L’émission FNE ne sera activée qu’après validation du parcours DGI applicable.</span></div></div></section>}

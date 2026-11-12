@@ -6,7 +6,7 @@ import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { getHostingCosts } from "../hosting/hosting.service";
 import { forecastLines } from "./forecast";
-import { isAbsurdRate, usdRate } from "./fx";
+import { isAbsurdRate, usdRate, type FxMode } from "./fx";
 import { generateDraftInvoicePdf } from "./invoice-pdf";
 
 export const billingRouter = asyncRouter();
@@ -65,7 +65,16 @@ const profileSchema = z.object({
   taxRegime: z.string().max(100).optional(),
   vatRegime: z.string().max(100).optional(),
   defaultCurrency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
+  /** Conversion des coûts (dollars) : parité commerciale 1 $ = 1 € (défaut) ou taux de marché (BCE). */
+  fxMode: z.enum(["parity", "market"]).default("parity"),
 });
+
+/** Règle de conversion des coûts : parité commerciale par défaut (décision du propriétaire, 2026-11-12). */
+async function fxMode(): Promise<FxMode> {
+  const row = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
+  const mode = row ? (JSON.parse(row.value) as { fxMode?: string }).fxMode : undefined;
+  return mode === "market" ? "market" : "parity";
+}
 
 function dateOrNull(value?: string | null) {
   if (!value) return null;
@@ -96,7 +105,7 @@ function calculate(lines: z.infer<typeof lineSchema>[], currency: "XOF" | "EUR" 
 
 billingRouter.get("/profile", async (_req, res) => {
   const row = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
-  res.json(row ? JSON.parse(row.value) : { brandName: "NJMDev", contactEmail: "", phone: "", website: "", paymentDetails: "", country: "Côte d’Ivoire", defaultCurrency: "XOF", legalProfileComplete: false });
+  res.json(row ? { fxMode: "parity", ...JSON.parse(row.value) } : { brandName: "NJMDev", contactEmail: "", phone: "", website: "", paymentDetails: "", country: "Côte d’Ivoire", defaultCurrency: "XOF", fxMode: "parity", legalProfileComplete: false });
 });
 
 billingRouter.put("/profile", async (req, res) => {
@@ -246,11 +255,11 @@ billingRouter.post("/forecast-lines", async (req, res) => {
   let rate = input.usdRate ?? 1;
   let rateInfo = input.currency === "USD" ? "dollars, sans conversion" : "saisi";
   if (input.currency !== "USD") {
-    const ref = await usdRate(input.currency, input.date).catch(() => null);
+    const ref = await usdRate(input.currency, input.date, await fxMode()).catch(() => null);
     if (!input.usdRate) {
       if (!ref) throw new HttpError(502, "Taux de change indisponible : saisis le taux (1 dollar = combien dans la devise du document).");
       rate = ref.rate;
-      rateInfo = `${ref.source}, ${ref.date}`;
+      rateInfo = ref.date ? `${ref.source}, ${ref.date}` : ref.source;
     } else if (ref && isAbsurdRate(input.usdRate, ref.rate)) {
       throw new HttpError(400, `Le taux saisi (${input.usdRate}) est très éloigné du taux du marché (${ref.rate}) : vérifie l'unité (1 dollar = combien de ${input.currency === "XOF" ? "FCFA" : "euros"}).`);
     }
@@ -267,7 +276,7 @@ billingRouter.get("/fx", async (req, res) => {
   const currency = z.enum(["XOF", "EUR", "USD"]).parse(req.query.currency);
   const date = typeof req.query.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date) ? req.query.date : null;
   try {
-    res.json(await usdRate(currency, date));
+    res.json({ ...(await usdRate(currency, date, await fxMode())), mode: await fxMode() });
   } catch (err) {
     throw new HttpError(502, (err as Error).message);
   }

@@ -8,6 +8,9 @@ import type { Currency } from "./forecast";
  */
 export const XOF_PER_EUR = 655.957;
 
+/** « parity » : parité commerciale (1 $ = 1 €, soit 655,957 FCFA) ; « market » : taux de la BCE. */
+export type FxMode = "parity" | "market";
+
 export interface FxRate {
   currency: Currency;
   /** Combien de la devise pour 1 dollar. */
@@ -63,8 +66,14 @@ async function eurPerUsd(date: string | null): Promise<{ eurPerUsd: number; date
 }
 
 /** Taux dollars → devise ; `date` (AAAA-MM-JJ) pour le taux d'un jour passé, sinon le dernier connu. */
-export async function usdRate(currency: Currency, date?: string | null): Promise<FxRate> {
+export async function usdRate(currency: Currency, date?: string | null, mode: FxMode = "market"): Promise<FxRate> {
   if (currency === "USD") return { currency, rate: 1, date: null, source: "—" };
+  // Parité commerciale (décision du 2026-11-12) : les dollars de Render sont facturés 1 pour 1 en euros.
+  if (mode === "parity") {
+    return currency === "EUR"
+      ? { currency, rate: 1, date: null, source: "parité commerciale 1 $ = 1 €" }
+      : { currency, rate: XOF_PER_EUR, date: null, source: "parité commerciale 1 $ = 1 € = 655,957 FCFA" };
+  }
   const when = date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date < new Date().toISOString().slice(0, 10) ? date : null;
   const e = await eurPerUsd(when);
   const rate = currency === "EUR" ? e.eurPerUsd : e.eurPerUsd * XOF_PER_EUR;
