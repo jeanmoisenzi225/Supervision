@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.24.0 — 2026-11-12
+
+Décidé le 2026-11-12 : « revenons aux vrais taux finalement, j'ajusterai moi-même ».
+
+- **Retour au taux de marché (BCE) par défaut** pour convertir les coûts : le champ « taux » est prérempli avec le taux du jour (à la date du document), et reste modifiable à la main ; les lignes importées se recalculent toujours quand on le change. La parité commerciale 1 $ = 1 € (v0.22.0) reste disponible comme réglage dans Paramètres.
+- Migration `20261112160000_billing_fx_market` : si le réglage avait déjà été enregistré, il repasse à « taux de marché ».
+
 ## v0.23.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « quand je modifie le taux après l'import, les montants doivent s'ajuster automatiquement en bas ».

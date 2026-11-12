@@ -66,15 +66,15 @@ const profileSchema = z.object({
   taxRegime: z.string().max(100).optional(),
   vatRegime: z.string().max(100).optional(),
   defaultCurrency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
-  /** Conversion des coûts (dollars) : parité commerciale 1 $ = 1 € (défaut) ou taux de marché (BCE). */
-  fxMode: z.enum(["parity", "market"]).default("parity"),
+  /** Conversion des coûts (dollars) : taux de marché de la BCE (défaut) ou parité commerciale 1 $ = 1 €. */
+  fxMode: z.enum(["parity", "market"]).default("market"),
 });
 
-/** Règle de conversion des coûts : parité commerciale par défaut (décision du propriétaire, 2026-11-12). */
+/** Règle de conversion des coûts : taux de marché par défaut (décision du propriétaire du 2026-11-12, après un essai de parité commerciale 1 $ = 1 €). */
 async function fxMode(): Promise<FxMode> {
   const row = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
   const mode = row ? (JSON.parse(row.value) as { fxMode?: string }).fxMode : undefined;
-  return mode === "market" ? "market" : "parity";
+  return mode === "parity" ? "parity" : "market";
 }
 
 function dateOrNull(value?: string | null) {
@@ -106,7 +106,7 @@ function calculate(lines: z.infer<typeof lineSchema>[], currency: "XOF" | "EUR" 
 
 billingRouter.get("/profile", async (_req, res) => {
   const row = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
-  res.json(row ? { fxMode: "parity", ...JSON.parse(row.value) } : { brandName: "NJMDev", contactEmail: "", phone: "", website: "", paymentDetails: "", country: "Côte d’Ivoire", defaultCurrency: "XOF", fxMode: "parity", legalProfileComplete: false });
+  res.json(row ? { fxMode: "market", ...JSON.parse(row.value) } : { brandName: "NJMDev", contactEmail: "", phone: "", website: "", paymentDetails: "", country: "Côte d’Ivoire", defaultCurrency: "XOF", fxMode: "market", legalProfileComplete: false });
 });
 
 billingRouter.put("/profile", async (req, res) => {
