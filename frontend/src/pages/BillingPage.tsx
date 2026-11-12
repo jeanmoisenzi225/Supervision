@@ -38,6 +38,8 @@ export function BillingPage() {
   const [usdRate, setUsdRate] = useState("");
   const [includeClaude, setIncludeClaude] = useState(true);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  /** Résultat de l'import, affiché à côté du bouton (le bandeau du haut de page est hors de vue sur téléphone). */
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function refresh() {
     const [c, i, p] = await Promise.all([api<Client[]>("/billing/clients"), api<Invoice[]>("/billing/invoices"), api<Profile>("/billing/profile")]);
@@ -56,7 +58,7 @@ export function BillingPage() {
   }, [lines, currency]);
 
   function newDraft() {
-    setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate(""); setKind("forecast"); setPeriod(currentMonth()); setImportWarnings([]);
+    setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate(""); setKind("forecast"); setPeriod(currentMonth()); setImportWarnings([]); setImportMsg(null);
     setIssueDate(new Date().toISOString().slice(0, 10)); setTab("new");
   }
   async function saveClient(e: FormEvent) {
@@ -135,15 +137,19 @@ export function BillingPage() {
 
   /** Reprend les coûts d'hébergement (et Claude) des applis du client, tels quels ; les lignes restent modifiables. */
   async function importHosting() {
-    setError(""); setNotice(""); setImportWarnings([]);
+    setError(""); setNotice(""); setImportWarnings([]); setImportMsg(null);
     try {
       const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId, currency, usdRate: currency !== "USD" && usdRate ? Number(usdRate) : undefined, includeClaude } });
       const kept = lines.filter((l) => l.source !== "hosting" && l.source !== "claude" && (l.description.trim() || l.unitPrice));
       const next = [...r.lines, ...kept];
       setLines(next.length ? next : [blankLine()]);
       setImportWarnings([...r.warnings, ...r.missingApps.map((k) => `Appli « ${k} » : aucun coût trouvé.`)]);
-      setNotice(`${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ") || "—"} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.skippedFree ? `, ${r.skippedFree} poste(s) gratuit(s) non repris` : ""}). Modifiables ligne par ligne.`);
-    } catch (err) { setError((err as Error).message); }
+      setImportMsg(
+        r.lines.length === 0
+          ? { ok: false, text: `Aucune ligne à importer pour ${r.apps.join(", ") || "ce client"} : ${r.skippedFree ? `${r.skippedFree} poste(s) gratuit(s) (par exemple un site statique), non repris. ` : "aucun coût trouvé. "}Si son hébergement doit être facturé, rattachez-lui aussi l'appli qui le porte (MGA pour Autonova Group) : onglet Clients › Modifier.` }
+          : { ok: true, text: `${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ")} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.skippedFree ? `, ${r.skippedFree} poste(s) gratuit(s) non repris` : ""}). Modifiables ligne par ligne.` }
+      );
+    } catch (err) { setImportMsg({ ok: false, text: (err as Error).message }); }
   }
   function addFreeLine(description: string) {
     const blank = lines.length === 1 && !lines[0].description.trim() && !lines[0].unitPrice;
@@ -202,7 +208,15 @@ export function BillingPage() {
         <p className="muted small">Reprend, tels quels, les coûts de la page « Coûts » des applis rattachées au client (onglet Clients). Les lignes importées restent modifiables, et les coûts sont des estimations : la facture définitive sera établie après la facture de Render.</p>
         {currency !== "USD" && <label>Taux de conversion : 1 dollar (USD) = … {currency === "XOF" ? "FCFA" : "euro(s)"}<input type="number" min="0" step="0.0001" placeholder={currency === "XOF" ? "ex. 600" : "ex. 0,92"} value={usdRate} onChange={(e) => setUsdRate(e.target.value)}/></label>}
         <label className="row"><input type="checkbox" checked={includeClaude} onChange={(e) => setIncludeClaude(e.target.checked)}/> Inclure les dépenses Claude du mois en cours</label>
+        {(() => {
+          const c = clients.find((x) => x.id === clientId);
+          if (!c) return <p className="small">⚠️ Choisissez d'abord un client.</p>;
+          const names = (c.appKeys ?? []).map((k) => (k === "njmdev" ? "NJMDev" : catalog.find((x) => x.key === k)?.name ?? k));
+          return names.length ? <p className="small muted">Applis rattachées à {c.name} : {names.join(", ")}.</p> : <p className="small">⚠️ Aucune appli n'est rattachée à {c.name} : onglet Clients › Modifier › « Applis dont l'hébergement est facturé à ce client ».</p>;
+        })()}
+        {currency !== "USD" && !Number(usdRate) && <p className="small">⚠️ Saisissez le taux de conversion ci-dessus pour activer l'import.</p>}
         <div className="row wrap"><button type="button" onClick={() => void importHosting()} disabled={!clientId || (currency !== "USD" && !Number(usdRate))}>Importer l'hébergement du client</button></div>
+        {importMsg && <p className={importMsg.ok ? "success small" : "error small"} role="status">{importMsg.text}</p>}
         {importWarnings.map((w) => <p key={w} className="small">⚠️ {w}</p>)}
       </section>
       <section className="card"><div className="page-head"><h3>Prestations</h3><button type="button" onClick={() => setLines([...lines, blankLine()])}>+ Ajouter une ligne</button></div>

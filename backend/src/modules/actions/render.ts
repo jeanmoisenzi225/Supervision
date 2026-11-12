@@ -46,26 +46,32 @@ let cache: { at: number; services: ServiceSummary[] } | null = null;
 /** Tous les services du compte Render (gardés 10 minutes en mémoire). */
 export async function listServices(fresh = false): Promise<ServiceSummary[]> {
   if (!fresh && cache && Date.now() - cache.at < 10 * 60_000) return cache.services;
-  const services: ServiceSummary[] = [];
-  let cursor = "";
-  for (let page = 0; page < 10; page++) {
-    const rows = await renderFetch<{ service: RenderService; cursor: string }[]>(`/services?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
-    services.push(
-      ...rows.map(({ service }) => ({
-        id: service.id,
-        name: service.name,
-        url: service.serviceDetails?.url ?? null,
-        type: service.type,
-        plan: service.serviceDetails?.plan ?? null,
-        suspended: service.suspended === "suspended",
-        diskGB: service.serviceDetails?.disk?.sizeGB ?? null,
-      }))
-    );
-    if (rows.length < 100) break;
-    cursor = rows[rows.length - 1].cursor;
+  try {
+    const services: ServiceSummary[] = [];
+    let cursor = "";
+    for (let page = 0; page < 10; page++) {
+      const rows = await renderFetch<{ service: RenderService; cursor: string }[]>(`/services?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+      services.push(
+        ...rows.map(({ service }) => ({
+          id: service.id,
+          name: service.name,
+          url: service.serviceDetails?.url ?? null,
+          type: service.type,
+          plan: service.serviceDetails?.plan ?? null,
+          suspended: service.suspended === "suspended",
+          diskGB: service.serviceDetails?.disk?.sizeGB ?? null,
+        }))
+      );
+      if (rows.length < 100) break;
+      cursor = rows[rows.length - 1].cursor;
+    }
+    cache = { at: Date.now(), services };
+    return services;
+  } catch (err) {
+    // Render limite le nombre de demandes (429) : on garde la dernière liste connue plutôt que d'échouer.
+    if (cache) return cache.services;
+    throw err;
   }
-  cache = { at: Date.now(), services };
-  return services;
 }
 
 /** Services Render d'une appli : par nom, ou par adresse surveillée (fonction pure, testée). */
@@ -152,7 +158,14 @@ let pgCache: { at: number; list: PostgresSummary[] } | null = null;
 /** Bases PostgreSQL du compte Render (gardées 10 minutes en mémoire ; `fresh` relit Render sans attendre). */
 export async function listPostgres(fresh = false): Promise<PostgresSummary[]> {
   if (!fresh && pgCache && Date.now() - pgCache.at < 10 * 60_000) return pgCache.list;
-  const rows = await renderFetch<({ postgres: Record<string, unknown> } | Record<string, unknown>)[]>("/postgres?limit=100");
+  let rows: ({ postgres: Record<string, unknown> } | Record<string, unknown>)[];
+  try {
+    rows = await renderFetch<({ postgres: Record<string, unknown> } | Record<string, unknown>)[]>("/postgres?limit=100");
+  } catch (err) {
+    // Limite de demandes de Render (429) : dernière liste connue.
+    if (pgCache) return pgCache.list;
+    throw err;
+  }
   const list = rows.map((row) => {
     const p = ("postgres" in row ? row.postgres : row) as Record<string, unknown>;
     return {

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.20.1 — 2026-11-12
+
+- **Import de l'hébergement d'un client** (cas d'Autonova Group) : le résultat s'affiche désormais **à côté du bouton** (le message d'erreur était en haut de page, hors de vue sur téléphone). Message explicite quand il n'y a rien à importer (postes gratuits, par exemple le site statique : rattacher aussi MGA au client), rappel des applis rattachées au client, et raison du bouton grisé (client ou taux manquant).
+- Si Render limite ses demandes (429), la dernière liste de services et de bases connue est reprise au lieu d'échouer.
+
 ## v0.20.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « comme NJM Supervision, on crée un module NJM Facturation qui va gérer la facturation ».
