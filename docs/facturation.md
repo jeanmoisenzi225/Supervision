@@ -44,6 +44,16 @@ Les factures officielles devront suivre les exigences DGI/FNE effectivement appl
 
 L’activité est déclarée comme exploitée depuis la Côte d’Ivoire. La résidence personnelle du propriétaire en France justifie néanmoins une validation fiscale transfrontalière distincte avant le démarrage commercial.
 
+## Facture prévisionnelle (v0.19.0)
+
+Décision du propriétaire (2026-11-12) : à partir des coûts de la page « Coûts », on établit pour chaque client une **facture prévisionnelle**, puis la **facture définitive** une fois que Render a facturé.
+
+- **Rattachement** : la fiche client indique les applis dont l'hébergement lui est facturé (`BillingClient.appKeys`, clés du catalogue plus `njmdev`).
+- **Import** : « Importer l'hébergement du client » (route `POST /api/billing/forecast-lines`) reprend, **tels quels**, les postes de la page « Coûts » des applis du client : une ligne par service, base, stockage (postes gratuits non repris), et, en option, les dépenses Claude du mois en cours par espace de travail. Montants convertis dans la devise du document au **taux saisi** (1 dollar = …), car Render facture en dollars ; aucun taux n'est présumé. Un poste d'offre inconnue est signalé, jamais inventé.
+- **Lignes modifiables** : les lignes importées sont des lignes ordinaires (description, quantité, prix, remise, TVA) que l'on peut corriger ou retirer ; elles portent leur origine (`source` : `hosting`, `claude`, `free`). Un nouvel import remplace les lignes importées et garde les autres.
+- **Lignes libres** : coûts de développement, main d'œuvre, messagerie e-mail, support… saisies à la main (raccourcis dans la saisie).
+- **Nature du document** : `kind` = `forecast` (facture prévisionnelle, par défaut) ou `draft` (brouillon de facture) ; mois concerné (`period`) et taux utilisé (`usdRate`) conservés. L'aperçu A4 et le PDF portent « PRÉVISIONNELLE », la référence `PREVISION-…` et la mention « montants estimés, la facture définitive sera établie après la facturation par l'hébergeur ». Toujours aucun numéro officiel ni certification FNE.
+
 ## Phase initiale
 
 La première phase doit rendre utilisables les clients et les brouillons, avec calculs et aperçu. Tant que l'identité juridique n'est pas renseignée, l'interface doit afficher explicitement que l'émission officielle est désactivée. Les factures de démonstration ne doivent jamais recevoir de numéro ressemblant à un numéro officiel.

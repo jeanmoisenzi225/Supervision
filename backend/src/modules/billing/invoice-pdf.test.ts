@@ -45,4 +45,21 @@ describe("generateDraftInvoicePdf", () => {
     expect(source).toContain("startxref");
     expect(source).toContain("42524F55494C4C4F4E");
   });
+
+  it("titre une facture prévisionnelle et précise qu'elle n'est pas définitive", () => {
+    const base = {
+      id: "forecast_12345678", number: null, kind: "forecast", period: "2026-11", currency: "EUR",
+      issueDate: null, serviceDate: null, dueDate: null, notes: null,
+      subtotal: decimal(13), vatTotal: decimal(0), total: decimal(13),
+      client: { name: "Client Démo", email: null, phone: null, billingAddress: null, postalCode: null, city: null, country: "Côte d’Ivoire", rccm: null, ncc: null },
+      lines: [{ description: "Procedia — hébergement", quantity: decimal(1), unitPrice: decimal(13), discountPercent: decimal(0), vatRate: decimal(0), subtotal: decimal(13), vatAmount: decimal(0), total: decimal(13) }],
+    };
+    const hex = (text: string) => Buffer.from(text, "latin1").toString("hex").toUpperCase();
+    const forecast = generateDraftInvoicePdf(base, { brandName: "NJMDev" }).toString("binary");
+    expect(forecast).toContain(hex("PR\xC9VISIONNELLE"));
+    expect(forecast).toContain(hex("PREVISION-"));
+    expect(forecast).not.toContain("42524F55494C4C4F4E2D"); // pas de « BROUILLON- »
+    const draft = generateDraftInvoicePdf({ ...base, kind: "draft" }, { brandName: "NJMDev" }).toString("binary");
+    expect(draft).toContain(hex("BROUILLON-"));
+  });
 });

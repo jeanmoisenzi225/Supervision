@@ -4,6 +4,8 @@ import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
+import { getHostingCosts } from "../hosting/hosting.service";
+import { forecastLines } from "./forecast";
 import { generateDraftInvoicePdf } from "./invoice-pdf";
 
 export const billingRouter = asyncRouter();
@@ -22,6 +24,7 @@ const clientSchema = z.object({
   ncc: z.string().trim().max(40).optional(),
   vatNumber: z.string().trim().max(30).optional(),
   notes: z.string().trim().max(2000).optional(),
+  appKeys: z.array(z.string().regex(/^[a-z0-9-]{1,40}$/)).max(20).default([]),
 });
 
 const lineSchema = z.object({
@@ -30,11 +33,15 @@ const lineSchema = z.object({
   unitPrice: z.coerce.number().min(0).max(100000000),
   discountPercent: z.coerce.number().min(0).max(100).default(0),
   vatRate: z.coerce.number().min(0).max(100).default(0),
+  source: z.enum(["hosting", "claude", "free"]).nullish(),
 });
 
 const invoiceSchema = z.object({
   clientId: z.string().min(1),
   currency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
+  kind: z.enum(["forecast", "draft"]).default("forecast"),
+  period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).nullish(),
+  usdRate: z.coerce.number().positive().max(1000000).nullish(),
   issueDate: z.string().optional().nullable(),
   serviceDate: z.string().optional().nullable(),
   dueDate: z.string().optional().nullable(),
@@ -77,7 +84,7 @@ function calculate(lines: z.infer<typeof lineSchema>[], currency: "XOF" | "EUR" 
     return {
       position, description: line.description, quantity, unitPrice,
       discountPercent: new Prisma.Decimal(line.discountPercent),
-      vatRate: new Prisma.Decimal(line.vatRate), subtotal, vatAmount,
+      vatRate: new Prisma.Decimal(line.vatRate), source: line.source ?? null, subtotal, vatAmount,
       total: subtotal.plus(vatAmount).toDecimalPlaces(precision),
     };
   });
@@ -149,7 +156,7 @@ billingRouter.post("/invoices", async (req, res) => {
     data: {
       clientId: client.id, status: "draft",
       issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
-      dueDate: dateOrNull(input.dueDate), currency: input.currency, notes: input.notes,
+      dueDate: dateOrNull(input.dueDate), currency: input.currency, kind: input.kind, period: input.period ?? null, usdRate: input.usdRate ?? null, notes: input.notes,
       subtotal: totals.subtotal, vatTotal: totals.vatTotal, total: totals.total,
       lines: { create: totals.lines },
     },
@@ -176,7 +183,7 @@ billingRouter.get("/invoices/:id/pdf", async (req, res) => {
   const setting = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
   const profile = setting ? JSON.parse(setting.value) : {};
   const pdf = generateDraftInvoicePdf(invoice, profile);
-  const filename = `NJMDev-brouillon-${invoice.id.slice(-8).toUpperCase()}.pdf`;
+  const filename = `NJMDev-${invoice.kind === "forecast" ? "previsionnelle" : "brouillon"}-${invoice.id.slice(-8).toUpperCase()}.pdf`;
   res.status(200)
     .set("Content-Type", "application/pdf")
     .set("Content-Disposition", `attachment; filename="${filename}"`)
@@ -196,7 +203,7 @@ billingRouter.put("/invoices/:id", async (req, res) => {
     return tx.billingInvoice.update({
       where: { id: existing.id },
       data: {
-        clientId: client.id, currency: input.currency, issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
+        clientId: client.id, currency: input.currency, kind: input.kind, period: input.period ?? null, usdRate: input.usdRate ?? null, issueDate: dateOrNull(input.issueDate), serviceDate: dateOrNull(input.serviceDate),
         dueDate: dateOrNull(input.dueDate), notes: input.notes,
         subtotal: totals.subtotal, vatTotal: totals.vatTotal, total: totals.total,
         lines: { create: totals.lines },
@@ -212,4 +219,30 @@ billingRouter.delete("/invoices/:id", async (req, res) => {
   if (!existing || existing.status !== "draft") throw new HttpError(409, "Seuls les brouillons peuvent être supprimés");
   await prisma.billingInvoice.delete({ where: { id: existing.id } });
   res.json({ ok: true });
+});
+
+const forecastSchema = z.object({
+  clientId: z.string().min(1).optional(),
+  appKeys: z.array(z.string().regex(/^[a-z0-9-]{1,40}$/)).max(20).optional(),
+  currency: z.enum(["XOF", "EUR", "USD"]).default("XOF"),
+  usdRate: z.coerce.number().positive().max(1000000).optional(),
+  includeClaude: z.boolean().default(true),
+});
+
+/** Lignes d'une facture prévisionnelle : coûts d'hébergement et Claude des applis du client, tels que la page « Coûts » les calcule. */
+billingRouter.post("/forecast-lines", async (req, res) => {
+  const input = forecastSchema.parse(req.body);
+  let appKeys = input.appKeys;
+  if (!appKeys && input.clientId) {
+    const client = await prisma.billingClient.findFirst({ where: { id: input.clientId, archivedAt: null } });
+    if (!client) throw new HttpError(400, "Sélectionne un client actif");
+    appKeys = client.appKeys;
+  }
+  if (!appKeys?.length) throw new HttpError(400, "Aucune appli n'est rattachée à ce client : coche-les dans sa fiche (onglet Clients).");
+  if (input.currency !== "USD" && !input.usdRate) throw new HttpError(400, "Indique le taux de conversion (1 dollar = combien dans la devise du document).");
+  const costs = await getHostingCosts();
+  if (!costs.renderConfigured) throw new HttpError(400, "Clé API Render non configurée : les coûts d'hébergement ne sont pas disponibles.");
+  const apps = costs.apps.filter((a) => appKeys!.includes(a.key));
+  const result = forecastLines(apps, input.currency, input.usdRate ?? 1, input.includeClaude);
+  res.json({ ...result, apps: apps.map((a) => a.name), missingApps: appKeys.filter((k) => !apps.some((a) => a.key === k)), pricesAsOf: costs.pricesAsOf });
 });

@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.19.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « à partir du module facturation, on facture chaque client ; facture prévisionnelle d'après les coûts, la vraie facture une fois que Render nous a facturé ; lignes libres pour les coûts de développement, la main d'œuvre, l'e-mail… ; lignes d'hébergement récupérées telles quelles mais modifiables ».
+
+- **Facture prévisionnelle** : nouvelle nature de document (par défaut), avec mois concerné ; aperçu A4 et PDF marqués « PRÉVISIONNELLE », mention que la facture définitive suivra la facturation de l'hébergeur.
+- **Client ↔ applis** : la fiche client indique les applis dont l'hébergement lui est facturé.
+- **Import des coûts** : un bouton reprend, tels quels, les postes d'hébergement (services, bases, stockage) et, au choix, les dépenses Claude du mois en cours des applis du client, convertis au taux saisi (1 dollar = …). Lignes modifiables, origine conservée ; offre inconnue signalée.
+- **Lignes libres** (développement, main d'œuvre, messagerie e-mail, support) en un geste.
+- Migration `20261112140000_billing_forecast` (applis du client, nature, mois, taux, origine des lignes).
+
 ## v0.18.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « rajouter le module de facturation sur la prod de la supervision ».

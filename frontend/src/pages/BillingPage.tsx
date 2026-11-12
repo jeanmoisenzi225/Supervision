@@ -3,11 +3,15 @@ import { api, apiBlob } from "../lib/api";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
 import { NJMDEV_LOGO_WHITE } from "../assets/njmdevLogo";
 
-type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null };
-type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number };
-type Invoice = { id: string; currency: string; number: string | null; status: string; clientId: string; client: Client; createdAt: string; issueDate: string | null; serviceDate: string | null; dueDate: string | null; notes: string | null; subtotal: string; vatTotal: string; total: string; lines: Array<Line & { id: string; subtotal: string; vatAmount: string; total: string }> };
+type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null; appKeys?: string[] };
+type Line = { description: string; quantity: number; unitPrice: number; discountPercent: number; vatRate: number; source?: string | null };
+type ForecastResponse = { lines: Line[]; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string };
+type AppRef = { key: string; name: string };
+type Invoice = { id: string; currency: string; kind?: string; period?: string | null; usdRate?: string | null; number: string | null; status: string; clientId: string; client: Client; createdAt: string; issueDate: string | null; serviceDate: string | null; dueDate: string | null; notes: string | null; subtotal: string; vatTotal: string; total: string; lines: Array<Line & { id: string; subtotal: string; vatAmount: string; total: string }> };
 type Profile = { brandName: string; contactEmail: string; phone: string; website: string; paymentDetails: string; country?: string; legalName?: string; legalForm?: string; businessAddress?: string; rccm?: string; ncc?: string; taxRegime?: string; vatRegime?: string; defaultCurrency?: string };
-const blankClient = () => ({ kind: "company", name: "", email: "", phone: "", billingAddress: "", postalCode: "", city: "", country: "Côte d’Ivoire", rccm: "", ncc: "", vatNumber: "" });
+const blankClient = () => ({ kind: "company", name: "", email: "", phone: "", billingAddress: "", postalCode: "", city: "", country: "Côte d’Ivoire", rccm: "", ncc: "", vatNumber: "", appKeys: [] as string[] });
+const currentMonth = () => new Date().toISOString().slice(0, 7);
+const FREE_LINES = ["Développement et évolutions", "Main d'œuvre", "Messagerie e-mail", "Support et maintenance"];
 const blankLine = (): Line => ({ description: "", quantity: 1, unitPrice: 0, discountPercent: 0, vatRate: 0 });
 const money = (v: string | number, currency = "XOF") => new Intl.NumberFormat("fr-FR", { style: "currency", currency, maximumFractionDigits: currency === "XOF" ? 0 : 2 }).format(Number(v || 0));
 
@@ -29,10 +33,17 @@ export function BillingPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [previewDoc, setPreviewDoc] = useState<InvoicePreviewData | null>(null);
+  const [catalog, setCatalog] = useState<AppRef[]>([]);
+  const [kind, setKind] = useState("forecast");
+  const [period, setPeriod] = useState(currentMonth());
+  const [usdRate, setUsdRate] = useState("");
+  const [includeClaude, setIncludeClaude] = useState(true);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
   async function refresh() {
     const [c, i, p] = await Promise.all([api<Client[]>("/billing/clients"), api<Invoice[]>("/billing/invoices"), api<Profile>("/billing/profile")]);
     setClients(c); setInvoices(i); setProfile(p);
+    api<{ apps: AppRef[] }>("/overview").then((o) => setCatalog(o.apps.map((a) => ({ key: a.key, name: a.name })))).catch(() => undefined);
     if (!clientId && c.length) setClientId(c[0].id);
   }
   useEffect(() => { void refresh().catch((e) => setError(e.message)); }, []);
@@ -46,7 +57,7 @@ export function BillingPage() {
   }, [lines, currency]);
 
   function newDraft() {
-    setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate("");
+    setEditingInvoice(null); setLines([blankLine()]); setNotes(""); setCurrency(profile.defaultCurrency || "XOF"); setServiceDate(""); setDueDate(""); setKind("forecast"); setPeriod(currentMonth()); setImportWarnings([]);
     setIssueDate(new Date().toISOString().slice(0, 10)); setTab("new");
   }
   async function saveClient(e: FormEvent) {
@@ -57,20 +68,21 @@ export function BillingPage() {
     } catch (err) { setError((err as Error).message); }
   }
   function startClientEdit(c: Client) {
-    setEditingClient(c.id); setClient({ kind: c.kind, name: c.name, email: c.email ?? "", phone: c.phone ?? "", billingAddress: c.billingAddress ?? "", postalCode: c.postalCode ?? "", city: c.city ?? "", country: c.country, rccm: c.rccm ?? "", ncc: c.ncc ?? "", vatNumber: c.vatNumber ?? "" }); setTab("clients");
+    setEditingClient(c.id); setClient({ kind: c.kind, name: c.name, email: c.email ?? "", phone: c.phone ?? "", billingAddress: c.billingAddress ?? "", postalCode: c.postalCode ?? "", city: c.city ?? "", country: c.country, rccm: c.rccm ?? "", ncc: c.ncc ?? "", vatNumber: c.vatNumber ?? "", appKeys: c.appKeys ?? [] }); setTab("clients");
   }
   async function saveDraft(e: FormEvent) {
     e.preventDefault(); setError(""); setNotice("");
     try {
-      const body = { clientId, currency, issueDate: issueDate || null, serviceDate: serviceDate || null, dueDate: dueDate || null, notes, lines };
+      const body = { clientId, currency, kind, period: period || null, usdRate: currency !== "USD" && usdRate ? Number(usdRate) : null, issueDate: issueDate || null, serviceDate: serviceDate || null, dueDate: dueDate || null, notes, lines };
       await api(editingInvoice ? `/billing/invoices/${editingInvoice}` : "/billing/invoices", { method: editingInvoice ? "PUT" : "POST", body });
-      await refresh(); setNotice("Brouillon enregistré. Aucun numéro officiel attribué."); setTab("invoices"); setEditingInvoice(null);
+      await refresh(); setNotice(kind === "forecast" ? "Facture prévisionnelle enregistrée. Aucun numéro officiel attribué." : "Brouillon enregistré. Aucun numéro officiel attribué."); setTab("invoices"); setEditingInvoice(null);
     } catch (err) { setError((err as Error).message); }
   }
   async function editDraft(i: Invoice) {
     setEditingInvoice(i.id); setClientId(i.clientId); setCurrency(i.currency || "XOF"); setIssueDate(i.issueDate?.slice(0, 10) ?? "");
+    setKind(i.kind ?? "forecast"); setPeriod(i.period ?? currentMonth()); setUsdRate(i.usdRate ? String(Number(i.usdRate)) : ""); setImportWarnings([]);
     setServiceDate(i.serviceDate?.slice(0, 10) ?? ""); setDueDate(i.dueDate?.slice(0, 10) ?? ""); setNotes(i.notes ?? "");
-    setLines(i.lines.map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), discountPercent: Number(l.discountPercent), vatRate: Number(l.vatRate) })));
+    setLines(i.lines.map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), discountPercent: Number(l.discountPercent), vatRate: Number(l.vatRate), source: (l as Line).source ?? null })));
     setTab("new");
   }
   async function downloadPdf(invoice: Invoice) {
@@ -80,12 +92,12 @@ export function BillingPage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `NJMDev-brouillon-${invoice.id.slice(-8).toUpperCase()}.pdf`;
+      link.download = `NJMDev-${invoice.kind === "draft" ? "brouillon" : "previsionnelle"}-${invoice.id.slice(-8).toUpperCase()}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-      setNotice("PDF du brouillon généré. Aucun fichier n'est archivé sur le serveur.");
+      setNotice("PDF généré. Aucun fichier n'est archivé sur le serveur.");
     } catch (err) { setError((err as Error).message); }
   }
 
@@ -95,7 +107,7 @@ export function BillingPage() {
     catch (err) { setError((err as Error).message); }
   }
   async function removeDraft(id: string) {
-    if (!window.confirm("Supprimer ce brouillon ?")) return;
+    if (!window.confirm("Supprimer ce document ?")) return;
     try { await api(`/billing/invoices/${id}`, { method: "DELETE" }); await refresh(); }
     catch (err) { setError((err as Error).message); }
   }
@@ -104,13 +116,15 @@ export function BillingPage() {
     const selectedClient = clients.find((item) => item.id === clientId);
     if (!selectedClient) { setError("Sélectionne un client avant de prévisualiser."); return; }
     setPreviewDoc({
-      reference: editingInvoice ? `BROUILLON-${editingInvoice.slice(-8).toUpperCase()}` : "BROUILLON NON ENREGISTRÉ",
+      kind, period,
+      reference: editingInvoice ? `${kind === "forecast" ? "PREVISION" : "BROUILLON"}-${editingInvoice.slice(-8).toUpperCase()}` : "NON ENREGISTRÉ",
       client: selectedClient, profile, currency, issueDate, serviceDate, dueDate, notes, lines,
     });
   }
   function previewSavedDraft(invoice: Invoice) {
     setPreviewDoc({
-      reference: `BROUILLON-${invoice.id.slice(-8).toUpperCase()}`,
+      kind: invoice.kind ?? "forecast", period: invoice.period,
+      reference: `${invoice.kind === "draft" ? "BROUILLON" : "PREVISION"}-${invoice.id.slice(-8).toUpperCase()}`,
       client: invoice.client, profile, currency: invoice.currency, issueDate: invoice.issueDate,
       serviceDate: invoice.serviceDate, dueDate: invoice.dueDate, notes: invoice.notes ?? "",
       lines: invoice.lines.map((line) => ({
@@ -120,6 +134,24 @@ export function BillingPage() {
     });
   }
 
+  /** Reprend les coûts d'hébergement (et Claude) des applis du client, tels quels ; les lignes restent modifiables. */
+  async function importHosting() {
+    setError(""); setNotice(""); setImportWarnings([]);
+    try {
+      const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId, currency, usdRate: currency !== "USD" && usdRate ? Number(usdRate) : undefined, includeClaude } });
+      const kept = lines.filter((l) => l.source !== "hosting" && l.source !== "claude" && (l.description.trim() || l.unitPrice));
+      const next = [...r.lines, ...kept];
+      setLines(next.length ? next : [blankLine()]);
+      setImportWarnings([...r.warnings, ...r.missingApps.map((k) => `Appli « ${k} » : aucun coût trouvé.`)]);
+      setNotice(`${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ") || "—"} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.skippedFree ? `, ${r.skippedFree} poste(s) gratuit(s) non repris` : ""}). Modifiables ligne par ligne.`);
+    } catch (err) { setError((err as Error).message); }
+  }
+  function addFreeLine(description: string) {
+    const blank = lines.length === 1 && !lines[0].description.trim() && !lines[0].unitPrice;
+    const line: Line = { ...blankLine(), description, source: "free" };
+    setLines(blank ? [line] : [...lines, line]);
+  }
+
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
     try { await api("/billing/profile", { method: "PUT", body: profile }); setNotice("Paramètres commerciaux enregistrés."); }
@@ -127,13 +159,13 @@ export function BillingPage() {
   }
 
   return <>
-    <div className="page-head"><div className="billing-page-brand"><img src={NJMDEV_LOGO_WHITE} alt="NJMDev" /><div><h1>Facturation NJMDev</h1><p className="muted small">Répertoire clients et préparation des factures.</p></div></div><button className="primary" onClick={newDraft}>+ Nouveau brouillon</button></div>
+    <div className="page-head"><div className="billing-page-brand"><img src={NJMDEV_LOGO_WHITE} alt="NJMDev" /><div><h1>Facturation NJMDev</h1><p className="muted small">Répertoire clients et préparation des factures.</p></div></div><button className="primary" onClick={newDraft}>+ Nouvelle facture prévisionnelle</button></div>
     <div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>La structure juridique et le régime de TVA ne sont pas encore configurés. Aucun numéro de facture ne sera attribué.</span></div></div>
     {notice && <p className="success small">{notice}</p>}{error && <p className="error small">{error}</p>}
     <div className="tabs">
-      {([["invoices", `Brouillons (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
+      {([["invoices", `Factures (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
     </div>
-    {tab === "invoices" && <section className="card"><h3>Brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun brouillon enregistré.</p> : <div className="invoice-table-scroll"><table className="table"><thead><tr><td>Référence</td><td>Client</td><td>Date</td><td className="num">Total TTC estimé</td><td>Actions</td></tr></thead><tbody>{invoices.map((i) => <tr key={i.id}><td><strong>BROUILLON</strong><br/><span className="muted small">{i.id.slice(-8).toUpperCase()}</span></td><td>{i.client.name}</td><td>{new Date(i.createdAt).toLocaleDateString("fr-FR")}</td><td className="num">{money(i.total, i.currency)}</td><td><div className="row wrap"><button onClick={() => previewSavedDraft(i)}>Aperçu A4</button><button onClick={() => void downloadPdf(i)}>Télécharger PDF</button><button onClick={() => void editDraft(i)}>Modifier</button><button className="danger" onClick={() => void removeDraft(i.id)}>Supprimer</button></div></td></tr>)}</tbody></table></div>}</section>}
+    {tab === "invoices" && <section className="card"><h3>Factures prévisionnelles et brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun document enregistré.</p> : <div className="invoice-table-scroll"><table className="table"><thead><tr><td>Référence</td><td>Client</td><td>Date</td><td className="num">Total TTC estimé</td><td>Actions</td></tr></thead><tbody>{invoices.map((i) => <tr key={i.id}><td><strong>{i.kind === "draft" ? "BROUILLON" : "PRÉVISIONNELLE"}</strong><br/><span className="muted small">{i.period ? `${i.period} · ` : ""}{i.id.slice(-8).toUpperCase()}</span></td><td>{i.client.name}</td><td>{new Date(i.createdAt).toLocaleDateString("fr-FR")}</td><td className="num">{money(i.total, i.currency)}</td><td><div className="row wrap"><button onClick={() => previewSavedDraft(i)}>Aperçu A4</button><button onClick={() => void downloadPdf(i)}>Télécharger PDF</button><button onClick={() => void editDraft(i)}>Modifier</button><button className="danger" onClick={() => void removeDraft(i.id)}>Supprimer</button></div></td></tr>)}</tbody></table></div>}</section>}
     {tab === "clients" && <div className="grid">
       <section className="card"><h3>{editingClient ? "Modifier le client" : "Nouveau client"}</h3><form className="stack-small" onSubmit={saveClient}>
         <label>Type<select value={client.kind} onChange={(e) => setClient({ ...client, kind: e.target.value })}><option value="company">Entreprise</option><option value="individual">Particulier</option></select></label>
@@ -146,20 +178,33 @@ export function BillingPage() {
         <label>RCCM (si applicable)<input value={client.rccm} onChange={(e) => setClient({ ...client, rccm: e.target.value })}/></label>
         <label>NCC (si applicable)<input value={client.ncc} onChange={(e) => setClient({ ...client, ncc: e.target.value })}/></label>
         <label>N° TVA<input value={client.vatNumber} onChange={(e) => setClient({ ...client, vatNumber: e.target.value })}/></label>
+        <fieldset className="stack-small"><legend className="small">Applis dont l'hébergement est facturé à ce client</legend>
+          {catalog.map((a) => <label className="row" key={a.key}><input type="checkbox" checked={client.appKeys.includes(a.key)} onChange={(e) => setClient({ ...client, appKeys: e.target.checked ? [...client.appKeys, a.key] : client.appKeys.filter((k) => k !== a.key) })}/> {a.name}</label>)}
+          <label className="row"><input type="checkbox" checked={client.appKeys.includes("njmdev")} onChange={(e) => setClient({ ...client, appKeys: e.target.checked ? [...client.appKeys, "njmdev"] : client.appKeys.filter((k) => k !== "njmdev") })}/> NJMDev (Supervision)</label>
+        </fieldset>
         <div className="row"><button className="primary" type="submit">Enregistrer</button>{editingClient && <button type="button" onClick={() => { setEditingClient(null); setClient(blankClient()); }}>Annuler</button>}</div>
       </form></section>
-      <section className="card"><h3>Répertoire</h3>{clients.length === 0 ? <p className="muted small">Aucun client pour le moment.</p> : clients.map((c) => <div className="service" key={c.id}><strong>{c.name}</strong><span className="muted small">{[c.email, c.city, c.country].filter(Boolean).join(" · ")}</span><div className="row"><button onClick={() => startClientEdit(c)}>Modifier</button><button onClick={() => void archiveClient(c.id)}>Archiver</button></div></div>)}</section>
+      <section className="card"><h3>Répertoire</h3>{clients.length === 0 ? <p className="muted small">Aucun client pour le moment.</p> : clients.map((c) => <div className="service" key={c.id}><strong>{c.name}</strong><span className="muted small">{[c.email, c.city, c.country].filter(Boolean).join(" · ")}</span>{c.appKeys?.length ? <span className="small">Applis : {c.appKeys.map((k) => (k === "njmdev" ? "NJMDev" : catalog.find((x) => x.key === k)?.name ?? k)).join(", ")}</span> : <span className="muted small">Aucune appli rattachée</span>}<div className="row"><button onClick={() => startClientEdit(c)}>Modifier</button><button onClick={() => void archiveClient(c.id)}>Archiver</button></div></div>)}</section>
     </div>}
     {tab === "new" && <form className="stack" onSubmit={saveDraft}>
-      <section className="card"><h3>{editingInvoice ? "Modifier le brouillon" : "Créer un brouillon"}</h3>
+      <section className="card"><h3>{editingInvoice ? "Modifier le document" : "Créer une facture prévisionnelle"}</h3>
         <label>Client<select required value={clientId} onChange={(e) => setClientId(e.target.value)}><option value="">Sélectionner un client</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
         {clients.length === 0 && <p className="muted small">Crée d'abord une fiche client.</p>}
         <label>Devise<select value={currency} onChange={(e) => setCurrency(e.target.value)}><option value="XOF">FCFA (XOF)</option><option value="EUR">Euro (EUR)</option><option value="USD">Dollar US (USD)</option></select></label>
+        <div className="row wrap"><label>Nature<select value={kind} onChange={(e) => setKind(e.target.value)}><option value="forecast">Facture prévisionnelle</option><option value="draft">Brouillon de facture</option></select></label><label>Mois concerné<input type="month" value={period} onChange={(e) => setPeriod(e.target.value)}/></label></div>
         <div className="row wrap"><label>Date du document<input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)}/></label><label>Date de prestation<input type="date" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)}/></label><label>Échéance souhaitée<input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}/></label></div>
       </section>
+      <section className="card"><h3>Hébergement et IA des applis du client</h3>
+        <p className="muted small">Reprend, tels quels, les coûts de la page « Coûts » des applis rattachées au client (onglet Clients). Les lignes importées restent modifiables, et les coûts sont des estimations : la facture définitive sera établie après la facture de Render.</p>
+        {currency !== "USD" && <label>Taux de conversion : 1 dollar (USD) = … {currency === "XOF" ? "FCFA" : "euro(s)"}<input type="number" min="0" step="0.0001" placeholder={currency === "XOF" ? "ex. 600" : "ex. 0,92"} value={usdRate} onChange={(e) => setUsdRate(e.target.value)}/></label>}
+        <label className="row"><input type="checkbox" checked={includeClaude} onChange={(e) => setIncludeClaude(e.target.checked)}/> Inclure les dépenses Claude du mois en cours</label>
+        <div className="row wrap"><button type="button" onClick={() => void importHosting()} disabled={!clientId || (currency !== "USD" && !Number(usdRate))}>Importer l'hébergement du client</button></div>
+        {importWarnings.map((w) => <p key={w} className="small">⚠️ {w}</p>)}
+      </section>
       <section className="card"><div className="page-head"><h3>Prestations</h3><button type="button" onClick={() => setLines([...lines, blankLine()])}>+ Ajouter une ligne</button></div>
+        <div className="row wrap"><span className="muted small">Ligne libre :</span>{FREE_LINES.map((d) => <button type="button" key={d} onClick={() => addFreeLine(d)}>{d}</button>)}</div>
         {lines.map((l, n) => <div className="invoice-line" key={n}>
-          <label className="line-description">Description<input required value={l.description} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, description: e.target.value } : x))}/></label>
+          <label className="line-description">Description{l.source === "hosting" || l.source === "claude" ? <span className="muted small"> · importée des coûts</span> : null}<input required value={l.description} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, description: e.target.value } : x))}/></label>
           <label>Qté<input type="number" min="0.001" step="0.001" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, quantity: Number(e.target.value) } : x))}/></label>
           <label>Prix HT<input type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, unitPrice: Number(e.target.value) } : x))}/></label>
           <label>Remise %<input type="number" min="0" max="100" step="0.01" value={l.discountPercent} onChange={(e) => setLines(lines.map((x, j) => j === n ? { ...x, discountPercent: Number(e.target.value) } : x))}/></label>

@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { NJMDEV_LOGO_BLACK } from "../assets/njmdevLogo";
 
 export type InvoicePreviewData = {
+  /** « forecast » : facture prévisionnelle (estimation avant la facture de l'hébergeur) ; sinon brouillon. */
+  kind?: string;
+  period?: string | null;
   reference: string;
   client: {
     name: string; email: string | null; phone: string | null; billingAddress: string | null;
@@ -40,7 +43,8 @@ export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; on
   const vatTotal = rows.reduce((sum, row) => sum + row.vat, 0);
   const total = subtotal + vatTotal;
 
-  return <div className="invoice-preview-overlay" role="dialog" aria-modal="true" aria-label="Aperçu A4 du brouillon">
+  const forecast = data.kind === "forecast";
+  return <div className="invoice-preview-overlay" role="dialog" aria-modal="true" aria-label="Aperçu A4 du document">
     <div className="invoice-preview-toolbar no-print">
       <div><strong>Aperçu A4</strong><span>Document de travail — aucune émission officielle</span></div>
       <div className="row wrap"><button onClick={() => window.print()} className="primary">Imprimer l’aperçu</button><button onClick={onClose}>Fermer</button></div>
@@ -58,7 +62,7 @@ export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; on
             {data.profile.ncc && <p>NCC : {data.profile.ncc}</p>}
             </div>
           </div>
-          <div className="invoice-preview-title"><span>BROUILLON</span><h2>FACTURE</h2><strong>{data.reference}</strong></div>
+          <div className="invoice-preview-title"><span>{forecast ? "PRÉVISIONNELLE" : "BROUILLON"}</span><h2>{forecast ? "FACTURE PRÉVISIONNELLE" : "FACTURE"}</h2><strong>{[forecast ? data.period : null, data.reference].filter(Boolean).join(" · ")}</strong></div>
         </header>
         <div className="invoice-preview-parties">
           <section><h3>FACTURÉ À</h3><strong>{data.client.name}</strong>
@@ -90,7 +94,8 @@ export function InvoicePreview({ data, onClose }: { data: InvoicePreviewData; on
         </div>
         {data.profile.paymentDetails && <div className="invoice-preview-payment"><h3>INFORMATIONS DE PAIEMENT</h3><p>{data.profile.paymentDetails}</p></div>}
         <footer className="invoice-preview-footer">
-          <strong>DOCUMENT DE TRAVAIL — BROUILLON NON ÉMIS</strong>
+          <strong>{forecast ? "DOCUMENT PRÉVISIONNEL — NON DÉFINITIF" : "DOCUMENT DE TRAVAIL — BROUILLON NON ÉMIS"}</strong>
+          {forecast && <p>Montants estimés d'après les offres d'hébergement en vigueur ; la facture définitive sera établie après la facturation par l'hébergeur, et peut différer.</p>}
           <p>Ce document est une prévisualisation. Il ne constitue pas une facture officielle, ne porte aucun numéro fiscal et ne comporte aucune certification FNE.</p>
         </footer>
       </div>

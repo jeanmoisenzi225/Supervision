@@ -205,6 +205,8 @@ model BillingClient {
   ncc            String?
   vatNumber      String?
   notes          String?
+  /// Applis dont l'hébergement est facturé à ce client (clés du catalogue : procedia, mga…), v0.19.0.
+  appKeys        String[] @default([])
   archivedAt     DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -224,6 +226,12 @@ model BillingInvoice {
   serviceDate DateTime?
   dueDate     DateTime?
   currency    String              @default("XOF")
+  /// « forecast » : facture prévisionnelle (estimation avant la facture de Render) ; « draft » : brouillon de facture (v0.19.0).
+  kind        String              @default("forecast")
+  /// Mois concerné, « 2026-11 ».
+  period      String?
+  /// Taux utilisé pour convertir les coûts (dollars) dans la devise du document.
+  usdRate     Decimal?            @db.Decimal(14, 6)
   notes       String?
   subtotal    Decimal             @default(0) @db.Decimal(14, 2)
   vatTotal    Decimal             @default(0) @db.Decimal(14, 2)
@@ -247,6 +255,8 @@ model BillingInvoiceLine {
   unitPrice       Decimal        @db.Decimal(14, 2)
   discountPercent Decimal        @default(0) @db.Decimal(5, 2)
   vatRate         Decimal        @default(0) @db.Decimal(5, 2)
+  /// Origine de la ligne : « hosting » ou « claude » (importée des coûts, modifiable), « free » (ligne libre).
+  source          String?
   subtotal        Decimal        @db.Decimal(14, 2)
   vatAmount       Decimal        @db.Decimal(14, 2)
   total           Decimal        @db.Decimal(14, 2)

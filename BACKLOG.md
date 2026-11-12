@@ -127,6 +127,8 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [ ] Profil légal ivoirien : identité de l’exploitant, nom commercial, adresse, RCCM, NCC, régime fiscal et régime TVA (à compléter après immatriculation).
 - [ ] Qualification du parcours FNE auprès de la DGI avant activation de l’émission.
 - [ ] Numérotation chronologique continue et atomique à l'émission ; instantané des identités vendeur/client ; facture émise non modifiable.
+- [x] Facture prévisionnelle d'après les coûts (client ↔ applis, import des coûts d'hébergement et Claude au taux saisi, lignes modifiables, lignes libres, PDF « PRÉVISIONNELLE »), v0.19.0 (2026-11-12).
+- [ ] Facture définitive après la facture de Render : à bâtir sur la prévisionnelle (même client, mêmes lignes, montants réels), une fois le profil légal prêt.
 - [ ] Historique, suivi des paiements et journal des événements.
 - [ ] Envoi e-mail traçable (phase ultérieure).
 - [ ] Préparer l'intégration à une plateforme agréée pour la facturation électronique ; ne pas assimiler un PDF envoyé par e-mail à une facture électronique conforme.

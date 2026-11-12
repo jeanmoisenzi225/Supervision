@@ -13,6 +13,7 @@ type PdfLine = {
   total: Prisma.Decimal;
 };
 type PdfInvoice = {
+  kind?: string; period?: string | null;
   id: string; number: string | null; currency: string; issueDate: Date | null;
   serviceDate: Date | null; dueDate: Date | null; notes: string | null;
   subtotal: Prisma.Decimal; vatTotal: Prisma.Decimal; total: Prisma.Decimal;
@@ -113,6 +114,7 @@ const wrap = (value: string, max = 82) => {
 };
 
 export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): Buffer {
+  const forecast = invoice.kind === "forecast";
   const logo = decodeNjmdevLogo();
   const pages: string[][] = [[]];
   let y = 0;
@@ -129,7 +131,7 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   const line = (x1: number, top1: number, x2: number, top2: number) =>
     page().push(`0.78 G 0.6 w ${x1} ${(PAGE_H-top1).toFixed(2)} m ${x2} ${(PAGE_H-top2).toFixed(2)} l S 0 G`);
   const ensure = (height: number) => {
-    if (y + height > PAGE_H - 55) { pages.push([]); y = 48; if (logo) drawLogo(MARGIN, 18, 72); else text(profile.brandName || "NJMDev", MARGIN, 32, 10, true); text("BROUILLON — SUITE", PAGE_W - 150, 32, 9, true); }
+    if (y + height > PAGE_H - 55) { pages.push([]); y = 48; if (logo) drawLogo(MARGIN, 18, 72); else text(profile.brandName || "NJMDev", MARGIN, 32, 10, true); text(forecast ? "PRÉVISIONNELLE — SUITE" : "BROUILLON — SUITE", PAGE_W - (forecast ? 170 : 150), 32, 9, true); }
   };
   const paragraph = (value: string, x = MARGIN, max = 82, size = 9, leading = 13) => {
     for (const part of wrap(value, max)) { ensure(leading); text(part, x, y, size); y += leading; }
@@ -138,7 +140,7 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   y = 48;
   if (logo) y = 28 + drawLogo(MARGIN, 28, 112) + 8;
   else { text(profile.brandName || "NJMDev", MARGIN, y, 22, true); y += 20; }
-  text("BROUILLON", PAGE_W - 130, 51, 12, true);
+  text(forecast ? "PRÉVISIONNELLE" : "BROUILLON", PAGE_W - (forecast ? 160 : 130), 51, 12, true);
   if (profile.legalName) { paragraph(profile.legalName, MARGIN, 80); }
   if (profile.businessAddress) paragraph(profile.businessAddress, MARGIN, 80);
   if (profile.contactEmail) paragraph(profile.contactEmail, MARGIN, 80);
@@ -149,9 +151,9 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   y += 12;
   line(MARGIN, y, PAGE_W - MARGIN, y);
   y += 22;
-  text("FACTURE — DOCUMENT DE TRAVAIL", MARGIN, y, 15, true);
+  text(forecast ? "FACTURE PRÉVISIONNELLE" + (invoice.period ? " — " + invoice.period : "") : "FACTURE — DOCUMENT DE TRAVAIL", MARGIN, y, 15, true);
   y += 20;
-  text("Référence : BROUILLON-" + invoice.id.slice(-8).toUpperCase(), MARGIN, y, 9, true);
+  text("Référence : " + (forecast ? "PREVISION-" : "BROUILLON-") + invoice.id.slice(-8).toUpperCase(), MARGIN, y, 9, true);
   y += 16;
   text("Date du document : " + date(invoice.issueDate), MARGIN, y);
   text("Date de prestation : " + date(invoice.serviceDate), 300, y);
@@ -208,7 +210,8 @@ export function generateDraftInvoicePdf(invoice: PdfInvoice, profile: Profile): 
   if (profile.paymentDetails) { ensure(45); text("INFORMATIONS DE PAIEMENT", MARGIN, y, 9, true); y += 14; paragraph(profile.paymentDetails, MARGIN, 90, 8.5, 12); y += 8; }
   ensure(55);
   line(MARGIN, y, PAGE_W - MARGIN, y); y += 15;
-  text("DOCUMENT DE TRAVAIL — BROUILLON NON ÉMIS", MARGIN, y, 8, true); y += 12;
+  text(forecast ? "DOCUMENT PRÉVISIONNEL — NON DÉFINITIF" : "DOCUMENT DE TRAVAIL — BROUILLON NON ÉMIS", MARGIN, y, 8, true); y += 12;
+  if (forecast) paragraph("Montants estimés d'après les offres d'hébergement en vigueur ; la facture définitive sera établie après la facturation par l'hébergeur, et peut différer.", MARGIN, 95, 7.5, 10);
   paragraph("Ce document n'est pas une facture officielle. Aucun numéro fiscal ni aucune certification FNE n'y sont attribués.", MARGIN, 95, 7.5, 10);
 
   const objects: string[] = [];
