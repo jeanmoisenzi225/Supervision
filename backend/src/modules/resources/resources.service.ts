@@ -53,6 +53,7 @@ async function cached<T>(key: string, ttlMs: number, load: () => Promise<T>): Pr
 
 /** Message d'erreur Render lisible (mesure réservée aux offres supérieures à Hobby). */
 export function readableMetricError(label: string, message: string): string {
+  if (/\b429\b|rate limit/i.test(message)) return `${label} (Render limite le nombre de demandes : réessayer dans une minute)`;
   if (/not allowed for plan/i.test(message)) {
     const plan = /plan:\s*([A-Za-z]+)/.exec(message)?.[1] ?? "actuelle";
     return `${label} (réservé aux offres Render supérieures à ${plan})`;
@@ -60,11 +61,19 @@ export function readableMetricError(label: string, message: string): string {
   return `${label} : ${message}`;
 }
 
-async function safe<T>(errors: string[], label: string, load: () => Promise<T>, fallback: T): Promise<T> {
+/** Dernière valeur obtenue de Render pour chaque mesure : reprise si Render limite les demandes (429). */
+const lastGood = new Map<string, unknown>();
+
+async function safe<T>(errors: string[], label: string, memo: string, load: () => Promise<T>, fallback: T): Promise<T> {
   try {
-    return await load();
+    const data = await load();
+    lastGood.set(memo, data);
+    return data;
   } catch (err) {
-    errors.push(readableMetricError(label, (err as Error).message));
+    const message = (err as Error).message;
+    // Limite de Render atteinte : on garde la dernière valeur connue plutôt qu'un trou.
+    if (/\b429\b|rate limit/i.test(message) && lastGood.has(memo)) return lastGood.get(memo) as T;
+    errors.push(readableMetricError(label, message));
     return fallback;
   }
 }
@@ -86,12 +95,12 @@ async function serviceResources(id: string, start: Date, resolution: number): Pr
   if (s.type === "static_site") return null;
   const errors: string[] = [];
   const [memory, memoryLimit, cpu, cpuLimit, requests, latency, disk, diskCapacity] = await Promise.all([
-    safe(errors, "mémoire", () => fetchMetric("memory", id, start, resolution, { aggregationMethod: "MAX" }), []),
-    safe(errors, "limite mémoire", () => fetchMetric("memory-limit", id, start, resolution), []),
-    safe(errors, "processeur", () => fetchMetric("cpu", id, start, resolution, { aggregationMethod: "MAX" }), []),
-    safe(errors, "limite processeur", () => fetchMetric("cpu-limit", id, start, resolution), []),
-    safe(errors, "requêtes", () => fetchMetric("http-requests", id, start, resolution, { aggregateBy: "statusCode" }), []),
-    safe(errors, "temps de réponse", () => fetchMetric("http-latency", id, start, resolution, { quantile: "0.95" }), []),
+    safe(errors, "mémoire", `memory:${id}:${resolution}`, () => fetchMetric("memory", id, start, resolution, { aggregationMethod: "MAX" }), []),
+    safe(errors, "limite mémoire", `memory-limit:${id}:${resolution}`, () => fetchMetric("memory-limit", id, start, resolution), []),
+    safe(errors, "processeur", `cpu:${id}:${resolution}`, () => fetchMetric("cpu", id, start, resolution, { aggregationMethod: "MAX" }), []),
+    safe(errors, "limite processeur", `cpu-limit:${id}:${resolution}`, () => fetchMetric("cpu-limit", id, start, resolution), []),
+    safe(errors, "requêtes", `http-requests:${id}:${resolution}`, () => fetchMetric("http-requests", id, start, resolution, { aggregateBy: "statusCode" }), []),
+    safe(errors, "temps de réponse", `http-latency:${id}:${resolution}`, () => fetchMetric("http-latency", id, start, resolution, { quantile: "0.95" }), []),
     // Disque persistant : séries vides pour un service sans disque (pas une erreur).
     fetchMetric("disk-usage", id, start, resolution).catch(() => [] as MetricSeries[]),
     fetchMetric("disk-capacity", id, start, resolution).catch(() => [] as MetricSeries[]),
@@ -117,9 +126,9 @@ async function serviceResources(id: string, start: Date, resolution: number): Pr
 async function databaseResources(db: Awaited<ReturnType<typeof listPostgres>>[number], start: Date, resolution: number): Promise<DatabaseResources> {
   const errors: string[] = [];
   const [disk, connections, sizes] = await Promise.all([
-    safe(errors, "historique du disque", () => fetchMetric("disk-usage", db.id, start, resolution), []),
-    safe(errors, "connexions", () => fetchMetric("active-connections", db.id, start, resolution), []),
-    safe(errors, "taille de la base", () => fetchPostgresSizes(db.id, db.databaseName), { databaseBytes: null, tables: [] }),
+    safe(errors, "historique du disque", `disk-usage:${db.id}:${resolution}`, () => fetchMetric("disk-usage", db.id, start, resolution), []),
+    safe(errors, "connexions", `active-connections:${db.id}:${resolution}`, () => fetchMetric("active-connections", db.id, start, resolution), []),
+    safe(errors, "taille de la base", `sizes:${db.id}`, () => fetchPostgresSizes(db.id, db.databaseName), { databaseBytes: null, tables: [] }),
   ]);
   let diskPoints = bytes(disk);
   let diskFromSamples = false;
@@ -173,7 +182,9 @@ export async function getAppResources(app: AppTarget, range: RangeKey, fresh = f
     const { hours, resolution } = RANGES[range];
     return { configured: false, services: [], databases: [], checks: await checkLatency(app, new Date(Date.now() - hours * 3600_000), resolution) };
   }
-  if (fresh) cache.delete(`${app.key}:${range}`);
+  // Actualisation demandée : relecture, sauf si la dernière date de moins d'une minute (Render limite le nombre de demandes).
+  const hit = cache.get(`${app.key}:${range}`);
+  if (fresh && hit && Date.now() - hit.at > 60_000) cache.delete(`${app.key}:${range}`);
   return cached(`${app.key}:${range}`, 2 * 60_000, async () => {
     const { hours, resolution } = RANGES[range];
     const start = new Date(Date.now() - hours * 3600_000);

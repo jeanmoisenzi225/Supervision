@@ -75,6 +75,25 @@ describe("repli quand Render limite les mesures (offre Hobby)", async () => {
     ]);
   });
 
+  it("additionne les tables quand Render ne donne pas la taille de la base entière", () => {
+    const s = parseSizes(
+      [
+        { Database: "procedia", Schema: "public", Table: "SourceDocument", Index: "", Bytes: 1_000_000_000 },
+        { Database: "procedia", Schema: "public", Table: "SourceDocument", Index: "SourceDocument_pkey", Bytes: 16_384 },
+        { Database: "procedia", Schema: "public", Table: "Node", Index: "", Bytes: 4_000_000 },
+      ],
+      "procedia"
+    );
+    expect(s.databaseBytes).toBe(1_004_000_000);
+    expect(s.tables[0]).toEqual({ name: "SourceDocument", bytes: 1_000_000_000 });
+  });
+
+  it("rend lisible la limite de demandes de Render", () => {
+    expect(readableMetricError("mémoire", 'Render a répondu 429 : {"message": "rate limit exceeded"}')).toBe(
+      "mémoire (Render limite le nombre de demandes : réessayer dans une minute)"
+    );
+  });
+
   it("rend lisible le refus lié à l'offre Render", () => {
     expect(readableMetricError("temps de réponse", 'Render a répondu 400 : {"message":"query is not allowed for plan: Hobby"}')).toBe(
       "temps de réponse (réservé aux offres Render supérieures à Hobby)"

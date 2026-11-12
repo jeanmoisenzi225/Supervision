@@ -171,14 +171,15 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
         return (
           <section key={db.id} className="card">
             <h3>Base {db.name}</h3>
+            <p className="muted small">Offre : {planLabel(db.plan)} (le disque se règle à part, dans Render).</p>
             <div className="metrics">
               {size ? (
-                <Gauge label="Disque" value={pct(used, size)} alertAt={80} detail={used !== null ? `${formatBytes(used)} sur ${db.diskSizeGB} Go` : `offre ${db.plan}`} />
+                <Gauge label="Disque" value={pct(used, size)} alertAt={80} detail={used !== null ? `${formatBytes(used)} sur ${db.diskSizeGB} Go` : `taille du disque : ${db.diskSizeGB} Go`} />
               ) : (
                 <div className="card metric">
                   <span className="muted small">Taille de la base</span>
                   <span className="metric-value">{used !== null ? formatBytes(used) : "—"}</span>
-                  <span className="muted small">offre {db.plan}</span>
+                  <span className="muted small">{planLabel(db.plan)}</span>
                 </div>
               )}
               {db.connections.length > 0 && (
@@ -238,4 +239,11 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
       {data?.configured && <p className="muted small">Mesures fournies par Render, rafraîchies toutes les 2 minutes.</p>}
     </div>
   );
+}
+
+/** Offre Render d'une base, lisible : « 0.1c-256mb » → « 0,1 processeur · 256 Mo de mémoire ». */
+function planLabel(plan: string): string {
+  const m = /^([\d.]+)c-(\d+)(mb|gb)$/i.exec(plan);
+  if (!m) return plan;
+  return `${m[1].replace(".", ",")} processeur · ${m[2]} ${m[3].toLowerCase() === "gb" ? "Go" : "Mo"} de mémoire`;
 }

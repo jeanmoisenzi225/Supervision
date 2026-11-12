@@ -211,5 +211,10 @@ export function parseSizes(
     .filter((r) => r.Table && !r.Index && typeof r.Bytes === "number")
     .map((r) => ({ name: r.Schema && r.Schema !== "public" ? `${r.Schema}.${r.Table}` : String(r.Table), bytes: r.Bytes! }))
     .sort((a, b) => b.bytes - a.bytes);
-  return { databaseBytes: main?.Bytes ?? null, tables };
+  // Render ne renvoie plus toujours la ligne « base entière » (constaté le 2026-11-12) : on additionne
+  // alors les tables de la base (chaque ligne de table compte déjà ses index et ses données hors ligne).
+  const dbName = main?.Database ?? databaseName ?? sizes.find((r) => r.Table)?.Database;
+  const ownTables = sizes.filter((r) => r.Table && !r.Index && typeof r.Bytes === "number" && (!dbName || r.Database === dbName));
+  const summed = ownTables.length ? ownTables.reduce((t, r) => t + (r.Bytes ?? 0), 0) : null;
+  return { databaseBytes: main?.Bytes ?? summed, tables };
 }

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.16.1 — 2026-11-12
+
+- **Correction : jauge « Disque » des bases vide** (« — » sur procedia-db alors que le disque fait 5 Go). Render ne renvoie plus la ligne « taille de la base entière » : la taille est désormais calculée en additionnant les tables de la base (environ 1,1 Go sur 5 Go pour procedia-db). L'historique relevé toutes les heures reprend aussi.
+- **Limite de demandes de Render (« 429 rate limit exceeded »)** : la dernière valeur connue de chaque mesure est réutilisée au lieu d'un trou, le message devient « Render limite le nombre de demandes : réessayer dans une minute », et l'actualisation par glissement ne relit pas Render plus d'une fois par minute.
+- L'offre d'une base s'affiche lisiblement (« 0,1 processeur · 256 Mo de mémoire ») : ce n'est pas la taille du disque, qui se règle à part.
+
 ## v0.16.0 — 2026-11-12
 
 Demandé le 2026-11-12 : « on rajoute un geste de glisser pour l'actualisation de la sup, du haut vers le bas » (la taille du disque de la base Procedia restait affichée à 1 Go après son agrandissement, faute d'actualisation).
