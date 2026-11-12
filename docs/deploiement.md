@@ -27,7 +27,7 @@ Coût : service Starter + petite base payante (la base gratuite expire après 30
 | Procedia | API Starter (0,5 processeur, 512 Mo), **offre payante depuis le 2026-11-12** ; appli web et site de recette : sites statiques | `procedia-db` : offre 0,1 processeur · 256 Mo, disque 5 Go |
 | MGA | voir Render | `garage-db` : offre 0,1 processeur · 256 Mo, disque 1 Go |
 
-Les montants ne sont pas recopiés ici : la facturation se lit dans Render (Billing). La page « Ressources » de chaque appli indique l'offre et le disque de ses bases. À contrôler après un changement d'offre : l'intervalle de vérification de l'appli (`<PREFIXE>_INTERVAL_SEC`) et l'option `sleepsWhenIdle` du catalogue.
+La page **« Facturation »** de la Supervision estime le coût mensuel de chaque appli d'après ces offres (tarifs publics de Render, table `backend/src/modules/billing/prices.ts` à remettre à jour si Render change ses prix) et y ajoute les dépenses Claude du mois par espace de travail. Les montants ne sont pas recopiés ici : la facture exacte se lit dans Render (Billing). La page « Ressources » de chaque appli indique l'offre et le disque de ses bases. À contrôler après un changement d'offre : l'intervalle de vérification de l'appli (`<PREFIXE>_INTERVAL_SEC`) et l'option `sleepsWhenIdle` du catalogue.
 
 Alerte : la base de test `supervision-staging-db` (offre gratuite) expire le 2026-12-09 ; la supprimer si elle ne sert plus.
 

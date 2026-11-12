@@ -28,6 +28,8 @@ export interface AppTarget {
   renderServiceIds: string[];
   /** Reconnaissance automatique des services Render de l'appli (nom ou adresse). */
   renderMatch: { names: RegExp[]; hosts: string[] };
+  /** Espaces de travail Anthropic de l'appli (nom reconnu), pour rattacher les dépenses Claude (facturation). */
+  claudeWorkspaces: RegExp[];
 }
 
 interface AppDefinition {
@@ -41,6 +43,8 @@ interface AppDefinition {
   /** Noms de services Render de l'appli, et adresses .onrender.com cachées derrière un domaine. */
   renderNames: RegExp[];
   renderHosts?: string[];
+  /** Noms d'espaces de travail Anthropic de l'appli ; <PREFIXE>_CLAUDE_WORKSPACE (noms séparés par des virgules) les remplace. */
+  claudeNames?: RegExp[];
   /** Adresse de base des routes `/supervision` de l'appli (sans `/supervision`). */
   defaultAdminUrl?: string;
 }
@@ -62,6 +66,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     intervalSec: 60,
     defaultAdminUrl: "https://garage-backend-r7i3.onrender.com/api",
     renderNames: [/^garage-/, /^mga-/],
+    claudeNames: [/mga|garage/i],
     renderHosts: ["garage-frontend-a7uv.onrender.com"],
     defaultChecks: [
       { id: "api", label: "API", url: "https://garage-backend-r7i3.onrender.com/health", expect: "health" },
@@ -85,6 +90,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     intervalSec: 60,
     defaultAdminUrl: "https://agent-brvm.onrender.com/api",
     renderNames: [/brvm/i, /yiri/i],
+    claudeNames: [/yiri|brvm/i],
     defaultChecks: [
       { id: "server", label: "Serveur", url: "https://agent-brvm.onrender.com/manifest.json", expect: "2xx" },
       { id: "app", label: "Appli web", url: "https://agent-brvm.onrender.com/app", expect: "2xx" },
@@ -97,6 +103,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     description: "Plateforme d'organisation familiale (pilote NZI FAMILY)",
     intervalSec: 300,
     renderNames: [/family/i],
+    claudeNames: [/family/i],
     defaultChecks: [],
   },
   {
@@ -106,6 +113,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     description: "Supervision technique multi-sites et multi-protocoles pour EDEN Telecom",
     intervalSec: 60,
     renderNames: [/^eden-sup-/i],
+    claudeNames: [/eden/i],
     defaultChecks: [
       { id: "api", label: "API backend", url: "https://eden-sup-backend.onrender.com/api/v1/health", expect: "health" },
       { id: "app", label: "Application web", url: "https://eden-sup-app.onrender.com/", expect: "2xx" },
@@ -122,6 +130,7 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     intervalSec: 60,
     defaultAdminUrl: "https://procedia-backend.onrender.com/api",
     renderNames: [/^procedia-/],
+    claudeNames: [/procedia/i],
     defaultChecks: [
       { id: "api", label: "API", url: "https://procedia-backend.onrender.com/api/health", expect: "health" },
       { id: "app", label: "Appli web", url: "https://procedia-frontend.onrender.com/", expect: "2xx" },
@@ -175,6 +184,13 @@ export function buildApps(read: (name: string) => string = readOptionalEnv): App
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+      claudeWorkspaces: read(`${p}_CLAUDE_WORKSPACE`)
+        ? read(`${p}_CLAUDE_WORKSPACE`)
+            .split(",")
+            .map((n) => n.trim())
+            .filter(Boolean)
+            .map((n) => new RegExp(`^${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"))
+        : (def.claudeNames ?? []),
       renderMatch: {
         names: def.renderNames,
         hosts: [...checks.map((c) => hostOf(c.url)), ...(def.renderHosts ?? [])].filter(Boolean),

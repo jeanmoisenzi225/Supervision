@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.17.0 — 2026-11-12
+
+Demandé le 2026-11-12 : « intégrer la facturation par application ».
+
+- **Page « Facturation »** : pour chaque appli (MGA, site Autonova, Yiri Invest, My Family, EDEN Supervision, Procedia) et pour NJMDev lui-même, le coût de l'**hébergement Render par mois** (estimation d'après l'offre de chaque service, base et disque, au tarif public de Render) et les **dépenses Claude du mois en cours** (réelles, par espace de travail), avec le total. Constat sur le compte au 12/11 : environ 52,55 $ par mois d'hébergement (dont Procedia 14,50 $, MGA 13,30 $, NJMDev 17,50 $).
+- Render ne fournit pas sa facturation par l'API : c'est une **estimation** (hors bande passante, minutes de construction et forfait de l'espace de travail), la facture exacte reste dans Render › Billing. Une offre inconnue est signalée, jamais inventée ; un service suspendu ne compte plus son instance.
+- Route `GET /api/billing` ; tarifs dans `backend/src/modules/billing/prices.ts` ; rattachement des espaces Claude par leur nom (ou `<PREFIXE>_CLAUDE_WORKSPACE`).
+
 ## v0.16.5 — 2026-11-12
 
 - **Procedia en offre payante Render** (API Starter, base payante, constaté via l'API Render) : vérification **chaque minute** au lieu de 30 minutes, plus de délai de réveil (délai d'attente des appels ramené à 30 s, seuil de lenteur du diagnostic à 5 s, mentions « service gratuit mis en veille » retirées pour Procedia). Documentation mise à jour : hébergement des applis (offres Render constatées), règle de réveil de l'offre gratuite devenue historique.

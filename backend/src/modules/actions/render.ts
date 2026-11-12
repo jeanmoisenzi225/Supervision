@@ -19,7 +19,7 @@ interface RenderService {
   type: string;
   suspended: string;
   dashboardUrl?: string;
-  serviceDetails?: { url?: string };
+  serviceDetails?: { url?: string; plan?: string; disk?: { sizeGB?: number } | null };
 }
 
 interface RenderDeploy {
@@ -30,22 +30,37 @@ interface RenderDeploy {
   commit?: { id?: string; message?: string };
 }
 
-interface ServiceSummary {
+export interface ServiceSummary {
   id: string;
   name: string;
   url: string | null;
+  /** Détails utiles à la facturation (v0.17.0). */
+  type?: string;
+  plan?: string | null;
+  suspended?: boolean;
+  diskGB?: number | null;
 }
 
 let cache: { at: number; services: ServiceSummary[] } | null = null;
 
 /** Tous les services du compte Render (gardés 10 minutes en mémoire). */
-export async function listServices(): Promise<ServiceSummary[]> {
-  if (cache && Date.now() - cache.at < 10 * 60_000) return cache.services;
+export async function listServices(fresh = false): Promise<ServiceSummary[]> {
+  if (!fresh && cache && Date.now() - cache.at < 10 * 60_000) return cache.services;
   const services: ServiceSummary[] = [];
   let cursor = "";
   for (let page = 0; page < 10; page++) {
     const rows = await renderFetch<{ service: RenderService; cursor: string }[]>(`/services?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
-    services.push(...rows.map(({ service }) => ({ id: service.id, name: service.name, url: service.serviceDetails?.url ?? null })));
+    services.push(
+      ...rows.map(({ service }) => ({
+        id: service.id,
+        name: service.name,
+        url: service.serviceDetails?.url ?? null,
+        type: service.type,
+        plan: service.serviceDetails?.plan ?? null,
+        suspended: service.suspended === "suspended",
+        diskGB: service.serviceDetails?.disk?.sizeGB ?? null,
+      }))
+    );
     if (rows.length < 100) break;
     cursor = rows[rows.length - 1].cursor;
   }
