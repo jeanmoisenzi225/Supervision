@@ -30,6 +30,7 @@ interface ImportsResponse {
   since?: string | null;
   totals?: { reussis: number; echecs: number; procedures?: number };
   clients?: ClientImports[];
+  unassigned?: number;
   running?: { since: string; author: string; mission: string }[];
   items?: ImportItem[];
   next?: string | null;
@@ -132,6 +133,9 @@ export function ImportsPanel({ app }: { app: AppOverview }) {
               </tbody>
             </table>
           </div>
+          {data.unassigned ? (
+            <p className="small muted">{data.unassigned} import(s) de l'historique ne peuvent être rattachés à aucun client (catégorie ou client renommé, supprimé, ou nom de catégorie porté par plusieurs clients).</p>
+          ) : null}
           <p className="small muted">Touchez un client pour ne voir que ses imports{client ? " ; touchez-le à nouveau pour revenir à tous les clients" : ""}.</p>
         </section>
       )}

@@ -80,7 +80,7 @@ Demandé le 2026-11-02 : « rajoute à l'outil de sup des rubriques par applicat
 - Demande (propriétaire, 2026-11-10) : voir dans la Supervision tout l'historique des imports, succès, échecs et causes.
 - Fait : route `GET /api/apps/:key/imports` et onglet « Imports » (Procedia). Vérifié par le propriétaire le 2026-11-11.
 
-## 8. Imports de Procedia : comparaison par client ✅ (v0.14.0)
+## 8. Imports de Procedia : comparaison par client ✅ (v0.14.0, v0.16.2)
 
 - Constat (propriétaire, 2026-11-11) : 291 procédures pour BNI dans Procedia, 139 imports dans la Supervision. Les 139 sont des fichiers (un fichier peut créer plusieurs procédures), tous clients confondus, suivis seulement depuis le 2026-11-10 ; les procédures saisies ou dupliquées ne sont pas des imports.
 - Fait : onglet « Imports » avec procédures créées, date de début du suivi, tableau par client (procédures dans l'outil, dont importées, autres, imports suivis) et filtre par client. Procedia v0.57.0 en ligne le 2026-11-12.

@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.16.2 — 2026-11-12
+
+- Onglet « Imports » de Procedia : nombre d'imports qui ne peuvent être rattachés à aucun client, sous le tableau « Par client » (avec Procedia v0.57.1, qui corrige le rattachement : « aucun import dans l'historique » en touchant BNI).
+
 ## v0.16.1 — 2026-11-12
 
 - **Correction : jauge « Disque » des bases vide** (« — » sur procedia-db alors que le disque fait 5 Go). Render ne renvoie plus la ligne « taille de la base entière » : la taille est désormais calculée en additionnant les tables de la base (environ 1,1 Go sur 5 Go pour procedia-db). L'historique relevé toutes les heures reprend aussi.
