@@ -77,6 +77,7 @@ export function summarize(buckets: CostBucket[], now = new Date(), workspaceName
   let monthToDate = 0;
   for (const b of buckets) {
     const t = Date.parse(b.starting_at);
+    if (t > now.getTime()) continue; // journée à venir (fenêtre demandée jusqu'à la fin de demain)
     let total = 0;
     for (const r of b.results) {
       const usd = Number(r.amount) / 100;
@@ -105,6 +106,32 @@ export function summarize(buckets: CostBucket[], now = new Date(), workspaceName
 
 let cache: { at: number; data: CostSummary } | null = null;
 
+/**
+ * Fenêtre demandée (v0.24.1) : 30 jours dont aujourd'hui, et `ending_at` à la fin de demain. Sans `ending_at`, le rapport
+ * ne renvoie que les journées terminées : la journée en cours manquait (le jour même, la Supervision affichait 0 $ et
+ * un mois en retard de toutes les dépenses du jour, par exemple 52 $ au lieu de 83 $ dans la Console).
+ */
+export function costWindow(now = new Date()): { start: Date; end: Date } {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return { start: new Date(today - 29 * 86_400_000), end: new Date(today + 2 * 86_400_000) };
+}
+
+async function fetchBuckets(start: Date, end: Date | null): Promise<CostBucket[]> {
+  const buckets: CostBucket[] = [];
+  let page: string | null = null;
+  for (let i = 0; i < 5; i++) {
+    const params = new URLSearchParams({ starting_at: start.toISOString(), bucket_width: "1d", limit: "31" });
+    if (end) params.set("ending_at", end.toISOString());
+    params.append("group_by[]", "description");
+    params.append("group_by[]", "workspace_id");
+    if (page) params.set("page", page);
+    const res: { data: CostBucket[]; has_more: boolean; next_page: string | null } = await adminGet(`/cost_report?${params.toString()}`);
+    buckets.push(...res.data);
+    if (!res.has_more || !res.next_page) break;
+    page = res.next_page;
+  }
+  return buckets;
+}
 /** Dépenses des 31 derniers jours (gardées 10 minutes en mémoire ; `fresh` relit Anthropic sans attendre). */
 export async function getCosts(fresh = false): Promise<CostSummary> {
   const empty = { monthToDateUsd: 0, todayUsd: 0, yesterdayUsd: 0, daily: [], byModel: [], byWorkspace: [] };
@@ -113,19 +140,9 @@ export async function getCosts(fresh = false): Promise<CostSummary> {
   if (!fresh && cache && Date.now() - cache.at < 10 * 60_000) return cache.data;
   try {
     const now = new Date();
-    const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - 30 * 86_400_000);
-    const buckets: CostBucket[] = [];
-    let page: string | null = null;
-    for (let i = 0; i < 5; i++) {
-      const params = new URLSearchParams({ starting_at: start.toISOString(), bucket_width: "1d", limit: "31" });
-      params.append("group_by[]", "description");
-      params.append("group_by[]", "workspace_id");
-      if (page) params.set("page", page);
-      const res: { data: CostBucket[]; has_more: boolean; next_page: string | null } = await adminGet(`/cost_report?${params.toString()}`);
-      buckets.push(...res.data);
-      if (!res.has_more || !res.next_page) break;
-      page = res.next_page;
-    }
+    const { start, end } = costWindow(now);
+    // Avec la journée en cours ; si Anthropic refuse `ending_at`, on retombe sur la demande d'avant (journées terminées seulement).
+    const buckets = await fetchBuckets(start, end).catch(() => fetchBuckets(new Date(start.getTime() - 86_400_000), null));
     // Noms des espaces de travail (facultatif : identifiants sinon).
     const names: Record<string, string> = {};
     await adminGet<{ data: { id: string; name: string }[] }>("/workspaces?limit=100")

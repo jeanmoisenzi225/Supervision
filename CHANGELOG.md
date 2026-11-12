@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.24.1 — 2026-11-12
+
+- **Correction : dépenses Claude du jour manquantes.** La page Claude (et Coûts, et l'alerte de budget) affichait 52,07 $ pour le mois et 0,00 $ « aujourd'hui », alors que la Console Anthropic indiquait 82,88 $ : le rapport de coûts d'Anthropic ne renvoie que les journées **terminées** quand on ne précise pas `ending_at`. La Supervision demande désormais jusqu'à la fin de demain, donc la **journée en cours est comptée** (avec le retard de quelques minutes d'Anthropic) ; si Anthropic refusait ce paramètre, elle revient à l'ancienne demande.
+
 ## v0.24.0 — 2026-11-12
 
 Décidé le 2026-11-12 : « revenons aux vrais taux finalement, j'ajusterai moi-même ».
