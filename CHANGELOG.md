@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.16.4 — 2026-11-12
+
+- **Icône de l'appli installée** : l'iPhone gardait l'ancienne icône (électrocardiogramme) en mémoire, sous le même nom de fichier. Les icônes NJMDev ont de nouveaux noms (`njmdev-*.png`), ce qui oblige le téléphone à les recharger à la réinstallation.
+
 ## v0.16.3 — 2026-11-12
 
 - Onglet « Imports » de Procedia : avec Procedia v0.58.0, **tous les imports depuis le 3/11** sont comptés et rattachés à leur client par leur catégorie ; libellé des imports sans client ajusté (catégorie supprimée depuis l'import).

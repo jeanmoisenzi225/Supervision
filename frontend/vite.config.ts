@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["favicon.png", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "brand/njmdev-white.png"],
+      includeAssets: ["njmdev-favicon.png", "njmdev-touch-180.png", "njmdev-icon-192.png", "njmdev-icon-512.png", "brand/njmdev-white.png"],
       manifest: {
         name: "NJMDev",
         short_name: "NJMDev",
@@ -22,8 +22,8 @@ export default defineConfig({
         background_color: "#0f172a",
         theme_color: "#0f172a",
         icons: [
-          { src: "icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "njmdev-icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "njmdev-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
       workbox: {
