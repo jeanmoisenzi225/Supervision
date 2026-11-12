@@ -134,7 +134,7 @@ export function ImportsPanel({ app }: { app: AppOverview }) {
             </table>
           </div>
           {data.unassigned ? (
-            <p className="small muted">{data.unassigned} import(s) de l'historique ne peuvent être rattachés à aucun client (catégorie ou client renommé, supprimé, ou nom de catégorie porté par plusieurs clients).</p>
+            <p className="small muted">{data.unassigned} import(s) de l'historique sans client (catégorie supprimée depuis l'import).</p>
           ) : null}
           <p className="small muted">Touchez un client pour ne voir que ses imports{client ? " ; touchez-le à nouveau pour revenir à tous les clients" : ""}.</p>
         </section>

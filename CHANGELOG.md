@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.16.3 — 2026-11-12
+
+- Onglet « Imports » de Procedia : avec Procedia v0.58.0, **tous les imports depuis le 3/11** sont comptés et rattachés à leur client par leur catégorie ; libellé des imports sans client ajusté (catégorie supprimée depuis l'import).
+
 ## v0.16.2 — 2026-11-12
 
 - Onglet « Imports » de Procedia : nombre d'imports qui ne peuvent être rattachés à aucun client, sous le tableau « Par client » (avec Procedia v0.57.1, qui corrige le rattachement : « aucun import dans l'historique » en touchant BNI).
