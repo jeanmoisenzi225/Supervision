@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.33.3 — 2026-11-13
+
+- **Correction : fausse alerte « redémarrage après saturation de la mémoire » après une mise en ligne.** Le 13/11 à 17:55 UTC (18:55 sur l'écran), la mise en ligne de Procedia v0.62.2 a ouvert une alerte critique de saturation alors que la mémoire valait 258 Mo (290 Mo au dernier relevé) et que Render n'avait signalé aucun arrêt, seulement le déploiement. Cause : la Supervision gardait le **pic de toute la vie du processus** (405 Mo vus plusieurs heures plus tôt pendant des imports) au lieu de la mémoire juste avant l'arrêt. Désormais : le pic ne porte que sur **les 2 dernières minutes** avant le redémarrage, et un redémarrage qui suit une mise en ligne n'est **jamais** une saturation (la mise en ligne coupe le processus quelle que soit sa mémoire). Une vraie saturation (mémoire élevée juste avant l'arrêt, sans mise en ligne) reste une alerte critique.
+
 ## v0.33.2 — 2026-11-13
 
 Demandé le 2026-11-13 : « pas d'animation, on pose le logo et on affiche juste le chargement en bas ».

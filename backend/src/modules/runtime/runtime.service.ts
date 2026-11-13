@@ -70,7 +70,19 @@ async function deployExplains(app: AppTarget, startedAt: Date): Promise<boolean>
 }
 
 const unsupported = new Map<string, number>();
-const lastGood = new Map<string, { startedAt: Date; rssMb: number; at: Date; peakMb: number }>();
+// `recent` : mémoire des derniers relevés (≈ 2 minutes) ; le pic est calculé là-dessus, pas sur toute la vie du processus (v0.33.3).
+export const RECENT_SAMPLES = 8;
+const lastGood = new Map<string, { startedAt: Date; rssMb: number; at: Date; recent: number[] }>();
+
+/** Ajoute un relevé à la fenêtre récente (fonction pure, testée). */
+export function pushRecent(recent: number[], rssMb: number, size = RECENT_SAMPLES): number[] {
+  return [...recent, rssMb].slice(-size);
+}
+
+/** Un redémarrage est-il une saturation de la mémoire ? Jamais s'il suit une mise en ligne (qui coupe le processus quelle que soit sa mémoire) (fonction pure, testée). */
+export function isMemoryRestart(recent: number[], afterDeploy: boolean): boolean {
+  return !afterDeploy && recent.length > 0 && Math.max(...recent) >= MEMORY_SUSPECT_MB;
+}
 const lastRestart = new Map<string, Date>();
 const QUIET_MS = 2 * 3600_000;
 
@@ -109,22 +121,24 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
   });
   const prev = lastGood.get(app.key);
   if (prev && Math.abs(startedAt.getTime() - prev.startedAt.getTime()) > 2000) {
-    const memory = prev.peakMb >= MEMORY_SUSPECT_MB;
-    // Redémarrage dû à une mise en ligne (v0.32.1) : information, ni alerte ni notification.
-    const deploy = !memory && (await deployExplains(app, startedAt));
+    // Redémarrage dû à une mise en ligne (v0.32.1) : information, ni alerte ni notification,
+    // quelle que soit la mémoire vue plus tôt dans la vie du processus (v0.33.3).
+    const deploy = await deployExplains(app, startedAt);
+    const memory = isMemoryRestart(prev.recent, deploy);
+    const peakMb = Math.max(...prev.recent);
     if (!deploy) lastRestart.set(app.key, now);
     await raiseAlert({
       appKey: app.key,
       kind: "app",
       severity: deploy ? "info" : memory ? "critical" : "warning",
       title: deploy ? `${app.name} — redémarrage pour une mise en ligne` : memory ? `${app.name} — redémarrage après saturation de la mémoire` : `${app.name} — redémarrage du service`,
-      detail: `Le service a redémarré (démarrage à ${startedAt.toISOString().slice(11, 19)} UTC). Dernière mémoire vue avant l'arrêt : ${prev.rssMb} Mo (pic ${prev.peakMb} Mo sur les derniers relevés, limite 512 Mo). Dernier relevé normal : ${prev.at.toISOString().slice(11, 19)} UTC.`,
+      detail: `Le service a redémarré (démarrage à ${startedAt.toISOString().slice(11, 19)} UTC). Dernière mémoire vue avant l'arrêt : ${prev.rssMb} Mo (pic ${peakMb} Mo sur les 2 dernières minutes, limite 512 Mo). Dernier relevé normal : ${prev.at.toISOString().slice(11, 19)} UTC.`,
       fingerprint: deploy ? `restart-deploy:${app.key}` : `restart:${app.key}`,
     });
-    lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, peakMb: report.rssMb });
+    lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, recent: [report.rssMb] });
   } else {
     // Pic mémoire retenu sur la durée de vie de ce processus (jusqu'au prochain redémarrage).
-    lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, peakMb: Math.max(prev?.peakMb ?? 0, report.rssMb) });
+    lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, recent: pushRecent(prev?.recent ?? [], report.rssMb) });
   }
   await watchTrends(app, report, now).catch((e) => console.error(`[tendance] ${app.key}`, (e as Error).message));
   const lr = lastRestart.get(app.key);

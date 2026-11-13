@@ -32,3 +32,23 @@ describe("Redémarrage dû à une mise en ligne (v0.32.1)", () => {
     expect(deployNear([ev("server_failed", "2026-11-13T12:47:30Z")], new Date("2026-11-13T12:47:58Z"))).toBe(false);
   });
 });
+
+import { isMemoryRestart, pushRecent } from "../src/modules/runtime/runtime.service";
+describe("Redémarrage : saturation ou mise en ligne (v0.33.3)", () => {
+  it("un redémarrage après une mise en ligne n'est jamais une saturation, même avec un pic ancien à 405 Mo", () => {
+    // 405 Mo vu tôt dans la vie du processus, puis 290 Mo juste avant la mise en ligne.
+    let r: number[] = [];
+    for (const v of [405, 330, 290, 290, 290]) r = pushRecent(r, v);
+    expect(isMemoryRestart(r, true)).toBe(false);
+    expect(isMemoryRestart(r, false)).toBe(true); // sans déploiement, le pic récent compte
+  });
+  it("le pic ne porte que sur les derniers relevés", () => {
+    let r: number[] = [405];
+    for (let i = 0; i < 8; i++) r = pushRecent(r, 280);
+    expect(r).toHaveLength(8);
+    expect(isMemoryRestart(r, false)).toBe(false);
+  });
+  it("une mémoire élevée juste avant l'arrêt, sans déploiement, reste une saturation", () => {
+    expect(isMemoryRestart([300, 470, 480], false)).toBe(true);
+  });
+});
