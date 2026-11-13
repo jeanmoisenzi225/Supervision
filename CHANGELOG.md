@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.30.0 — 2026-11-13
+
+- **Journaux de la plateforme Render dans la page Journaux (quasi-direct).** Toutes les 15 secondes, la Supervision lit la sortie standard de chaque service Render rattaché à une appli (lignes `[mémoire]` de Procedia, démarrage et déploiement, erreurs que l'appli n'a pas transmises, traces d'arrêt) et les range avec la source « render » (filtre « source » de la page). Niveau déduit du texte (erreur, saturation mémoire → fatal, ALERTE → avertissement). Les codes de couleur sont retirés. Conservation : durée habituelle des journaux. Les journaux envoyés par les applis restent inchangés : une même ligne peut apparaître deux fois (une fois par l'appli, une fois par Render).
+
 ## v0.29.0 — 2026-11-13
 
 Demandé le 2026-11-13 : « une supervision la plus complète possible, avec du temps réel » (1ʳᵉ étape).
