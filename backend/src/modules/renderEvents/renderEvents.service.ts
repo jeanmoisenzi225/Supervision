@@ -3,6 +3,7 @@ import { env } from "../../config/env";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
 import { fetchMetric, renderFetch, resolveServiceIds } from "../actions/render";
 import { isPaused } from "../pause/pause.service";
+import { stamp } from "../../utils/time";
 
 // Arrêts du service constatés par Render (événements « server_failed », v0.26.0).
 // Render les publie 15 à 30 minutes après l'arrêt réel : l'alerte vient donc après coup,
@@ -34,7 +35,7 @@ export function failuresSince(events: RenderEvent[], since: Date): ServiceFailur
     .sort((a, b) => a.at.getTime() - b.at.getTime());
 }
 
-const fmt = (d: Date) => d.toLocaleString("fr-FR", { timeZone: "UTC", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const fmt = (d: Date) => stamp(d);
 /** Au-delà de ce délai sans nouvel arrêt, l'alerte est refermée. */
 export const QUIET_MS = 2 * 3600_000;
 
@@ -66,8 +67,8 @@ export async function watchRenderEvents(now = new Date()): Promise<void> {
           title: f.kind === "memory" ? `${app.name} — service arrêté : mémoire saturée` : `${app.name} — service arrêté par la plateforme`,
           detail:
             f.kind === "memory"
-              ? `Render a arrêté le service le ${fmt(f.at)} UTC : mémoire dépassée${f.memoryLimit ? ` (limite ${f.memoryLimit})` : ""}. Les traitements en cours (imports…) sont interrompus. Le compteur compte chaque arrêt.`
-              : `Render a signalé un arrêt du service le ${fmt(f.at)} UTC.`,
+              ? `Render a arrêté le service le ${fmt(f.at)} : mémoire dépassée${f.memoryLimit ? ` (limite ${f.memoryLimit})` : ""}. Les traitements en cours (imports…) sont interrompus. Le compteur compte chaque arrêt.`
+              : `Render a signalé un arrêt du service le ${fmt(f.at)}.`,
           fingerprint: `render-failed:${id}`,
         });
       }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { localizeTimes } from "../lib/format";
 import { api, type AppOverview } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
 
@@ -98,7 +99,7 @@ export function TimelinePanel({ app }: { app: AppOverview }) {
                   <td>{ICON[i.level]}</td>
                   <td>
                     <strong>{i.title}</strong>
-                    {i.detail && <div className="small muted">{i.detail}</div>}
+                    {i.detail && <div className="small muted">{localizeTimes(i.detail)}</div>}
                   </td>
                   <td className="small muted">{KIND[i.kind] ?? i.kind}</td>
                 </tr>

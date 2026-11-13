@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api, type Alert } from "../lib/api";
-import { dateTime, timeAgo } from "../lib/format";
+import { dateTime, localizeTimes, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 import { SeverityBadge } from "./StatusBadge";
 
@@ -37,7 +37,7 @@ export function AlertsList({ app, appNames }: { app?: string; appNames?: Record<
               {a.count > 1 && <span className="pill">×{a.count}</span>}
             </div>
             <strong>{a.title}</strong>
-            {a.detail && <pre className="detail">{a.detail}</pre>}
+            {a.detail && <pre className="detail">{localizeTimes(a.detail)}</pre>}
             <div className="row small muted">
               <span className="grow">
                 Ouverte le {dateTime(a.openedAt)} · vue {timeAgo(a.lastSeenAt)}

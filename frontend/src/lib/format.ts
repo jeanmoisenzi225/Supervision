@@ -31,6 +31,16 @@ export function timeAgo(iso: string | null | undefined): string {
   return `il y a ${Math.round(s / 86400)} j`;
 }
 
+/** Remplace les dates `⟦ISO⟧` écrites par le serveur par l'heure de l'appareil (heure seule aujourd'hui, jour et heure sinon) (v0.34.0). */
+export function localizeTimes(text: string, now = new Date()): string {
+  return text.replace(/⟦([^⟧]+)⟧/g, (_m, iso: string) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const hour = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return d.toDateString() === now.toDateString() ? hour : `${d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })} ${hour}`;
+  });
+}
+
 export function dateTime(iso: string): string {
   return new Date(iso).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stamp } from "../../utils/time";
 import { apps, type AppTarget } from "../../config/apps";
 import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
@@ -44,7 +45,7 @@ export function jobState(
   return { state: "ok", expectedAt };
 }
 
-const fmt = (d: Date) => d.toLocaleString("fr-FR", { timeZone: "UTC", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const fmt = (d: Date) => stamp(d);
 
 /** Enregistre une exécution envoyée par une appli, ouvre ou referme les alertes. */
 export async function recordRun(app: AppTarget, input: z.infer<typeof jobRunSchema>, now = new Date()): Promise<void> {
@@ -74,7 +75,7 @@ export async function recordRun(app: AppTarget, input: z.infer<typeof jobRunSche
           kind: "app",
           severity: "warning",
           title: `${app.name} — tâche « ${input.label} » exécutée ${count} fois`,
-          detail: `${count} exécutions depuis l'échéance de ${fmt(since)} UTC : risque d'envois en double (ex. notifications).`,
+          detail: `${count} exécutions depuis l'échéance de ${fmt(since)} : risque d'envois en double (ex. notifications).`,
           fingerprint: `jobdup:${input.key}:${since.toISOString().slice(0, 16)}`,
         });
       }
@@ -120,7 +121,7 @@ export async function watchJobs(now = new Date()): Promise<void> {
         kind: "app",
         severity: "critical",
         title: `${app.name} — tâche « ${j.label} » non exécutée`,
-        detail: `Prévue le ${fmt(expectedAt)} UTC (marge ${j.graceMinutes} min), aucune exécution reçue depuis.${j.lastRunAt ? ` Dernière exécution : ${fmt(j.lastRunAt)} UTC.` : ""}`,
+        detail: `Prévue le ${fmt(expectedAt)} (marge ${j.graceMinutes} min), aucune exécution reçue depuis.${j.lastRunAt ? ` Dernière exécution : ${fmt(j.lastRunAt)}.` : ""}`,
         fingerprint: `joblate:${j.key}`,
       });
     }

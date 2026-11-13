@@ -52,3 +52,10 @@ describe("Redémarrage : saturation ou mise en ligne (v0.33.3)", () => {
     expect(isMemoryRestart([300, 470, 480], false)).toBe(true);
   });
 });
+
+import { stamp } from "../src/utils/time";
+describe("Dates des textes du serveur (v0.34.0)", () => {
+  it("sont écrites sous forme de repère que l'interface passe à l'heure de l'appareil", () => {
+    expect(stamp(new Date("2026-11-13T17:55:58Z"))).toBe("⟦2026-11-13T17:55:58.000Z⟧");
+  });
+});

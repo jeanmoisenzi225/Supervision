@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.34.0 — 2026-11-13
+
+Demandé le 2026-11-13 : « j'ai l'impression qu'on a 2 types d'horaires dans l'application ? Pas juste UTC ? » → **une seule heure : celle de l'appareil.**
+
+- **Une seule heure partout : celle de votre appareil.** Jusqu'ici l'interface affichait l'heure de l'appareil (ex. 18:55) alors que les textes écrits par le serveur donnaient l'heure UTC (ex. 17:55 UTC) : détails d'alertes (redémarrage, mémoire élevée, arrêt Render, tâche non exécutée ou en double), pause de la supervision dans le diagnostic. Ces textes portent désormais la date sous forme de repère (`⟦…⟧`) que l'interface (alertes, diagnostic, chronologie) et les **notifications** convertissent à l'heure de l'appareil : plus aucun « UTC » mélangé aux heures de l'écran. Les alertes déjà ouvertes gardent leur ancien texte en UTC.
+- Reste en UTC, et c'est écrit à l'écran : les **horaires de tâches planifiées** (« Horaires en UTC (= heure d'Abidjan) »), qui sont des définitions de planification, et les jours des coûts Claude (découpés par jour UTC par Anthropic).
+
 ## v0.33.3 — 2026-11-13
 
 - **Correction : fausse alerte « redémarrage après saturation de la mémoire » après une mise en ligne.** Le 13/11 à 17:55 UTC (18:55 sur l'écran), la mise en ligne de Procedia v0.62.2 a ouvert une alerte critique de saturation alors que la mémoire valait 258 Mo (290 Mo au dernier relevé) et que Render n'avait signalé aucun arrêt, seulement le déploiement. Cause : la Supervision gardait le **pic de toute la vie du processus** (405 Mo vus plusieurs heures plus tôt pendant des imports) au lieu de la mémoire juste avant l'arrêt. Désormais : le pic ne porte que sur **les 2 dernières minutes** avant le redémarrage, et un redémarrage qui suit une mise en ligne n'est **jamais** une saturation (la mise en ligne coupe le processus quelle que soit sa mémoire). Une vraie saturation (mémoire élevée juste avant l'arrêt, sans mise en ligne) reste une alerte critique.

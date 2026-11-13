@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { localizeTimes } from "../lib/format";
 import { api, type AppOverview } from "../lib/api";
 
 type DiagStatus = "ok" | "warn" | "ko" | "info";
@@ -78,7 +79,7 @@ export function DiagnosticPanel({ app, onDone }: { app: AppOverview; onDone: () 
                 <span className={`dot ${i.status === "ko" ? "ko" : i.status}`} />
                 <div>
                   <strong className="small">{i.label}</strong>
-                  <div className="small muted">{i.detail}</div>
+                  <div className="small muted">{localizeTimes(i.detail)}</div>
                 </div>
               </li>
             ))}

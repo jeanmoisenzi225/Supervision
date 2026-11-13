@@ -5,6 +5,7 @@ import { renderFetch, resolveServiceIds } from "../actions/render";
 import type { RenderEvent } from "../renderEvents/renderEvents.service";
 import { callApp } from "../actions/actions.routes";
 import { isPaused } from "../pause/pause.service";
+import { stamp } from "../../utils/time";
 
 // État en direct des services (v0.29.0) : la Supervision interroge toutes les 15 secondes le
 // rapport signé `runtime` de chaque appli qui le propose (mémoire réelle, date de démarrage, retard
@@ -132,7 +133,7 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
       kind: "app",
       severity: deploy ? "info" : memory ? "critical" : "warning",
       title: deploy ? `${app.name} — redémarrage pour une mise en ligne` : memory ? `${app.name} — redémarrage après saturation de la mémoire` : `${app.name} — redémarrage du service`,
-      detail: `Le service a redémarré (démarrage à ${startedAt.toISOString().slice(11, 19)} UTC). Dernière mémoire vue avant l'arrêt : ${prev.rssMb} Mo (pic ${peakMb} Mo sur les 2 dernières minutes, limite 512 Mo). Dernier relevé normal : ${prev.at.toISOString().slice(11, 19)} UTC.`,
+      detail: `Le service a redémarré (démarrage à ${stamp(startedAt)}). Dernière mémoire vue avant l'arrêt : ${prev.rssMb} Mo (pic ${peakMb} Mo sur les 2 dernières minutes, limite 512 Mo). Dernier relevé normal : ${stamp(prev.at)}.`,
       fingerprint: deploy ? `restart-deploy:${app.key}` : `restart:${app.key}`,
     });
     lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, recent: [report.rssMb] });
@@ -170,7 +171,7 @@ export async function watchTrends(app: AppTarget, report: RuntimeReport, now = n
       kind: "app",
       severity: report.rssMb >= MEM_CRIT_MB ? "critical" : "warning",
       title: `${app.name} — mémoire élevée : ${report.rssMb} Mo sur 512 Mo`,
-      detail: `Relevé en direct à ${now.toISOString().slice(11, 19)} UTC. Au-delà de 512 Mo, Render arrête le service et coupe les traitements en cours (imports…).`,
+      detail: `Relevé en direct à ${stamp(now)}. Au-delà de 512 Mo, Render arrête le service et coupe les traitements en cours (imports…).`,
       fingerprint: memFp,
     });
   } else if (report.rssMb < MEM_CLEAR_MB) {

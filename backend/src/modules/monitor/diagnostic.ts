@@ -1,3 +1,4 @@
+import { stamp } from "../../utils/time";
 import type { AppTarget } from "../../config/apps";
 import { env } from "../../config/env";
 import { prisma } from "../../db/prisma";
@@ -72,7 +73,7 @@ export async function runDiagnostic(app: AppTarget) {
       id: "pause",
       label: "Supervision",
       status: "info",
-      detail: `Coupée ${pause.until ? `jusqu'au ${pause.until.toLocaleString("fr-FR", { timeZone: "Africa/Abidjan" })}` : "jusqu'à réactivation"} : ni alertes ni notifications.`,
+      detail: `Coupée ${pause.until ? `jusqu'au ${stamp(pause.until)}` : "jusqu'à réactivation"} : ni alertes ni notifications.`,
     });
   }
 

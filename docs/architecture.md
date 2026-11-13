@@ -61,6 +61,10 @@ Les routes `/api/billing/*` sont protégées par `requireAdmin` ; `POST /api/bil
 - **Incidents connus** repérés dans les journaux reçus, quel que soit leur niveau : crédit Claude épuisé, clé Claude refusée ou absente, saturation de l'API Claude. Alerte dédiée (`known:<clé>`), sans alerte d'erreur générique en double. Anthropic ne permet pas de lire le solde de crédit : c'est le message d'erreur de l'API qui le révèle.
 - Notification push à l'ouverture (critique ou attention) et à la fermeture automatique.
 
+## Heures (v0.34.0)
+
+Une seule heure à l'écran : celle de l'appareil. Les textes écrits par le serveur ne contiennent jamais d'heure en clair : ils portent la date sous la forme `⟦ISO⟧` (`backend/src/utils/time.ts`, `stamp`), remplacée par l'heure de l'appareil par `localizeTimes` (`frontend/src/lib/format.ts`) dans les alertes, le diagnostic et la chronologie, et par le service worker des notifications (`public/push-worker.js`). Exceptions affichées comme telles : horaires des tâches planifiées (expressions cron, UTC) et découpage par jour UTC des coûts Claude.
+
 ## Page de démarrage (v0.33.0)
 
 `frontend/src/components/Splash.tsx`, `lib/launch.ts` (`isNewOpening` : premier chargement de la fenêtre dans l'application installée, `sessionStorage` `njmdev.opened`) : logo posé, sans animation, avec une barre de chargement qui se remplit dessous, 4 s (`LOGO_MS`, comme Procedia) puis fondu de 0,4 s ; `?splash=1` la force. Styles `.splash*` dans `styles.css`.
