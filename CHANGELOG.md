@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.35.6 — 2026-11-13
+
+- **Mesure de l'écran : hauteurs des unités CSS.** La page `/ecran` affiche aussi la hauteur réelle de `100vh`, `100dvh`, `100svh`, `100lvh`, d'un élément fixe plein écran et le décalage de la zone visible, pour comprendre l'écart de 80 px mesuré sur l'écran intérieur entre `innerHeight` et `clientHeight`. Les mesures de l'appareil (iOS 27.2.1) sont consignées dans `docs/iphone-duo.md`.
+
 ## v0.35.5 — 2026-11-13
 
 - **Accès à la mesure de l'écran depuis l'application installée** : bouton « Mesurer l'écran » dans Réglages › Affichage (l'application installée n'a pas de barre d'adresse). Un lien direct `/ecran` reste utilisable dans Safari.

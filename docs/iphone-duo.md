@@ -74,6 +74,24 @@ iOS 27.1 : sorti le 23/10/2026 (uniquement sur iPhone Duo) ; iOS 27.2 : 26/10/20
 
 Mise en page par **largeur** (≤ 640, 641–960, > 960 px, qui tombent sur 382 / 385 / 594 / 669 / 951), jamais par orientation ; marges gauche et droite traitées séparément (`env(safe-area-inset-left/right)`) ; barre du haut non fixe sous 520 px de hauteur ; champs à 16 px, zones tactiles de 44 px ; fond de la page = couleur de l'application (c'est lui que le système prolonge dans le rail) ; `viewport-fit=cover` déclaré.
 
+## 10. Mesures sur l'appareil (iOS 27.2.1, application installée NJMDev, 2026-11-13)
+
+Page `/ecran`, pixels CSS, densité 3, `display-mode: standalone`, posture et segments : non disponibles (drapeaux Safari désactivés). L'agent utilisateur annonce « iPhone OS 18_7 » avec « Version/27.2 » (figé par Apple, ne pas s'en servir).
+
+| Configuration | Page (innerWidth × innerHeight) | clientHeight | Marges de sécurité haut / droite / bas / gauche |
+|---|---|---:|---|
+| Écran extérieur, portrait | **382 × 678** | 678 | 0 / 0 / (non relevé) / 0 |
+| Écran intérieur, portrait | **669 × 949** | **869** | **82** / 0 / 34 / 0 |
+| Écran intérieur, paysage | **867 × 669** | **587** | 0 / 0 / 34 / 0 |
+
+Constats :
+
+1. **Le rail retire 84 px à la page** : 466 − 382 = 84 (extérieur portrait) et 951 − 867 = 84 (intérieur paysage) ; sur l'intérieur en portrait, aucune colonne (669 de large). La page ne s'étend **pas** sous le rail dans l'application installée, malgré `viewport-fit=cover`.
+2. **`env(safe-area-inset-right)` vaut 0 partout** : le rail n'est pas exposé comme marge de sécurité. Pour le détecter, seule la largeur de la page (`innerWidth`) renseigne.
+3. **`screen.width × screen.height` vaut toujours 466 × 678** (l'écran extérieur), même sur l'écran intérieur : ne jamais s'en servir.
+4. **Hauteur** : sur l'écran intérieur, `innerHeight` dépasse `clientHeight` de 80 à 82 px (949 / 869 ; 669 / 587). Un élément « fixe » plein écran (`inset: 0`) mesure alors 80 px de moins que l'écran : c'est la **bande d'une autre teinte** vue en bas de la page de démarrage (corrigée en v0.35.3 et v0.62.5 par un débordement de 200 px).
+5. Marge haute de 82 px et basse de 34 px sur l'écran intérieur en portrait.
+
 ## Sources
 
 Apple : fiche technique iPhone Duo (support.apple.com/en-us/148588), salle de presse (apple.com/newsroom/2026/09/apple-unveils-iphone-duo), Tech Talk « Prepare your app for iPhone Duo » (developer.apple.com/videos/play/tech-talks/111461), WebKit : « WebKit Features for Safari 27.1 » (webkit.org/blog/18486) et « 27.2 » (webkit.org/blog/18515). Secondaires : guide Capacitor iPhone Duo (capgo.app), « iPhone Duo for Developers » (blakecrosley.com), « First Developer Good to Knows » (swiftjectivec.com), forum développeur Apple (fil 853762).
