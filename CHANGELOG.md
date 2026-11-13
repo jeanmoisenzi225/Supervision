@@ -1,8 +1,12 @@
 # Journal des versions
 
+## v0.35.5 — 2026-11-13
+
+- **Accès à la mesure de l'écran depuis l'application installée** : bouton « Mesurer l'écran » dans Réglages › Affichage (l'application installée n'a pas de barre d'adresse). Un lien direct `/ecran` reste utilisable dans Safari.
+
 ## v0.35.4 — 2026-11-13
 
-- **Page de mesure de l'écran : `/ecran`.** Pour comprendre pourquoi la fenêtre ne prend pas tout l'écran de l'iPhone Duo (colonne laissée à droite, côté barre d'état), cette page, ouverte sans connexion et sans aucune donnée, affiche la taille réellement donnée à la page (largeur, hauteur, zone visible, écran), les **marges de sécurité** haut, droite, bas et gauche, le mode « application installée », l'orientation, la posture du pliage et les segments d'écran. Un **cadre rouge** marque le bord de la page et un **cadre vert en pointillés** la zone sûre. À ouvrir dans l'application installée (en ajoutant `/ecran` à l'adresse n'est pas possible : voir ci-dessous) puis dans Safari, et à comparer.
+- **Page de mesure de l'écran : `/ecran`.** Pour comprendre pourquoi la fenêtre ne prend pas tout l'écran de l'iPhone Duo (colonne laissée à droite, côté barre d'état), cette page, ouverte sans connexion et sans aucune donnée, affiche la taille réellement donnée à la page (largeur, hauteur, zone visible, écran), les **marges de sécurité** haut, droite, bas et gauche, le mode « application installée », l'orientation, la posture du pliage et les segments d'écran. Un **cadre rouge** marque le bord de la page et un **cadre vert en pointillés** la zone sûre. À ouvrir dans l'application installée (Réglages › Affichage › Mesurer l'écran, v0.35.5) puis dans Safari (adresse `/ecran`), et à comparer.
 
 ## v0.35.3 — 2026-11-13
 

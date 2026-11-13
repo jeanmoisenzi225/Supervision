@@ -97,6 +97,12 @@ export function Settings() {
         {message && <p className="small">{message}</p>}
       </section>
       <section className="card">
+        <h3>Affichage</h3>
+        <p className="muted small">Mesure la zone d'écran réellement donnée à l'application (taille, marges de sécurité, repères colorés). Utile pour régler l'affichage sur un appareil pliable.</p>
+        <a className="button" href="/ecran">Mesurer l'écran</a>
+      </section>
+
+      <section className="card">
         <h3>Compte</h3>
         <p className="small">Connecté : {email}</p>
         <p className="muted small">Version {APP_VERSION}</p>
