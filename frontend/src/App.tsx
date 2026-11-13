@@ -15,10 +15,13 @@ import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { LogsPage } from "./pages/LogsPage";
 import { Settings } from "./pages/Settings";
+import { ScreenDiag } from "./pages/ScreenDiag";
 import { Splash } from "./components/Splash";
 
 export function App() {
   const [loggedIn, setLoggedIn] = useState(Boolean(getToken()));
+  // Mesure de l'écran (v0.35.4) : page ouverte sans connexion, qui ne montre aucune donnée.
+  if (window.location.pathname === "/ecran") return <ScreenDiag />;
 
   useEffect(() => {
     const onLogout = () => setLoggedIn(false);

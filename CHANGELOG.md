@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.35.4 — 2026-11-13
+
+- **Page de mesure de l'écran : `/ecran`.** Pour comprendre pourquoi la fenêtre ne prend pas tout l'écran de l'iPhone Duo (colonne laissée à droite, côté barre d'état), cette page, ouverte sans connexion et sans aucune donnée, affiche la taille réellement donnée à la page (largeur, hauteur, zone visible, écran), les **marges de sécurité** haut, droite, bas et gauche, le mode « application installée », l'orientation, la posture du pliage et les segments d'écran. Un **cadre rouge** marque le bord de la page et un **cadre vert en pointillés** la zone sûre. À ouvrir dans l'application installée (en ajoutant `/ecran` à l'adresse n'est pas possible : voir ci-dessous) puis dans Safari, et à comparer.
+
 ## v0.35.3 — 2026-11-13
 
 - **Correction : bande d'une autre teinte en bas de la page de démarrage.** Sur l'iPhone Duo (application installée), la page de démarrage laissait voir en bas une bande plus claire (≈ 80 px) : l'écran n'était pas couvert jusqu'au bord. La page de démarrage **déborde maintenant de 200 px sous l'écran** (son contenu reste centré sur la partie visible : écart mesuré 0 px) et le **fond de la page prend sa couleur** pendant son affichage, de sorte qu'aucune bande d'une autre teinte ne puisse apparaître.
