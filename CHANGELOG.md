@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.35.0 — 2026-11-13
+
+Demandé le 2026-11-13 : « optimisons Procedia et la Supervision pour l'iPhone Duo » (appareil pliable : écran fermé étroit, écran ouvert large).
+
+- **Écran ouvert (largeur intermédiaire, 641 à 960 px).** Le menu du haut passe sur sa propre ligne (il était coupé après « Backlo… ») et les onglets d'une appli se répartissent sur plusieurs lignes au lieu d'être coupés (« Administratio… »).
+- **Écran fermé / iPhone.** Le menu tient sur **une seule ligne défilante**, avec un dégradé qui montre la suite : la barre du haut, toujours visible, perd ≈ 40 px de hauteur. Même dégradé sur les onglets.
+- **Tactile.** Zones d'au moins **44 px** (boutons, menu, onglets) ; champs de saisie à **16 px** (en dessous, iOS zoome sur la page à chaque saisie) ; suppression du délai de double-toucher et de la surbrillance au toucher.
+- **Encoche et écran tourné.** Marges de sécurité à gauche et à droite ; hauteur d'écran dynamique (`dvh`) pour que la barre d'adresse de Safari ne masque pas le bas.
+- Vérifié sur trois largeurs (393, 744 et 1 000 px) : aucun débordement horizontal.
+
 ## v0.34.0 — 2026-11-13
 
 Demandé le 2026-11-13 : « j'ai l'impression qu'on a 2 types d'horaires dans l'application ? Pas juste UTC ? » → **une seule heure : celle de l'appareil.**

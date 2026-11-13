@@ -348,3 +348,33 @@ html, body { overscroll-behavior-y: contain; }
 @keyframes splash-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .splash-fill { animation: none; } }
 @media print { .splash { display: none; } }
+
+/* Appareils pliables, tablettes et iPhone (v0.35.0) */
+html { -webkit-tap-highlight-color: transparent; }
+button, a, input, select, summary { touch-action: manipulation; }
+.shell { min-height: 100vh; min-height: 100dvh; }
+.login { min-height: 100vh; min-height: 100dvh; }
+/* Marges sûres à gauche et à droite (encoche, écran tourné) */
+.topbar, .home-head { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+.content { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+@media (max-width: 640px) {
+  .content { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+  /* Menu sur une seule ligne défilante (au lieu de deux) : la barre du haut, fixe, prend moins de hauteur. */
+  .nav { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(to right, #000 90%, transparent); mask-image: linear-gradient(to right, #000 90%, transparent); padding-right: 24px; }
+  .nav::-webkit-scrollbar { display: none; }
+  /* Rangées défilantes (onglets) : un dégradé à droite montre qu'il y a une suite. */
+  .tabs { -webkit-mask-image: linear-gradient(to right, #000 88%, transparent); mask-image: linear-gradient(to right, #000 88%, transparent); padding-right: 24px; }
+}
+/* Écran ouvert d'un appareil pliable (largeur intermédiaire) : menu sur sa propre ligne, onglets sur plusieurs lignes, sans rien de coupé. */
+@media (min-width: 641px) and (max-width: 960px) {
+  .nav { order: 3; flex-basis: 100%; }
+  .tabs { flex-wrap: wrap; overflow-x: visible; }
+}
+/* Écrans tactiles : zones d'au moins 44 px et champs à 16 px (sinon iOS zoome à la saisie). */
+@media (pointer: coarse) {
+  button:not(.link):not(.client-link), .button, .nav a { min-height: 44px; }
+  .nav a { display: inline-flex; align-items: center; padding-left: 12px; padding-right: 12px; }
+  input, select, textarea { font-size: 16px; min-height: 44px; }
+  input[type=checkbox], input[type=radio] { min-height: 0; }
+  .tabs button { min-height: 44px; }
+}
