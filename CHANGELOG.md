@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.32.1 — 2026-11-13
+
+- **Correction : un redémarrage dû à une mise en ligne n'est plus une alerte.** Le 13/11 à 12:47:58 UTC, l'alerte « Procedia — redémarrage du service » s'est ouverte alors que le service venait d'être redéployé (Procedia v0.62.0, déploiement lancé à 12:47:14, mémoire normale : 221 Mo). La Supervision recoupe maintenant chaque redémarrage avec les déploiements Render : s'il suit un déploiement (lancé dans les 15 minutes précédentes), il est classé « redémarrage pour une mise en ligne », en information, sans notification, et ne compte pas dans les « redémarrages en boucle ». La chronologie le marque de la même façon. Un redémarrage avec mémoire élevée reste une alerte critique, déploiement ou non.
+
 ## v0.32.0 — 2026-11-13
 
 - **Alertes de tendance.** Sur le relevé en direct (toutes les 15 secondes) : **mémoire élevée** (avertissement dès 400 Mo, critique dès 460 Mo sur 512, refermée sous 330 Mo), **service saturé** (boucle d'événements en retard de plus d'une seconde, deux relevés de suite) et **redémarrages en boucle** (3 en une heure, critique). Sur Render, toutes les 5 minutes : **taux d'erreurs serveur** (au moins 20 requêtes et 5 % de réponses 5xx sur 15 minutes ; critique dès 20 %), refermée sous 2 %.

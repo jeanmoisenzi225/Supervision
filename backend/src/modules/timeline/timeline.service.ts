@@ -3,6 +3,7 @@ import type { AppTarget } from "../../config/apps";
 import { renderFetch, resolveServiceIds } from "../actions/render";
 import { detectRestarts } from "../runtime/runtime.service";
 import type { RenderEvent } from "../renderEvents/renderEvents.service";
+import { deployNear } from "../runtime/runtime.service";
 
 // Chronologie des incidents d'une appli (v0.31.0) : alertes, arrêts et déploiements Render,
 // redémarrages détectés en direct, sur une seule frise triée par date.
@@ -77,12 +78,21 @@ export async function getTimeline(app: AppTarget, hours: number) {
     detail: r.lastRssMb !== null ? `Dernière mémoire vue : ${r.lastRssMb} Mo` : undefined,
   }));
   const renderItems: TimelineItem[] = [];
+  const allEvents: RenderEvent[] = [];
   for (const id of ids) {
     const events = await renderFetch<RenderEvent[]>(`/services/${id}/events?limit=100`).catch(() => [] as RenderEvent[]);
+    allEvents.push(...events);
     for (const e of events) {
       if (new Date(e.event.timestamp) < since) continue;
       const item = renderEventItem(e.event);
       if (item) renderItems.push(item);
+    }
+  }
+  // Un redémarrage couvert par un déploiement n'est pas un incident (v0.32.1).
+  for (const r of restartItems) {
+    if (r.kind === "restart" && r.level !== "critical" && deployNear(allEvents, new Date(r.at))) {
+      r.level = "info";
+      r.title = "Redémarrage pour une mise en ligne";
     }
   }
   return { hours, availability: availability(okCount, totalCount), checks: totalCount, items: mergeTimeline(alertItems, restartItems, renderItems) };

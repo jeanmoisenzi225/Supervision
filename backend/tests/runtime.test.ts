@@ -19,3 +19,16 @@ describe("Redémarrages repérés par la date de démarrage (v0.29.0)", () => {
     expect(detectRestarts([s(0, -100, 200), s(15, 0, null, false), s(30, -100, 210)])).toEqual([]);
   });
 });
+
+import { deployNear } from "../src/modules/runtime/runtime.service";
+describe("Redémarrage dû à une mise en ligne (v0.32.1)", () => {
+  const ev = (type: string, ts: string) => ({ event: { id: "x", type, timestamp: ts } });
+  it("reconnaît un déploiement lancé juste avant le démarrage", () => {
+    expect(deployNear([ev("deploy_started", "2026-11-13T12:47:14Z")], new Date("2026-11-13T12:47:58Z"))).toBe(true);
+  });
+  it("ignore un déploiement ancien ou postérieur", () => {
+    expect(deployNear([ev("deploy_started", "2026-11-13T11:00:00Z")], new Date("2026-11-13T12:47:58Z"))).toBe(false);
+    expect(deployNear([ev("deploy_started", "2026-11-13T13:30:00Z")], new Date("2026-11-13T12:47:58Z"))).toBe(false);
+    expect(deployNear([ev("server_failed", "2026-11-13T12:47:30Z")], new Date("2026-11-13T12:47:58Z"))).toBe(false);
+  });
+});

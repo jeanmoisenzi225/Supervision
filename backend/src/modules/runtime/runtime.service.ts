@@ -1,6 +1,8 @@
 import { apps, type AppTarget } from "../../config/apps";
 import { prisma } from "../../db/prisma";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
+import { renderFetch, resolveServiceIds } from "../actions/render";
+import type { RenderEvent } from "../renderEvents/renderEvents.service";
 import { callApp } from "../actions/actions.routes";
 import { isPaused } from "../pause/pause.service";
 
@@ -48,6 +50,25 @@ export function detectRestarts(samples: { at: Date; ok: boolean; startedAt: Date
   return out;
 }
 
+/** Un déploiement Render couvre-t-il ce redémarrage ? (lancé dans les 15 min qui précèdent le démarrage, fini au plus 3 min avant) (fonction pure, testée). */
+export function deployNear(events: RenderEvent[], startedAt: Date): boolean {
+  const t = startedAt.getTime();
+  return events.some((e) => {
+    if (e.event.type !== "deploy_started") return false;
+    const s = new Date(e.event.timestamp).getTime();
+    return s <= t + 60_000 && t - s <= 15 * 60_000;
+  });
+}
+
+async function deployExplains(app: AppTarget, startedAt: Date): Promise<boolean> {
+  const ids = await resolveServiceIds(app).catch(() => [] as string[]);
+  for (const id of ids) {
+    const events = await renderFetch<RenderEvent[]>(`/services/${id}/events?limit=30`).catch(() => [] as RenderEvent[]);
+    if (deployNear(events, startedAt)) return true;
+  }
+  return false;
+}
+
 const unsupported = new Map<string, number>();
 const lastGood = new Map<string, { startedAt: Date; rssMb: number; at: Date; peakMb: number }>();
 const lastRestart = new Map<string, Date>();
@@ -89,14 +110,16 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
   const prev = lastGood.get(app.key);
   if (prev && Math.abs(startedAt.getTime() - prev.startedAt.getTime()) > 2000) {
     const memory = prev.peakMb >= MEMORY_SUSPECT_MB;
-    lastRestart.set(app.key, now);
+    // Redémarrage dû à une mise en ligne (v0.32.1) : information, ni alerte ni notification.
+    const deploy = !memory && (await deployExplains(app, startedAt));
+    if (!deploy) lastRestart.set(app.key, now);
     await raiseAlert({
       appKey: app.key,
       kind: "app",
-      severity: memory ? "critical" : "warning",
-      title: memory ? `${app.name} — redémarrage après saturation de la mémoire` : `${app.name} — redémarrage du service`,
+      severity: deploy ? "info" : memory ? "critical" : "warning",
+      title: deploy ? `${app.name} — redémarrage pour une mise en ligne` : memory ? `${app.name} — redémarrage après saturation de la mémoire` : `${app.name} — redémarrage du service`,
       detail: `Le service a redémarré (démarrage à ${startedAt.toISOString().slice(11, 19)} UTC). Dernière mémoire vue avant l'arrêt : ${prev.rssMb} Mo (pic ${prev.peakMb} Mo sur les derniers relevés, limite 512 Mo). Dernier relevé normal : ${prev.at.toISOString().slice(11, 19)} UTC.`,
-      fingerprint: `restart:${app.key}`,
+      fingerprint: deploy ? `restart-deploy:${app.key}` : `restart:${app.key}`,
     });
     lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, peakMb: report.rssMb });
   } else {
