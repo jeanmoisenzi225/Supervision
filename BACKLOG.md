@@ -158,6 +158,6 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 ## 15. Étude du cache de prompts Claude ✅ (2026-11-13)
 
 - Demande (propriétaire) : « on a reçu cette info [taux de cache 12 %, jusqu'à 36 $ par mois], peux-tu faire une étude ? » Étude dans `docs/etude-cache-claude.md`.
-- Conclusion : la notification vient surtout des renvois en boucle du même PDF pendant l'incident mémoire de Procedia (corrigés en v0.59.0 à v0.60.0) ; cacher les documents d'import serait contre-productif ; la consigne et le schéma de Procedia ne rapportent qu'≈ 2 $ par mois ; l'assistant de l'agent BRVM est à vérifier (écritures de cache sans relecture probable).
+- Conclusion : la notification vient surtout des renvois en boucle du même PDF pendant l'incident mémoire de Procedia (corrigés en v0.59.0 à v0.60.0) ; cacher les documents d'import serait contre-productif ; la consigne et le schéma de Procedia ne rapportent qu'≈ 2 $ par mois ; l'agent BRVM, suspendu depuis le 03/11, n'est pas concerné.
 - [ ] Afficher le taux de cache par appli sur la page Claude (rapport d'usage de l'API Admin), à décider avec le propriétaire.
-- [ ] Agent BRVM : lire la commande `USAGE` (lectures / écritures de cache) puis ajuster les blocs de l'assistant.
+- ❌ Agent BRVM : sans objet, service Render `Agent-brvm` suspendu depuis le 03/11 et WhatsApp coupé (v0.39.0 du 17/09) ; la notification vient donc uniquement de Procedia.
