@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.33.1 — 2026-11-13
+
+Demandé le 2026-11-13 : plus de « rideau » en balayage ; le logo se dessine progressivement, trait après trait.
+
+- **Page de démarrage : le logo se dessine trait par trait.** On commence par le trait du bas, puis celui juste au-dessus en partant de sa droite, et on fait le tour du logo (côté gauche, diagonale du N, côté gauche du carré, haut, côté droit, bas, diagonale) jusqu'à la fin, tout à droite. Seule une **barre de chargement** s'affiche sous le logo : plus de nom, de légende ni d'éclat. Durée inchangée : 4 s. Le logo final est identique à l'original (vérifié pixel à pixel : 0 pixel manquant, 0 en trop).
+
 ## v0.33.0 — 2026-11-13
 
 Demandé le 2026-11-13 : « une petite animation pour l'entrée dans NJMDev, de même durée que Procedia ».

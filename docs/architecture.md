@@ -63,7 +63,7 @@ Les routes `/api/billing/*` sont protégées par `requireAdmin` ; `POST /api/bil
 
 ## Page de démarrage (v0.33.0)
 
-`frontend/src/components/Splash.tsx`, `lib/launch.ts` (`isNewOpening` : premier chargement de la fenêtre dans l'application installée, `sessionStorage` `njmdev.opened`) : animation du logo de 4 s (`LOGO_MS`, comme Procedia) puis fondu de 0,4 s ; `?splash=1` la force. Styles `.splash*` dans `styles.css`.
+`frontend/src/components/Splash.tsx`, `lib/launch.ts` (`isNewOpening` : premier chargement de la fenêtre dans l'application installée, `sessionStorage` `njmdev.opened`) : logo dessiné trait par trait (masque SVG animé, `STROKES` dans l'ordre du dessin : trait du bas, puis le tour du logo jusqu'à la fin à droite) avec une barre de chargement dessous, 4 s (`LOGO_MS`, comme Procedia) puis fondu de 0,4 s ; `?splash=1` la force. Styles `.splash*` dans `styles.css`.
 
 ## Routes
 
