@@ -134,3 +134,13 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [ ] Préparer l'intégration à une plateforme agréée pour la facturation électronique ; ne pas assimiler un PDF envoyé par e-mail à une facture électronique conforme.
 - [ ] Tests : calculs multi-TVA, concurrence de numérotation, immutabilité, autorisations et PDF.
 - [ ] Documentation, migrations et déploiement vérifiés.
+
+## 14. Incident Procedia : arrêts « mémoire saturée » ⏸ (2026-11-13)
+
+- Constat (Render, 2026-11-13) : l'API `procedia-backend` (Starter, 512 Mo) est tuée par manque de mémoire (événements « oomKilled », 512 Mi) : 11/11 vers 10 h 04, 12/11 vers 16 h 49, 13/11 vers 09 h 32, 09 h 40, 09 h 47 et 10 h 06 (UTC). Chaque arrêt coupe les imports en cours ; le client relance, la boucle recommence. Mémoire normale ~190 Mo, avec des paliers de +40 à +190 Mo en quelques secondes pour 1 à 11 requêtes par minute, en partie jamais rendus.
+- Décisions du propriétaire (2026-11-13) : **pas** de passage à 3 ou 4 imports simultanés ; plan de correction **mis de côté pour l'instant**.
+- [ ] Correction Procedia (v0.59.0, à livrer avec la règle de mise en ligne de Procedia : `jobs` = 0, client prévenu, feu vert) : limite de deux imports à la fois et un gros document (> 10 Mo environ) seul ; moins de copies en mémoire par import (décodage unique, libération dès l'envoi à Claude) ; journal de la mémoire au début et à la fin de chaque import et alerte vers 400 Mo ; vérification de la lecture du document d'origine.
+- [ ] Alerte Supervision sur les événements Render « mémoire saturée » (`/services/{id}/events`, type `server_failed`), qui arrivent 15 à 30 minutes après l'arrêt.
+- [ ] Si les arrêts continuent après la correction : API de Procedia en offre Standard (2 Go, +18 $ par mois).
+- Cause exacte du pic de mémoire : **non identifiée côté Render** (Render ne donne ni l'adresse appelée ni la mémoire par fonction) ; à établir par le journal de mémoire ci-dessus.
+
