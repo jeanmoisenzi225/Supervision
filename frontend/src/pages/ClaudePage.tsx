@@ -11,6 +11,8 @@ interface Costs {
   daily: [number, number][];
   byModel: { model: string; usd: number }[];
   byWorkspace: { workspace: string; usd: number }[];
+  /** Espaces de travail cumulés par appli (v0.25.0). */
+  byApp?: { key: string; name: string; usd: number; workspaces: { workspace: string; usd: number }[] }[];
   error?: string;
 }
 
@@ -103,6 +105,29 @@ export function ClaudePage() {
               </tbody>
             </table>
           </section>
+          {data.byApp && data.byApp.some((a) => a.key !== "other") && (
+            <section className="card">
+              <h3>Ce mois-ci, par appli</h3>
+              <table className="table">
+                <tbody>
+                  {data.byApp.map((a) => (
+                    <tr key={a.key}>
+                      <td>
+                        <strong>{a.name}</strong>
+                        {a.workspaces.length > 1 && (
+                          <div className="small muted">{a.workspaces.map((w) => `${w.workspace} ${usd(w.usd)}`).join(" + ")}</div>
+                        )}
+                      </td>
+                      <td className="num">
+                        <strong>{usd(a.usd)}</strong>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="small muted">Les espaces de travail d'une même appli sont cumulés (réglage <code>&lt;APPLI&gt;_CLAUDE_WORKSPACE</code> sur le service supervision).</p>
+            </section>
+          )}
           {data.byWorkspace.length > 1 && (
             <section className="card">
               <h3>Ce mois-ci, par espace de travail</h3>

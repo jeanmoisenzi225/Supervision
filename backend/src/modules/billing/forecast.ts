@@ -54,9 +54,12 @@ export function forecastLines(apps: Pick<BillingApp, "name" | "render" | "claude
       lines.push({ description: `${app.name} — hébergement : ${what}`, quantity: 1, unitPrice: convertUsd(l.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "hosting", usd: l.usd });
     }
     if (includeClaude) {
-      for (const w of app.claude.workspaces) {
-        if (w.usd <= 0) continue;
-        lines.push({ description: `${app.name} — intelligence artificielle (Claude) : espace « ${w.workspace} », dépenses du mois en cours`, quantity: 1, unitPrice: convertUsd(w.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "claude", usd: w.usd });
+      // Une seule ligne par appli : les espaces de travail Claude de l'appli sont cumulés (v0.25.0).
+      const spaces = app.claude.workspaces.filter((w) => w.usd > 0);
+      const total = Math.round(spaces.reduce((t, w) => t + w.usd, 0) * 100) / 100;
+      if (total > 0) {
+        const detail = spaces.length > 1 ? `espaces ${spaces.map((w) => `« ${w.workspace} »`).join(" et ")}` : `espace « ${spaces[0].workspace} »`;
+        lines.push({ description: `${app.name} — intelligence artificielle (Claude) : ${detail}, dépenses du mois en cours`, quantity: 1, unitPrice: convertUsd(total, currency, usdRate), discountPercent: 0, vatRate: 0, source: "claude", usd: total });
       }
     }
   }

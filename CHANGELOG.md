@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.25.0 — 2026-11-13
+
+Demandé le 2026-11-13 : « les deux montants concernent Procedia mais sont dissociés, comment les cumuler ? » (espace « Procedia » 8,50 $ et « Espace par défaut » 74,95 $).
+
+- **Page Claude : section « Ce mois-ci, par appli »** : les espaces de travail d'une même appli sont cumulés (par exemple Procedia = « Procedia » + « Espace par défaut », avec le détail), le reste figure sous « Non rattaché à une appli ». Le rattachement se règle avec `<APPLI>_CLAUDE_WORKSPACE` (noms séparés par des virgules) sur le service supervision, comme pour la page Coûts.
+- **Facture prévisionnelle : une seule ligne Claude par appli**, cumulant ses espaces de travail (au lieu d'une ligne par espace) ; le montant en dollars d'origine suit le taux comme les autres lignes importées.
+
 ## v0.24.1 — 2026-11-12
 
 - **Correction : dépenses Claude du jour manquantes.** La page Claude (et Coûts, et l'alerte de budget) affichait 52,07 $ pour le mois et 0,00 $ « aujourd'hui », alors que la Console Anthropic indiquait 82,88 $ : le rapport de coûts d'Anthropic ne renvoie que les journées **terminées** quand on ne précise pas `ending_at`. La Supervision demande désormais jusqu'à la fin de demain, donc la **journée en cours est comptée** (avec le retard de quelques minutes d'Anthropic) ; si Anthropic refusait ce paramètre, elle revient à l'ancienne demande.

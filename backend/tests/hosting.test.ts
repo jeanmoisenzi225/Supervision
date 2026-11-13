@@ -75,3 +75,19 @@ describe("coûts par appli", () => {
     expect(buildHostingCosts([{ key: "a", name: "A", renderMatch: { names: [/^x$/], hosts: [] }, claudeWorkspaces: [] }], [svc("x", "web_service", "2c-99g")], [], { byWorkspace: [] }).totals.unknown).toBe(1);
   });
 });
+
+describe("dépenses Claude cumulées par appli", () => {
+  it("additionne les espaces de travail d'une même appli et isole le reste", async () => {
+    const { claudeByApp } = await import("../src/modules/hosting/hosting.service");
+    const apps = buildApps(() => "");
+    const r = claudeByApp(apps, [{ workspace: "Procedia", usd: 8.5 }, { workspace: "Espace par défaut", usd: 74.95 }, { workspace: "Autre", usd: 1 }]);
+    // Sans réglage : « Procedia » est reconnu par son nom, l'espace par défaut reste non rattaché.
+    expect(r.map((x) => [x.key, x.usd])).toEqual([["procedia", 8.5], ["other", 75.95]]);
+    process.env.PROCEDIA_CLAUDE_WORKSPACE = "Procedia,Espace par défaut";
+    const apps2 = buildApps((n) => process.env[n] ?? "");
+    const r2 = claudeByApp(apps2, [{ workspace: "Procedia", usd: 8.5 }, { workspace: "Espace par défaut", usd: 74.95 }, { workspace: "Autre", usd: 1 }]);
+    expect(r2.find((x) => x.key === "procedia")).toMatchObject({ usd: 83.45, workspaces: [{ workspace: "Procedia", usd: 8.5 }, { workspace: "Espace par défaut", usd: 74.95 }] });
+    expect(r2.find((x) => x.key === "other")?.usd).toBe(1);
+    delete process.env.PROCEDIA_CLAUDE_WORKSPACE;
+  });
+});

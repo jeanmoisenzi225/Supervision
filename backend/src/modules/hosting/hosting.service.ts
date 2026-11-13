@@ -57,6 +57,19 @@ type Target = Pick<AppTarget, "key" | "name" | "renderMatch" | "claudeWorkspaces
 /** NJMDev lui-même (la Supervision) : ses services et sa base, et un éventuel espace Claude « NJMDev ». */
 const NJMDEV: Target = { key: "njmdev", name: "NJMDev (Supervision)", renderMatch: { names: [/^supervision/i], hosts: [] }, claudeWorkspaces: [/njm|supervision/i] };
 
+/** Dépenses Claude du mois par appli (v0.25.0) : les espaces de travail d'une même appli sont cumulés ; le reste est « non rattaché ». */
+export function claudeByApp(apps: Pick<Target, "key" | "name" | "claudeWorkspaces">[], byWorkspace: { workspace: string; usd: number }[]) {
+  const taken = new Set<string>();
+  const rows = [...apps, { key: NJMDEV.key, name: NJMDEV.name, claudeWorkspaces: NJMDEV.claudeWorkspaces }].map((app) => {
+    const workspaces = byWorkspace.filter((w) => !taken.has(w.workspace) && app.claudeWorkspaces.some((re) => re.test(w.workspace)));
+    workspaces.forEach((w) => taken.add(w.workspace));
+    return { key: app.key, name: app.name, usd: round(workspaces.reduce((t, w) => t + w.usd, 0)), workspaces };
+  });
+  const rest = byWorkspace.filter((w) => !taken.has(w.workspace));
+  if (rest.length) rows.push({ key: "other", name: "Non rattaché à une appli", usd: round(rest.reduce((t, w) => t + w.usd, 0)), workspaces: rest });
+  return rows.filter((r) => r.workspaces.length);
+}
+
 /** Assemble la facturation par appli (fonction pure, testée). `other` regroupe ce qu'aucune appli ne revendique. */
 export function buildHostingCosts(apps: Target[], services: ServiceSummary[], dbs: PostgresSummary[], costs: Pick<CostSummary, "byWorkspace">) {
   const targets = [...apps, NJMDEV];

@@ -6,7 +6,7 @@ import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { getPause, pauseApp, resumeApp } from "../pause/pause.service";
-import { getHostingCosts } from "../hosting/hosting.service";
+import { claudeByApp, getHostingCosts } from "../hosting/hosting.service";
 import { getCosts } from "../costs/costs.service";
 import { listJobs } from "../jobs/jobs.service";
 import { BACKLOG_SOURCES, backlogItem, backlogOf, backlogOverview, recentEvents, syncSource } from "../backlog/backlog.service";
@@ -160,7 +160,8 @@ monitorRouter.get("/hosting-costs", async (req, res) => {
 });
 
 monitorRouter.get("/claude/costs", async (req, res) => {
-  res.json(await getCosts(wantsFresh(req)));
+  const costs = await getCosts(wantsFresh(req));
+  res.json({ ...costs, byApp: claudeByApp(apps, costs.byWorkspace) });
 });
 
 monitorRouter.post("/apps/:key/diagnostic", async (req, res) => {

@@ -44,4 +44,14 @@ describe("facture prévisionnelle : lignes importées des coûts", () => {
     expect(r.lines.some((l) => l.source === "claude")).toBe(false);
     expect(r.lines[0].unitPrice).toBe(6.44);
   });
+
+  it("cumule en une seule ligne les espaces de travail Claude d'une même appli", () => {
+    const app = { ...procedia, claude: { usd: 83.45, workspaces: [{ workspace: "Procedia", usd: 8.5 }, { workspace: "Espace par défaut", usd: 74.95 }] } };
+    const r = forecastLines([app], "USD", 1, true);
+    const claude = r.lines.filter((l) => l.source === "claude");
+    expect(claude).toHaveLength(1);
+    expect(claude[0].unitPrice).toBe(83.45);
+    expect(claude[0].usd).toBe(83.45);
+    expect(claude[0].description).toContain("« Procedia » et « Espace par défaut »");
+  });
 });
