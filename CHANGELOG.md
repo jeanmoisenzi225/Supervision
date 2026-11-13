@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.28.0 — 2026-11-13
+
+Demandé le 2026-11-13 : « beaucoup des infos de supervision dans Render ne remontent pas dans notre sup : on ne voit à aucun moment la mémoire saturée ».
+
+- **Les pics de mémoire et de processeur ne sont plus lissés.** Mesuré le 13/11 : sur la même période, Render donnait 403 Mo de pic avec un pas de 30 s, mais seulement 190 Mo avec un pas de 10 minutes (celui de la page Ressources sur 24 h) : le « maximum » demandé à Render n'est pas conservé aux pas larges. La Supervision demande maintenant un pas fin (1 min sur 24 h, 5 min sur 7 jours, 15 min sur 30 jours) et garde le **maximum de chaque pas d'affichage**.
+- **Les arrêts du service apparaissent sur les graphiques.** Les événements Render « service arrêté » (dont « mémoire saturée ») sont repérés par un trait vertical rouge (▲) sur les courbes Mémoire et Processeur, avec un décompte sous le graphique. Explication notée à l'écran : Render arrête le service entre deux mesures, la courbe n'atteint donc jamais la limite de 512 Mo (pic mesuré 403 Mo malgré les arrêts) ; seuls ces repères montrent la saturation.
+
 ## v0.27.0 — 2026-11-13
 
 - **Imports Procedia : taille du document.** Chaque import affiche désormais la taille du document (ex. « 16 Mo ») sous le nom du fichier, pour repérer les gros documents derrière les arrêts de mémoire. La taille est fournie par Procedia à partir de sa v0.60.0 : les imports plus anciens n'en ont pas.

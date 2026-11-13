@@ -119,3 +119,12 @@ describe("repli quand Render limite les mesures (offre Hobby)", async () => {
     ]);
   });
 });
+
+import { maxBuckets } from "../src/modules/resources/units";
+describe("Regroupement en gardant les pics (v0.28.0)", () => {
+  it("garde le maximum de chaque pas, pas la moyenne", () => {
+    const base = Date.UTC(2026, 10, 13, 10, 0, 0);
+    const pts: [number, number][] = [[base, 90], [base + 60_000, 403], [base + 120_000, 95], [base + 600_000, 100], [base + 660_000, 110]];
+    expect(maxBuckets(pts, 600)).toEqual([[base, 403], [base + 600_000, 110]]);
+  });
+});

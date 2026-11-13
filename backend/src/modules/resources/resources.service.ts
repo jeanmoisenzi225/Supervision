@@ -4,7 +4,9 @@ import { prisma } from "../../db/prisma";
 import { describeService, fetchMetric, fetchPostgresSizes, listPostgres, matchPostgres, resolveServiceIds, type MetricSeries } from "../actions/render";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
 import { isPaused } from "../pause/pause.service";
-import { daysUntil, last, percent, RANGES, sumSeries, toBytes, type RangeKey } from "./units";
+import { daysUntil, last, maxBuckets, percent, RANGES, sumSeries, toBytes, type RangeKey } from "./units";
+import { failuresSince, type RenderEvent } from "../renderEvents/renderEvents.service";
+import { renderFetch } from "../actions/render";
 
 type Points = [number, number][];
 
@@ -18,6 +20,8 @@ export interface ServiceResources {
   cpuLimit: number | null;
   requests: Points; // requêtes par intervalle
   errors5xx: Points;
+  /** Arrêts du service signalés par Render sur la période (v0.28.0) : mémoire saturée ou autre. */
+  failures: { at: number; kind: "memory" | "other" }[];
   latencyP95: Points; // millisecondes
   /** Disque persistant du service (octets), s'il en a un. */
   disk: Points;
@@ -89,15 +93,15 @@ async function sampledPoints(key: string, start: Date): Promise<Points> {
 const bytes = (series: MetricSeries[]): Points =>
   sumSeries(series.map((s) => s.points.map(([t, v]) => [t, toBytes(v, s.unit)] as [number, number])));
 
-async function serviceResources(id: string, start: Date, resolution: number): Promise<ServiceResources | null> {
+async function serviceResources(id: string, start: Date, resolution: number, fine: number): Promise<ServiceResources | null> {
   const s = await describeService(id);
   // Un site statique n'a ni mémoire ni processeur à surveiller.
   if (s.type === "static_site") return null;
   const errors: string[] = [];
   const [memory, memoryLimit, cpu, cpuLimit, requests, latency, disk, diskCapacity] = await Promise.all([
-    safe(errors, "mémoire", `memory:${id}:${resolution}`, () => fetchMetric("memory", id, start, resolution, { aggregationMethod: "MAX" }), []),
+    safe(errors, "mémoire", `memory:${id}:${fine}`, () => fetchMetric("memory", id, start, fine, { aggregationMethod: "MAX" }), []),
     safe(errors, "limite mémoire", `memory-limit:${id}:${resolution}`, () => fetchMetric("memory-limit", id, start, resolution), []),
-    safe(errors, "processeur", `cpu:${id}:${resolution}`, () => fetchMetric("cpu", id, start, resolution, { aggregationMethod: "MAX" }), []),
+    safe(errors, "processeur", `cpu:${id}:${fine}`, () => fetchMetric("cpu", id, start, fine, { aggregationMethod: "MAX" }), []),
     safe(errors, "limite processeur", `cpu-limit:${id}:${resolution}`, () => fetchMetric("cpu-limit", id, start, resolution), []),
     safe(errors, "requêtes", `http-requests:${id}:${resolution}`, () => fetchMetric("http-requests", id, start, resolution, { aggregateBy: "statusCode" }), []),
     safe(errors, "temps de réponse", `http-latency:${id}:${resolution}`, () => fetchMetric("http-latency", id, start, resolution, { quantile: "0.95" }), []),
@@ -105,20 +109,24 @@ async function serviceResources(id: string, start: Date, resolution: number): Pr
     fetchMetric("disk-usage", id, start, resolution).catch(() => [] as MetricSeries[]),
     fetchMetric("disk-capacity", id, start, resolution).catch(() => [] as MetricSeries[]),
   ]);
+  // Arrêts constatés par Render (événements « server_failed ») sur la période.
+  const events = await renderFetch<RenderEvent[]>(`/services/${id}/events?limit=100`).catch(() => [] as RenderEvent[]);
+  const failures = failuresSince(events, start).map((f) => ({ at: f.at.getTime(), kind: f.kind }));
   const limitPoints = bytes(memoryLimit);
   return {
     id,
     name: s.name,
     type: s.type,
-    memory: bytes(memory),
+    memory: maxBuckets(bytes(memory), resolution),
     memoryLimit: last(limitPoints),
-    cpu: sumSeries(cpu.map((x) => x.points)),
+    cpu: maxBuckets(sumSeries(cpu.map((x) => x.points)), resolution),
     cpuLimit: last(sumSeries(cpuLimit.map((x) => x.points))),
     requests: sumSeries(requests.map((x) => x.points)),
     errors5xx: sumSeries(requests.filter((x) => /^5/.test(x.labels.statusCode ?? "")).map((x) => x.points)),
     latencyP95: sumSeries(latency.map((x) => x.points)),
     disk: bytes(disk),
     diskCapacity: last(bytes(diskCapacity)),
+    failures,
     errors,
   };
 }
@@ -186,10 +194,10 @@ export async function getAppResources(app: AppTarget, range: RangeKey, fresh = f
   const hit = cache.get(`${app.key}:${range}`);
   if (fresh && hit && Date.now() - hit.at > 60_000) cache.delete(`${app.key}:${range}`);
   return cached(`${app.key}:${range}`, 2 * 60_000, async () => {
-    const { hours, resolution } = RANGES[range];
+    const { hours, resolution, fine } = RANGES[range];
     const start = new Date(Date.now() - hours * 3600_000);
     const [ids, pgs] = await Promise.all([resolveServiceIds(app), listPostgres(fresh).catch(() => [])]);
-    const services = (await Promise.all(ids.map((id) => serviceResources(id, start, resolution).catch(() => null)))).filter(
+    const services = (await Promise.all(ids.map((id) => serviceResources(id, start, resolution, fine).catch(() => null)))).filter(
       (s): s is ServiceResources => s !== null
     );
     const databases = await Promise.all(matchPostgres(app.renderMatch.names, pgs).map((db) => databaseResources(db, start, resolution)));

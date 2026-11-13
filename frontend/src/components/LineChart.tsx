@@ -11,6 +11,8 @@ interface Props {
   /** Seuil d'alerte, affiché en pointillé orange. */
   threshold?: { value: number; label: string } | null;
   rangeHours: number;
+  /** Arrêts du service (v0.28.0) : trait vertical rouge (mémoire saturée) ou orange (autre arrêt). */
+  marks?: { at: number; kind: "memory" | "other" }[];
 }
 
 const W = 600;
@@ -26,7 +28,7 @@ function timeLabel(t: number, rangeHours: number): string {
 }
 
 /** Courbe d'une seule série, avec limite et seuil facultatifs, réticule et infobulle au survol ou au toucher. */
-export function LineChart({ title, points, format, limit, threshold, rangeHours }: Props) {
+export function LineChart({ title, points, format, limit, threshold, rangeHours, marks = [] }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<number | null>(null);
 
@@ -116,6 +118,15 @@ export function LineChart({ title, points, format, limit, threshold, rangeHours 
               </text>
             </g>
           )}
+          {marks
+            .filter((m) => m.at >= geo.t0 && m.at <= geo.t1)
+            .map((m) => (
+              <g key={m.at} className={m.kind === "memory" ? "mark mark-memory" : "mark mark-other"}>
+                <title>{`${m.kind === "memory" ? "Service arrêté : mémoire saturée" : "Service arrêté"} · ${new Date(m.at).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`}</title>
+                <line className="mark-line" x1={geo.x(m.at)} x2={geo.x(m.at)} y1={PAD.top} y2={H - PAD.bottom} />
+                <text className="mark-icon" x={geo.x(m.at)} y={PAD.top + 9} textAnchor="middle">▲</text>
+              </g>
+            ))}
           <path className="series-area" d={geo.area} />
           <path className="series-line" d={geo.line} />
           {hp && (

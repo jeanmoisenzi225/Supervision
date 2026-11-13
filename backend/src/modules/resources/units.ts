@@ -41,10 +41,24 @@ export function daysUntil(iso: string | null, now = Date.now()): number | null {
   return Math.floor((new Date(iso).getTime() - now) / 86_400_000);
 }
 
+// `resolution` : pas d'affichage ; `fine` : pas demandé à Render pour la mémoire et le processeur
+// (v0.28.0). Render ne conserve pas les pics aux pas larges (mesuré le 13/11 : 403 Mo à 30 s,
+// 190 Mo à 600 s) : on demande un pas fin, puis on garde le maximum de chaque pas d'affichage.
 export const RANGES = {
-  "24h": { hours: 24, resolution: 600 },
-  "7d": { hours: 24 * 7, resolution: 3600 },
-  "30d": { hours: 24 * 30, resolution: 4 * 3600 },
+  "24h": { hours: 24, resolution: 600, fine: 60 },
+  "7d": { hours: 24 * 7, resolution: 3600, fine: 300 },
+  "30d": { hours: 24 * 30, resolution: 4 * 3600, fine: 900 },
 } as const;
+
+/** Regroupe une série par pas de `bucketSec` secondes en gardant le MAXIMUM de chaque pas (fonction pure, testée). */
+export function maxBuckets(points: [number, number][], bucketSec: number): [number, number][] {
+  const ms = bucketSec * 1000;
+  const out = new Map<number, number>();
+  for (const [t, v] of points) {
+    const b = Math.floor(t / ms) * ms;
+    out.set(b, Math.max(out.get(b) ?? -Infinity, v));
+  }
+  return [...out.entries()].sort((a, b) => a[0] - b[0]);
+}
 
 export type RangeKey = keyof typeof RANGES;

@@ -178,6 +178,10 @@ label.toggle { flex-direction: row; align-items: center; gap: 6px; }
 .chart .crosshair { stroke: var(--muted); stroke-width: 1; }
 .chart .ref-line { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .chart .ref-label { fill: var(--muted); font-size: 11px; }
+.chart .mark-line { stroke: var(--status-critical, #e5484d); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: 0.9; }
+.chart .mark-other .mark-line { stroke: var(--status-warning); }
+.chart .mark-icon { fill: var(--status-critical, #e5484d); font-size: 10px; }
+.chart .mark-other .mark-icon { fill: var(--status-warning); }
 .chart .threshold-line { stroke: var(--status-warning); stroke-width: 1.5; stroke-dasharray: 3 4; opacity: 0.8; }
 .chart .threshold-label { fill: #fcd34d; font-size: 11px; }
 .chart-tip { position: absolute; top: 4px; transform: translateX(-50%); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 8px; font-size: 12px; display: flex; flex-direction: column; pointer-events: none; white-space: nowrap; }

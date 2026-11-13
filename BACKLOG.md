@@ -148,3 +148,4 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - Correction à ajouter au plan : lecture du document d'origine en flux (déchiffrement par blocs, sans tout charger) ou avec une limite d'une lecture à la fois, en plus de la limite d'imports par poids.
 - Cause exacte du pic de mémoire (Render) : **non identifiée côté Render** (Render ne donne ni l'adresse appelée ni la mémoire par fonction) ; à établir par le journal de mémoire ci-dessus.
 - [x] Taille du document de chaque import affichée dans la Supervision (v0.27.0 ; Procedia v0.60.0 conserve la taille avec la tâche d'import, migration ; imports plus anciens sans taille).
+- [x] Page Ressources : pics conservés (pas fin + maximum) et arrêts Render tracés sur les graphiques mémoire et processeur (v0.28.0). Constat : Render ne montre jamais la saturation dans ses courbes (pic mesuré 403 Mo malgré les arrêts à 512 Mo) ; seuls les événements d'arrêt la révèlent.

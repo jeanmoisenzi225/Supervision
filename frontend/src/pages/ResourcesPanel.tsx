@@ -18,6 +18,7 @@ interface Resources {
     cpuLimit: number | null;
     requests: Points;
     errors5xx: Points;
+    failures: { at: number; kind: "memory" | "other" }[];
     latencyP95: Points;
     disk: Points;
     diskCapacity: number | null;
@@ -136,7 +137,13 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
               rangeHours={hours}
               limit={s.memoryLimit ? { value: s.memoryLimit, label: `limite ${formatBytes(s.memoryLimit)}` } : null}
               threshold={s.memoryLimit ? { value: s.memoryLimit * 0.85, label: "alerte 85 %" } : null}
+              marks={s.failures}
             />
+            {s.failures.length > 0 && (
+              <p className="small">
+                ▲ <strong>{s.failures.length}</strong> arrêt{s.failures.length > 1 ? "s" : ""} du service signalé{s.failures.length > 1 ? "s" : ""} par Render sur la période ({s.failures.filter((f) => f.kind === "memory").length} pour mémoire saturée). Le service est arrêté entre deux mesures : la courbe n'atteint donc jamais la limite, seuls ces repères montrent la saturation. Render les publie 15 à 30 minutes après l'arrêt.
+              </p>
+            )}
             {s.diskCapacity && s.disk.length > 0 && (
               <>
                 <div className="metrics">
@@ -157,7 +164,7 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
                 />
               </>
             )}
-            <LineChart title="Processeur" points={s.cpu} format={formatCpu} rangeHours={hours} limit={s.cpuLimit ? { value: s.cpuLimit, label: `limite ${formatCpu(s.cpuLimit)}` } : null} />
+            <LineChart title="Processeur" points={s.cpu} format={formatCpu} rangeHours={hours} limit={s.cpuLimit ? { value: s.cpuLimit, label: `limite ${formatCpu(s.cpuLimit)}` } : null} marks={s.failures} />
             {s.requests.length > 0 && <LineChart title="Requêtes par intervalle" points={s.requests} format={formatCount} rangeHours={hours} />}
             {s.latencyP95.length > 0 && <LineChart title="Temps de réponse (95 % des requêtes)" points={s.latencyP95} format={formatMs} rangeHours={hours} />}
             {s.errors.length > 0 && <p className="muted small">Non disponible : {s.errors.join(" ; ")}.</p>}
