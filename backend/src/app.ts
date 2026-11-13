@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import { errorHandler } from "./middleware/errorHandler";
 import { actionsRouter } from "./modules/actions/actions.routes";
 import { runtimeRouter } from "./modules/runtime/runtime.routes";
+import { timelineRouter } from "./modules/timeline/timeline.routes";
 import { alertsRouter } from "./modules/alerts/alerts.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { billingRouter } from "./modules/billing/billing.routes";
@@ -42,6 +43,7 @@ export function createApp() {
   app.use("/api/alerts", alertsRouter);
   app.use("/api/logs", logsRouter);
   app.use("/api/apps", runtimeRouter);
+  app.use("/api/apps", timelineRouter);
   app.use("/api/apps", actionsRouter);
   app.use("/api/push", pushRouter);
   app.use("/api/billing", billingRouter);

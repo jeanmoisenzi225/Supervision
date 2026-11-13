@@ -12,10 +12,11 @@ import { AdminPanel } from "./AdminPanel";
 import { ImportsPanel } from "./ImportsPanel";
 import { JobsPanel } from "./JobsPanel";
 import { LivePanel } from "./LivePanel";
+import { TimelinePanel } from "./TimelinePanel";
 import { TenantsPanel } from "./TenantsPanel";
 import { ResourcesPanel } from "./ResourcesPanel";
 
-type Tab = "dispo" | "direct" | "clients" | "ressources" | "taches" | "imports" | "journaux" | "alertes" | "admin";
+type Tab = "dispo" | "direct" | "chrono" | "clients" | "ressources" | "taches" | "imports" | "journaux" | "alertes" | "admin";
 
 interface ChecksData {
   hourly: { checkId: string; hour: string; total: number; ok: number; avgLatencyMs: number }[];
@@ -68,6 +69,9 @@ export function AppDetail() {
         </button>
         <button className={tab === "direct" ? "active" : ""} onClick={() => setTab("direct")}>
           En direct
+        </button>
+        <button className={tab === "chrono" ? "active" : ""} onClick={() => setTab("chrono")}>
+          Chronologie
         </button>
         <button className={tab === "clients" ? "active" : ""} onClick={() => setTab("clients")}>
           Clients
@@ -179,6 +183,8 @@ export function AppDetail() {
         ))}
 
       {tab === "direct" && <LivePanel app={app} />}
+
+      {tab === "chrono" && <TimelinePanel app={app} />}
 
       {tab === "clients" && <TenantsPanel app={app} />}
 

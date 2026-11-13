@@ -151,4 +151,5 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [x] Page Ressources : pics conservés (pas fin + maximum) et arrêts Render tracés sur les graphiques mémoire et processeur (v0.28.0). Constat : Render ne montre jamais la saturation dans ses courbes (pic mesuré 403 Mo malgré les arrêts à 512 Mo) ; seuls les événements d'arrêt la révèlent.
 - [x] Supervision en temps réel, étape 1 : onglet « En direct » (mémoire réelle toutes les 15 s) et détection de redémarrage à la seconde près (v0.29.0 ; Procedia v0.61.0).
 - [x] Journaux Render dans la page Journaux, toutes les 15 secondes (v0.30.0).
-- [ ] Étapes suivantes (analyse du 2026-11-13) : chronologie des incidents (déploiements, redémarrages), alertes de tendance, bande passante et instances, imports en direct, battement de cœur pour les autres applis.
+- [x] Chronologie des incidents par appli, avec disponibilité (v0.31.0).
+- [ ] Étapes suivantes (analyse du 2026-11-13) : alertes de tendance, bande passante et instances, imports en direct, battement de cœur pour les autres applis.
