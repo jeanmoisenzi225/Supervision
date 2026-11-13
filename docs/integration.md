@@ -19,7 +19,7 @@ Remplacer ou compléter avec `<PREFIXE>_URLS` : liste séparée par des virgules
 
 **Procedia (offre payante Render depuis le 2026-11-12)** : l'API tourne en Starter (0,5 processeur, 512 Mo) et ne s'endort plus ; la base `procedia-db` est une base payante (disque de 5 Go). La vérification passe donc à 1 minute, sans délai de réveil. Avant, l'offre gratuite mettait le service en veille après 15 minutes d'inactivité : chaque vérification le réveillait, d'où un intervalle de 30 minutes pour ne pas consommer les 750 h gratuites du compte. L'option `sleepsWhenIdle` du catalogue (`backend/src/config/apps.ts`) reste disponible pour une appli en offre gratuite.
 
-**Coûts (page « Coûts »)** : les services et bases Render d'une appli sont reconnus comme pour les graphiques de ressources. Ses dépenses Claude sont rattachées par le **nom de l'espace de travail Anthropic** (il doit contenir le nom de l'appli : « MGA », « Procedia », « Yiri »…). Un autre nom se déclare avec `<PREFIXE>_CLAUDE_WORKSPACE` (noms exacts séparés par des virgules).
+**Coûts (page « Coûts »)** : les services et bases Render d'une appli sont reconnus comme pour les graphiques de ressources. Ses dépenses Claude sont rattachées par le **nom de l'espace de travail Anthropic** (il doit contenir le nom de l'appli : « MGA », « Procedia », « Yiri »…). Un autre nom se déclare avec `<PREFIXE>_CLAUDE_WORKSPACE` (noms séparés par des virgules ; le nom de l'espace doit **contenir** le nom donné, sans tenir compte de la casse, des accents ni des espaces en trop, v0.25.1).
 
 ## 2. Journaux et alertes
 

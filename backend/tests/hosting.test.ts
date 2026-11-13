@@ -90,4 +90,14 @@ describe("dépenses Claude cumulées par appli", () => {
     expect(r2.find((x) => x.key === "other")?.usd).toBe(1);
     delete process.env.PROCEDIA_CLAUDE_WORKSPACE;
   });
+
+  it("reconnaît un espace malgré un espace en trop, une espace insécable, la casse ou les accents (v0.25.1)", async () => {
+    const { claudeByApp } = await import("../src/modules/hosting/hosting.service");
+    process.env.PROCEDIA_CLAUDE_WORKSPACE = "Procedia, Espace par defaut";
+    const apps = buildApps((n) => process.env[n] ?? "");
+    const r = claudeByApp(apps, [{ workspace: "Procedia ", usd: 8.5 }, { workspace: "Espace\u00a0par défaut", usd: 74.95 }]);
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ key: "procedia", usd: 83.45 });
+    delete process.env.PROCEDIA_CLAUDE_WORKSPACE;
+  });
 });

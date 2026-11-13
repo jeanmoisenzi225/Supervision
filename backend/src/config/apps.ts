@@ -11,6 +11,11 @@ export interface CheckTarget {
   timeoutMs: number;
 }
 
+/** Nom d'espace de travail comparable : sans accents, espaces (y compris insécables ou en trop) réduits et retirés en bout. */
+export function normWorkspace(name: string): string {
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s\u00a0\u202f]+/g, " ").trim();
+}
+
 export interface AppTarget {
   key: string;
   envPrefix: string;
@@ -189,7 +194,8 @@ export function buildApps(read: (name: string) => string = readOptionalEnv): App
             .split(",")
             .map((n) => n.trim())
             .filter(Boolean)
-            .map((n) => new RegExp(`^${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"))
+            // Le nom de l'espace doit contenir le nom donné (sans tenir compte de la casse, des accents ni des espaces en trop).
+            .map((n) => new RegExp(normWorkspace(n).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"))
         : (def.claudeNames ?? []),
       renderMatch: {
         names: def.renderNames,

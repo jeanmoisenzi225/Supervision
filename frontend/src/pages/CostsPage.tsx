@@ -89,7 +89,7 @@ export function CostsPage() {
                     {app.claude.workspaces.map((w) => (
                       <tr key={w.workspace}>
                         <td>
-                          Claude · {w.workspace}
+                          Claude · « {w.workspace} »
                           <div className="small muted">dépenses du mois en cours</div>
                         </td>
                         <td className="num nowrap">{usd(w.usd)}</td>

@@ -1,4 +1,4 @@
-import { apps, type AppTarget } from "../../config/apps";
+import { apps, normWorkspace, type AppTarget } from "../../config/apps";
 import { env } from "../../config/env";
 import { listPostgres, listServices, matchPostgres, matchServices, type PostgresSummary, type ServiceSummary } from "../actions/render";
 import { getCosts, type CostSummary } from "../costs/costs.service";
@@ -61,7 +61,7 @@ const NJMDEV: Target = { key: "njmdev", name: "NJMDev (Supervision)", renderMatc
 export function claudeByApp(apps: Pick<Target, "key" | "name" | "claudeWorkspaces">[], byWorkspace: { workspace: string; usd: number }[]) {
   const taken = new Set<string>();
   const rows = [...apps, { key: NJMDEV.key, name: NJMDEV.name, claudeWorkspaces: NJMDEV.claudeWorkspaces }].map((app) => {
-    const workspaces = byWorkspace.filter((w) => !taken.has(w.workspace) && app.claudeWorkspaces.some((re) => re.test(w.workspace)));
+    const workspaces = byWorkspace.filter((w) => !taken.has(w.workspace) && app.claudeWorkspaces.some((re) => re.test(normWorkspace(w.workspace))));
     workspaces.forEach((w) => taken.add(w.workspace));
     return { key: app.key, name: app.name, usd: round(workspaces.reduce((t, w) => t + w.usd, 0)), workspaces };
   });
@@ -82,7 +82,7 @@ export function buildHostingCosts(apps: Target[], services: ServiceSummary[], db
     const myDbs = matchPostgres(app.renderMatch.names, dbs).filter((d) => !takenDbs.has(d.id));
     myDbs.forEach((d) => takenDbs.add(d.id));
     const lines = renderLines(mine, myDbs);
-    const workspaces = costs.byWorkspace.filter((w) => !takenWorkspaces.has(w.workspace) && app.claudeWorkspaces.some((re) => re.test(w.workspace)));
+    const workspaces = costs.byWorkspace.filter((w) => !takenWorkspaces.has(w.workspace) && app.claudeWorkspaces.some((re) => re.test(normWorkspace(w.workspace))));
     workspaces.forEach((w) => takenWorkspaces.add(w.workspace));
     const claudeUsd = round(workspaces.reduce((t, w) => t + w.usd, 0));
     const render = { lines, ...sumLines(lines) };
