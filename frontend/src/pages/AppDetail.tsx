@@ -11,10 +11,11 @@ import { usePolling } from "../lib/usePolling";
 import { AdminPanel } from "./AdminPanel";
 import { ImportsPanel } from "./ImportsPanel";
 import { JobsPanel } from "./JobsPanel";
+import { LivePanel } from "./LivePanel";
 import { TenantsPanel } from "./TenantsPanel";
 import { ResourcesPanel } from "./ResourcesPanel";
 
-type Tab = "dispo" | "clients" | "ressources" | "taches" | "imports" | "journaux" | "alertes" | "admin";
+type Tab = "dispo" | "direct" | "clients" | "ressources" | "taches" | "imports" | "journaux" | "alertes" | "admin";
 
 interface ChecksData {
   hourly: { checkId: string; hour: string; total: number; ok: number; avgLatencyMs: number }[];
@@ -64,6 +65,9 @@ export function AppDetail() {
       <div className="tabs">
         <button className={tab === "dispo" ? "active" : ""} onClick={() => setTab("dispo")}>
           Disponibilité
+        </button>
+        <button className={tab === "direct" ? "active" : ""} onClick={() => setTab("direct")}>
+          En direct
         </button>
         <button className={tab === "clients" ? "active" : ""} onClick={() => setTab("clients")}>
           Clients
@@ -173,6 +177,8 @@ export function AppDetail() {
             </p>
           </div>
         ))}
+
+      {tab === "direct" && <LivePanel app={app} />}
 
       {tab === "clients" && <TenantsPanel app={app} />}
 

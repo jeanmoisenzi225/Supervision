@@ -6,6 +6,7 @@ import { startMonitor } from "./modules/monitor/monitor";
 import { startResourceWatcher } from "./modules/resources/resources.service";
 import { startCostWatcher } from "./modules/costs/costs.service";
 import { startRenderEventWatcher } from "./modules/renderEvents/renderEvents.service";
+import { startRuntimeWatcher } from "./modules/runtime/runtime.service";
 import { startJobWatcher } from "./modules/jobs/jobs.service";
 import { startBacklogSync } from "./modules/backlog/backlog.service";
 import { initPush } from "./modules/push/push.service";
@@ -20,6 +21,7 @@ async function main() {
   startCostWatcher();
   startJobWatcher();
   startRenderEventWatcher();
+  startRuntimeWatcher();
   startBacklogSync();
 }
 

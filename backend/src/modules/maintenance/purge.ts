@@ -5,6 +5,7 @@ import { prisma } from "../../db/prisma";
 export async function purgeOldData(): Promise<void> {
   const day = 24 * 3600_000;
   await prisma.jobRun.deleteMany({ where: { at: { lt: new Date(Date.now() - env.logRetentionDays * day) } } });
+  await prisma.runtimeSample.deleteMany({ where: { at: { lt: new Date(Date.now() - 7 * day) } } });
   await prisma.resourceSample.deleteMany({ where: { at: { lt: new Date(Date.now() - 90 * day) } } });
   const [logs, checks] = await Promise.all([
     prisma.logEntry.deleteMany({ where: { at: { lt: new Date(Date.now() - env.logRetentionDays * day) } } }),

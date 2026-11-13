@@ -19,7 +19,7 @@ function getApp(key: string): AppTarget {
 }
 
 /** Appel du protocole d'administration exposé par une appli (voir docs/integration.md). */
-async function callApp<T>(app: AppTarget, path: string, init: RequestInit = {}): Promise<T> {
+export async function callApp<T>(app: AppTarget, path: string, init: RequestInit = {}): Promise<T> {
   if (!app.adminUrl || !app.adminToken) throw new HttpError(400, "Actions d'administration non configurées pour cette appli");
   const method = (init.method ?? "GET").toUpperCase();
   const payload = typeof init.body === "string" ? init.body : "";

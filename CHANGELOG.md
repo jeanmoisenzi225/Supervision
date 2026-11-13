@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.29.0 — 2026-11-13
+
+Demandé le 2026-11-13 : « une supervision la plus complète possible, avec du temps réel » (1ʳᵉ étape).
+
+- **Onglet « En direct » par appli.** La Supervision interroge toutes les **15 secondes** le rapport signé `runtime` de l'appli (Procedia v0.61.0 : mémoire réelle du processus, date de démarrage, retard de la boucle d'événements, imports en cours) et trace la **mémoire réelle** sur 15 minutes, 1 h, 6 h ou 24 h, page actualisée toutes les 5 secondes. Relevés conservés 7 jours.
+- **Redémarrage détecté à la seconde près.** Un changement de date de démarrage ouvre l'alerte « redémarrage du service » (critique si la mémoire dépassait 400 Mo juste avant : « redémarrage après saturation de la mémoire », avec la dernière mémoire vue), alors que Render ne le publie que 15 à 30 minutes plus tard. Refermée après 2 h sans redémarrage. Les redémarrages sont aussi repérés par un ▲ sur les courbes.
+- Les applis qui n'ont pas encore le rapport (réponse 404) sont réessayées toutes les heures, sans bruit ; les applis qui s'endorment (offre gratuite) ne sont jamais interrogées pour ne pas les réveiller.
+
 ## v0.28.0 — 2026-11-13
 
 Demandé le 2026-11-13 : « beaucoup des infos de supervision dans Render ne remontent pas dans notre sup : on ne voit à aucun moment la mémoire saturée ».

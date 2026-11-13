@@ -35,6 +35,26 @@ model CheckResult {
   @@index([at])
 }
 
+/// Relevé en direct de l'état d'un service (v0.29.0) : mémoire réelle, démarrage, retard de la boucle.
+model RuntimeSample {
+  id          BigInt   @id @default(autoincrement())
+  appKey      String
+  at          DateTime @default(now())
+  ok          Boolean
+  startedAt   DateTime?
+  uptimeSec   Int?
+  rssMb       Int?
+  heapMb      Int?
+  externalMb  Int?
+  loopLagMaxMs Float?
+  imports     Int?
+  jobs        Int?
+  error       String?
+
+  @@index([appKey, at])
+  @@index([at])
+}
+
 /// Alerte : panne détectée, erreur remontée par une appli ou alerte métier.
 /// Une même alerte (même empreinte) ouverte n'est pas dupliquée : son
 /// compteur augmente.
