@@ -161,3 +161,9 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - Conclusion : la notification vient surtout des renvois en boucle du même PDF pendant l'incident mémoire de Procedia (corrigés en v0.59.0 à v0.60.0) ; cacher les documents d'import serait contre-productif ; la consigne et le schéma de Procedia ne rapportent qu'≈ 2 $ par mois ; l'agent BRVM, suspendu depuis le 03/11, n'est pas concerné.
 - [ ] Afficher le taux de cache par appli sur la page Claude (rapport d'usage de l'API Admin), à décider avec le propriétaire.
 - ❌ Agent BRVM : sans objet, service Render `Agent-brvm` suspendu depuis le 03/11 et WhatsApp coupé (v0.39.0 du 17/09) ; la notification vient donc uniquement de Procedia.
+
+## 16. Affichage sur iPhone Duo ℹ️ (2026-11-13)
+
+- Référence complète des écrans intérieur et extérieur dans `docs/iphone-duo.md` (sources Apple et WebKit).
+- [ ] Mesurer sur l'appareil (iOS 27.2.1, application installée) les marges de sécurité et la zone donnée à la page : Réglages › Affichage › Mesurer l'écran (`/ecran`), captures dans l'application puis dans Safari.
+- [ ] Colonne laissée à droite (rail de la barre d'état) : aucune solution web connue ; Apple étudie un affichage bord à bord simplifié. À réexaminer après la mesure.

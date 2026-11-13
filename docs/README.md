@@ -5,3 +5,4 @@
 - [Déploiement](deploiement.md) : Render, variables d'environnement, développement local.
 - [Facturation NJMDev](facturation.md) : périmètre, états, garde-fous et architecture du module de facturation.
 - [Étude du cache de prompts Claude](etude-cache-claude.md) : analyse de la notification Anthropic (taux de cache 12 %), appli par appli, recommandations.
+- [iPhone Duo : informations d'affichage](iphone-duo.md) : écrans intérieur et extérieur (pixels, points, pixels CSS, rail, zones sûres, pliage), sources et inconnues.
