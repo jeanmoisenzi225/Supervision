@@ -339,17 +339,12 @@ html, body { overscroll-behavior-y: contain; }
   .billing-page-brand img { width: 88px; max-height: 58px; }
 }
 
-/* Page de démarrage NJMDev (v0.33.1) : 4 s, comme Procedia. Le logo se dessine trait après trait, avec une barre de chargement dessous. */
-.splash { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6rem; background: #0a1033; color: #fff; opacity: 1; transition: opacity 0.4s ease; }
+/* Page de démarrage NJMDev (v0.33.2) : 4 s, comme Procedia. Logo posé, barre de chargement dessous. */
+.splash { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.8rem; background: #0a1033; color: #fff; opacity: 1; transition: opacity 0.4s ease; }
 .splash.is-leaving { opacity: 0; pointer-events: none; }
-.splash-logo { width: min(64vw, 340px); height: auto; overflow: visible; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5)); }
-.splash-draw { fill: none; stroke: #fff; stroke-width: 34; stroke-linejoin: miter; stroke-linecap: butt; stroke-dasharray: 1; stroke-dashoffset: 1; animation-name: splash-draw; animation-timing-function: linear; animation-fill-mode: both; }
+.splash-logo { width: min(64vw, 340px); height: auto; display: block; }
 .splash-bar { position: relative; width: 160px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
-.splash-fill { position: absolute; inset: 0; border-radius: 4px; background: linear-gradient(90deg, #6366f1, #8b9cf7); transform-origin: left; animation: splash-fill 3.6s linear 0.2s both; }
-@keyframes splash-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.splash-fill { position: absolute; inset: 0; border-radius: 4px; background: linear-gradient(90deg, #6366f1, #8b9cf7); transform-origin: left; animation: splash-fill 3.8s linear both; }
 @keyframes splash-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .splash-draw { animation: none; stroke-dashoffset: 0; }
-  .splash-fill { animation: none; }
-}
+@media (prefers-reduced-motion: reduce) { .splash-fill { animation: none; } }
 @media print { .splash { display: none; } }

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.33.2 — 2026-11-13
+
+Demandé le 2026-11-13 : « pas d'animation, on pose le logo et on affiche juste le chargement en bas ».
+
+- **Page de démarrage : logo posé, sans animation.** Le logo s'affiche tel quel dès l'ouverture et seule la barre de chargement, juste dessous, se remplit pendant 4 secondes (durée de Procedia), puis fondu de 0,4 s. Le tracé trait par trait de la v0.33.1 est retiré.
+
 ## v0.33.1 — 2026-11-13
 
 Demandé le 2026-11-13 : plus de « rideau » en balayage ; le logo se dessine progressivement, trait après trait.
