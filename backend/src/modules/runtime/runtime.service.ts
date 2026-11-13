@@ -15,9 +15,14 @@ export interface RuntimeReport {
   heapUsedMb: number;
   externalMb: number;
   loopLagMaxMs: number;
-  imports?: { running: number };
+  imports?: { running: number; usedMb?: number; budgetMb?: number };
   jobs?: number | null;
+  /** Imports en cours (Procedia v0.62.0) : durée et taille, sans nom de document. */
+  runningImports?: { id: string; sinceSec: number; sizeMb: number | null }[];
 }
+
+/** Dernier rapport reçu par appli (en mémoire, au plus 15 secondes de retard). */
+export const latestReport = new Map<string, { at: number; report: RuntimeReport }>();
 
 export interface Restart {
   at: Date;
@@ -65,6 +70,7 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
     return;
   }
   const startedAt = new Date(report.startedAt);
+  latestReport.set(app.key, { at: now.getTime(), report });
   await prisma.runtimeSample.create({
     data: {
       appKey: app.key,
@@ -97,10 +103,60 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
     // Pic mémoire retenu sur la durée de vie de ce processus (jusqu'au prochain redémarrage).
     lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, peakMb: Math.max(prev?.peakMb ?? 0, report.rssMb) });
   }
+  await watchTrends(app, report, now).catch((e) => console.error(`[tendance] ${app.key}`, (e as Error).message));
   const lr = lastRestart.get(app.key);
   if (lr && now.getTime() - lr.getTime() > QUIET_MS) {
     lastRestart.delete(app.key);
     await resolveAlert(app.key, `restart:${app.key}`, `${app.name} — plus de redémarrage depuis 2 h`);
+  }
+}
+
+/** Alertes de tendance sur le relevé en direct (v0.32.0). */
+export const MEM_WARN_MB = 400;
+export const MEM_CRIT_MB = 460;
+export const MEM_CLEAR_MB = 330;
+export const RESTART_LOOP = { count: 3, windowMs: 3600_000 };
+export const LOOP_LAG_MS = 1000;
+
+/** Nombre de redémarrages dans la fenêtre donnée (fonction pure, testée). */
+export function restartsWithin(restarts: Restart[], now: Date, windowMs: number): number {
+  return restarts.filter((r) => now.getTime() - r.at.getTime() <= windowMs).length;
+}
+
+const lagStreak = new Map<string, number>();
+
+export async function watchTrends(app: AppTarget, report: RuntimeReport, now = new Date()): Promise<void> {
+  const memFp = `mem-high:${app.key}`;
+  if (report.rssMb >= MEM_WARN_MB) {
+    await raiseAlert({
+      appKey: app.key,
+      kind: "app",
+      severity: report.rssMb >= MEM_CRIT_MB ? "critical" : "warning",
+      title: `${app.name} — mémoire élevée : ${report.rssMb} Mo sur 512 Mo`,
+      detail: `Relevé en direct à ${now.toISOString().slice(11, 19)} UTC. Au-delà de 512 Mo, Render arrête le service et coupe les traitements en cours (imports…).`,
+      fingerprint: memFp,
+    });
+  } else if (report.rssMb < MEM_CLEAR_MB) {
+    await resolveAlert(app.key, memFp, `${app.name} — mémoire revenue à ${report.rssMb} Mo`);
+  }
+  // Boucle d'événements bloquée deux relevés de suite : service saturé, avant même l'arrêt.
+  const lagFp = `loop-lag:${app.key}`;
+  const streak = report.loopLagMaxMs >= LOOP_LAG_MS ? (lagStreak.get(app.key) ?? 0) + 1 : 0;
+  lagStreak.set(app.key, streak);
+  if (streak >= 2) {
+    await raiseAlert({ appKey: app.key, kind: "app", severity: "warning", title: `${app.name} — service saturé (retard de ${Math.round(report.loopLagMaxMs)} ms)`, detail: "Le processus met plus d'une seconde à traiter ses tâches, deux relevés de suite : les requêtes ralentissent.", fingerprint: lagFp });
+  } else if (streak === 0) {
+    await resolveAlert(app.key, lagFp, `${app.name} — service de nouveau réactif`);
+  }
+  // Redémarrages en boucle : 3 en une heure.
+  const since = new Date(now.getTime() - RESTART_LOOP.windowMs);
+  const rows = await prisma.runtimeSample.findMany({ where: { appKey: app.key, at: { gte: since } }, orderBy: { at: "asc" }, select: { at: true, ok: true, startedAt: true, rssMb: true } });
+  const n = restartsWithin(detectRestarts(rows), now, RESTART_LOOP.windowMs);
+  const loopFp = `restart-loop:${app.key}`;
+  if (n >= RESTART_LOOP.count) {
+    await raiseAlert({ appKey: app.key, kind: "app", severity: "critical", title: `${app.name} — redémarrages en boucle : ${n} en 1 heure`, detail: "Le service redémarre sans cesse (souvent mémoire saturée). Voir l'onglet « En direct » et « Chronologie ».", fingerprint: loopFp });
+  } else if (n === 0) {
+    await resolveAlert(app.key, loopFp, `${app.name} — plus de redémarrages en boucle`);
   }
 }
 

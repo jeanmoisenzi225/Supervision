@@ -22,6 +22,7 @@ interface LiveData {
   samples: Sample[];
   restarts: { at: number; lastRssMb: number | null; kind: "memory" | "other" }[];
   last: Sample | null;
+  current: { at: number; report: { imports?: { running: number; usedMb?: number; budgetMb?: number }; runningImports?: { id: string; sinceSec: number; sizeMb: number | null }[] } } | null;
 }
 
 const WINDOWS = [
@@ -94,6 +95,29 @@ export function LivePanel({ app }: { app: AppOverview }) {
           <span className="muted small">en cours</span>
         </div>
       </div>
+      {data.current?.report.runningImports && (
+        <div>
+          <h4 style={{ margin: "12px 0 6px" }}>
+            Imports en cours ({data.current.report.runningImports.length}
+            {data.current.report.imports?.budgetMb ? ` · budget mémoire ${data.current.report.imports.usedMb ?? 0} / ${data.current.report.imports.budgetMb} Mo` : ""})
+          </h4>
+          {data.current.report.runningImports.length === 0 ? (
+            <p className="muted small">Aucun import en cours.</p>
+          ) : (
+            <table className="table">
+              <tbody>
+                {data.current.report.runningImports.map((i) => (
+                  <tr key={i.id}>
+                    <td className="small">n° {i.id}</td>
+                    <td>{i.sizeMb !== null ? `${i.sizeMb.toLocaleString("fr-FR")} Mo` : "taille inconnue"}</td>
+                    <td className="small muted">depuis {i.sinceSec >= 60 ? `${Math.floor(i.sinceSec / 60)} min ${i.sinceSec % 60} s` : `${i.sinceSec} s`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
       <LineChart title="Mémoire réelle du service" points={rss} format={formatBytes} rangeHours={minutes / 60} limit={{ value: 512 * 1024 * 1024, label: "limite 512 Mo" }} threshold={{ value: 512 * 1024 * 1024 * 0.8, label: "alerte 80 %" }} marks={data.restarts.map((r) => ({ at: r.at, kind: r.kind }))} />
       {data.restarts.length > 0 && (
         <ul className="small">

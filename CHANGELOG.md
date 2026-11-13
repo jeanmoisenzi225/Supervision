@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.32.0 — 2026-11-13
+
+- **Alertes de tendance.** Sur le relevé en direct (toutes les 15 secondes) : **mémoire élevée** (avertissement dès 400 Mo, critique dès 460 Mo sur 512, refermée sous 330 Mo), **service saturé** (boucle d'événements en retard de plus d'une seconde, deux relevés de suite) et **redémarrages en boucle** (3 en une heure, critique). Sur Render, toutes les 5 minutes : **taux d'erreurs serveur** (au moins 20 requêtes et 5 % de réponses 5xx sur 15 minutes ; critique dès 20 %), refermée sous 2 %.
+- **Page Ressources : bande passante sortante et nombre d'instances** de chaque service (mesures Render jusque-là non utilisées).
+- **Onglet « En direct » : imports en cours** (numéro court, taille du document, durée) et part du budget mémoire des imports réservée (avec Procedia v0.62.0 ; sans nom de document ni client).
+
 ## v0.31.0 — 2026-11-13
 
 - **Onglet « Chronologie » par appli.** Une seule frise, du plus récent au plus ancien et groupée par jour, qui réunit : les alertes de la Supervision, les **arrêts et reprises du service signalés par Render** (dont « mémoire saturée »), les **déploiements** (lancés, terminés, en échec) et les **redémarrages détectés en direct**. Périodes de 6 h, 24 h, 7 jours et 30 jours, filtre « problèmes seulement ». En tête : **disponibilité** (vérifications réussies / faites) et nombre d'incidents graves.

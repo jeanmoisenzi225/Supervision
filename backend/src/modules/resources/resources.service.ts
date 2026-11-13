@@ -22,6 +22,9 @@ export interface ServiceResources {
   errors5xx: Points;
   /** Arrêts du service signalés par Render sur la période (v0.28.0) : mémoire saturée ou autre. */
   failures: { at: number; kind: "memory" | "other" }[];
+  /** Bande passante sortante (octets par pas) et nombre d'instances (v0.32.0). */
+  bandwidth: Points;
+  instances: Points;
   latencyP95: Points; // millisecondes
   /** Disque persistant du service (octets), s'il en a un. */
   disk: Points;
@@ -98,7 +101,7 @@ async function serviceResources(id: string, start: Date, resolution: number, fin
   // Un site statique n'a ni mémoire ni processeur à surveiller.
   if (s.type === "static_site") return null;
   const errors: string[] = [];
-  const [memory, memoryLimit, cpu, cpuLimit, requests, latency, disk, diskCapacity] = await Promise.all([
+  const [memory, memoryLimit, cpu, cpuLimit, requests, latency, disk, diskCapacity, bandwidth, instances] = await Promise.all([
     safe(errors, "mémoire", `memory:${id}:${fine}`, () => fetchMetric("memory", id, start, fine, { aggregationMethod: "MAX" }), []),
     safe(errors, "limite mémoire", `memory-limit:${id}:${resolution}`, () => fetchMetric("memory-limit", id, start, resolution), []),
     safe(errors, "processeur", `cpu:${id}:${fine}`, () => fetchMetric("cpu", id, start, fine, { aggregationMethod: "MAX" }), []),
@@ -108,6 +111,8 @@ async function serviceResources(id: string, start: Date, resolution: number, fin
     // Disque persistant : séries vides pour un service sans disque (pas une erreur).
     fetchMetric("disk-usage", id, start, resolution).catch(() => [] as MetricSeries[]),
     fetchMetric("disk-capacity", id, start, resolution).catch(() => [] as MetricSeries[]),
+    fetchMetric("bandwidth", id, start, Math.max(resolution, 3600)).catch(() => [] as MetricSeries[]),
+    fetchMetric("instance-count", id, start, resolution).catch(() => [] as MetricSeries[]),
   ]);
   // Arrêts constatés par Render (événements « server_failed ») sur la période.
   const events = await renderFetch<RenderEvent[]>(`/services/${id}/events?limit=100`).catch(() => [] as RenderEvent[]);
@@ -127,6 +132,8 @@ async function serviceResources(id: string, start: Date, resolution: number, fin
     disk: bytes(disk),
     diskCapacity: last(bytes(diskCapacity)),
     failures,
+    bandwidth: bytes(bandwidth),
+    instances: sumSeries(instances.map((x) => x.points)),
     errors,
   };
 }

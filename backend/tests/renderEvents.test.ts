@@ -23,3 +23,21 @@ describe("Arrêts du service signalés par Render", () => {
     expect(failuresSince(events, new Date("2026-11-13T11:00:00Z"))).toEqual([]);
   });
 });
+
+import { errorRate } from "../src/modules/renderEvents/renderEvents.service";
+import { restartsWithin } from "../src/modules/runtime/runtime.service";
+describe("Alertes de tendance (v0.32.0)", () => {
+  it("calcule la part des erreurs 5xx", () => {
+    const s = [
+      { labels: { statusCode: "200" }, points: [[0, 60], [1, 20]] as [number, number][] },
+      { labels: { statusCode: "502" }, points: [[0, 15], [1, 5]] as [number, number][] },
+    ];
+    expect(errorRate(s)).toEqual({ total: 100, errors: 20, rate: 0.2 });
+    expect(errorRate([])).toEqual({ total: 0, errors: 0, rate: 0 });
+  });
+  it("compte les redémarrages dans la fenêtre", () => {
+    const now = new Date("2026-11-13T12:00:00Z");
+    const r = (min: number) => ({ at: new Date(now.getTime() - min * 60_000), lastRssMb: 300, kind: "other" as const });
+    expect(restartsWithin([r(5), r(20), r(59), r(90)], now, 3600_000)).toBe(3);
+  });
+});

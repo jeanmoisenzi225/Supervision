@@ -152,4 +152,5 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [x] Supervision en temps réel, étape 1 : onglet « En direct » (mémoire réelle toutes les 15 s) et détection de redémarrage à la seconde près (v0.29.0 ; Procedia v0.61.0).
 - [x] Journaux Render dans la page Journaux, toutes les 15 secondes (v0.30.0).
 - [x] Chronologie des incidents par appli, avec disponibilité (v0.31.0).
-- [ ] Étapes suivantes (analyse du 2026-11-13) : alertes de tendance, bande passante et instances, imports en direct, battement de cœur pour les autres applis.
+- [x] Alertes de tendance, bande passante, instances, imports en cours en direct (v0.32.0).
+- [ ] Reste : relevé en direct (`reports/runtime`) pour les autres applis (MGA, Yiri, My Family, EDEN, Autonova) : chaque appli doit exposer le rapport.

@@ -19,6 +19,8 @@ interface Resources {
     requests: Points;
     errors5xx: Points;
     failures: { at: number; kind: "memory" | "other" }[];
+    bandwidth: Points;
+    instances: Points;
     latencyP95: Points;
     disk: Points;
     diskCapacity: number | null;
@@ -165,6 +167,12 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
               </>
             )}
             <LineChart title="Processeur" points={s.cpu} format={formatCpu} rangeHours={hours} limit={s.cpuLimit ? { value: s.cpuLimit, label: `limite ${formatCpu(s.cpuLimit)}` } : null} marks={s.failures} />
+            {s.bandwidth.length > 0 && <LineChart title="Bande passante sortante (par heure)" points={s.bandwidth} format={formatBytes} rangeHours={hours} />}
+            {s.instances.length > 0 && (
+              <p className="small muted">
+                Instances en service : <strong>{lastOf(s.instances)}</strong> (maximum {maxOf(s.instances)} sur la période).
+              </p>
+            )}
             {s.requests.length > 0 && <LineChart title="Requêtes par intervalle" points={s.requests} format={formatCount} rangeHours={hours} />}
             {s.latencyP95.length > 0 && <LineChart title="Temps de réponse (95 % des requêtes)" points={s.latencyP95} format={formatMs} rangeHours={hours} />}
             {s.errors.length > 0 && <p className="muted small">Non disponible : {s.errors.join(" ; ")}.</p>}

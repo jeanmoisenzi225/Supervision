@@ -1,7 +1,7 @@
 import { apps } from "../../config/apps";
 import { env } from "../../config/env";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
-import { renderFetch, resolveServiceIds } from "../actions/render";
+import { fetchMetric, renderFetch, resolveServiceIds } from "../actions/render";
 import { isPaused } from "../pause/pause.service";
 
 // Arrêts du service constatés par Render (événements « server_failed », v0.26.0).
@@ -81,8 +81,41 @@ export async function watchRenderEvents(now = new Date()): Promise<void> {
   }
 }
 
+/** Part des réponses en erreur serveur (5xx) parmi toutes les réponses d'une série par code HTTP (fonction pure, testée). */
+export function errorRate(series: { labels: Record<string, string>; points: [number, number][] }[]): { total: number; errors: number; rate: number } {
+  let total = 0;
+  let errors = 0;
+  for (const s of series) {
+    const sum = s.points.reduce((t, p) => t + p[1], 0);
+    total += sum;
+    if (/^5/.test(s.labels.statusCode ?? "")) errors += sum;
+  }
+  return { total, errors, rate: total > 0 ? errors / total : 0 };
+}
+
+/** Alerte sur le taux d'erreurs 5xx des 15 dernières minutes (v0.32.0) : au moins 20 requêtes et 5 % d'erreurs. */
+export async function watchErrorRate(now = new Date()): Promise<void> {
+  if (!env.renderApiKey) return;
+  for (const app of apps) {
+    if (await isPaused(app.key)) continue;
+    const ids = await resolveServiceIds(app).catch(() => [] as string[]);
+    for (const id of ids) {
+      const series = await fetchMetric("http-requests", id, new Date(now.getTime() - 15 * 60_000), 60, { aggregateBy: "statusCode" }).catch(() => null);
+      if (!series) continue;
+      const { total, errors, rate } = errorRate(series);
+      const fp = `err-rate:${id}`;
+      if (total >= 20 && rate >= 0.05) {
+        await raiseAlert({ appKey: app.key, kind: "app", severity: rate >= 0.2 ? "critical" : "warning", title: `${app.name} — ${Math.round(rate * 100)} % d'erreurs serveur`, detail: `${errors} réponses en erreur 5xx sur ${total} requêtes ces 15 dernières minutes (souvent des 502 pendant un redémarrage).`, fingerprint: fp });
+      } else if (rate < 0.02) {
+        await resolveAlert(app.key, fp, `${app.name} — taux d'erreurs serveur normal`);
+      }
+    }
+  }
+}
+
 export function startRenderEventWatcher(): void {
   if (!env.monitorEnabled) return;
   setTimeout(() => void watchRenderEvents().catch((e) => console.error("[render]", (e as Error).message)), 20_000);
   setInterval(() => void watchRenderEvents().catch((e) => console.error("[render]", (e as Error).message)), 10 * 60_000);
+  setInterval(() => void watchErrorRate().catch((e) => console.error("[erreurs 5xx]", (e as Error).message)), 5 * 60_000);
 }
