@@ -378,3 +378,5 @@ button, a, input, select, summary { touch-action: manipulation; }
   input[type=checkbox], input[type=radio] { min-height: 0; }
   .tabs button { min-height: 44px; }
 }
+/* Écran peu haut (écran extérieur d'un appareil pliable tourné : ≈ 406 px) : la barre du haut défile avec la page au lieu de rester fixe. */
+@media (max-height: 520px) { .topbar { position: static; } }

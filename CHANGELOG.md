@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.35.1 — 2026-11-13
+
+Suite de la demande « optimisons pour l'iPhone Duo », après lecture des sources Apple et WebKit (tailles réelles d'écran : Safari 27.1, session « Prepare your app for iPhone Duo »).
+
+- **Contrôle aux vraies tailles** (pixels CSS annoncés par WebKit : écran extérieur 382 × 618 portrait et 594 × 406 paysage, écran intérieur 669 × 902 portrait et 951 × 620 paysage, deux fenêtres côte à côte 385 × 609) : aucun débordement horizontal, le découpage de v0.35.0 (≤ 640 px, 641–960 px, > 960 px) tombe bien sur ces tailles.
+- **Écran extérieur tourné (594 × 406)** : la barre du haut prenait 25 % de la hauteur et restait fixe. Sous 520 px de hauteur, elle défile maintenant avec la page.
+- Aucun changement nécessaire côté orientation ni marges : la Supervision ne se sert d'aucune requête d'orientation (l'écran intérieur ne respecte pas l'orientation de l'interface) et traite les marges de sécurité gauche et droite séparément (elles sont asymétriques sur l'iPhone Duo).
+
 ## v0.35.0 — 2026-11-13
 
 Demandé le 2026-11-13 : « optimisons Procedia et la Supervision pour l'iPhone Duo » (appareil pliable : écran fermé étroit, écran ouvert large).

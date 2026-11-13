@@ -61,6 +61,10 @@ Les routes `/api/billing/*` sont protégées par `requireAdmin` ; `POST /api/bil
 - **Incidents connus** repérés dans les journaux reçus, quel que soit leur niveau : crédit Claude épuisé, clé Claude refusée ou absente, saturation de l'API Claude. Alerte dédiée (`known:<clé>`), sans alerte d'erreur générique en double. Anthropic ne permet pas de lire le solde de crédit : c'est le message d'erreur de l'API qui le révèle.
 - Notification push à l'ouverture (critique ou attention) et à la fermeture automatique.
 
+## Appareils pliables : iPhone Duo (v0.35.0, v0.35.1)
+
+Tailles de référence (pixels CSS, Safari 27.1 d'après WebKit) : écran extérieur 382 × 618 (portrait) et 594 × 406 (paysage) ; écran intérieur 669 × 902 et 951 × 620 ; deux fenêtres côte à côte 385 × 609. Règles : mise en page par **largeur** (≤ 640 px menu sur une ligne défilante ; 641–960 px menu sur sa ligne et onglets sur plusieurs lignes ; au-delà, mise en page large), **jamais par orientation** (l'écran intérieur ne respecte pas l'orientation) ; marges de sécurité gauche et droite traitées séparément (`max(16px, env(safe-area-inset-left))`, asymétriques sur l'appareil) ; barre du haut non fixe sous 520 px de hauteur ; zones tactiles de 44 px et champs à 16 px (`pointer: coarse`). Les API Device Posture et Viewport Segments de Safari 27.1 sont en préversion derrière un drapeau : non utilisées (une seule surface continue, rien à gérer).
+
 ## Heures (v0.34.0)
 
 Une seule heure à l'écran : celle de l'appareil. Les textes écrits par le serveur ne contiennent jamais d'heure en clair : ils portent la date sous la forme `⟦ISO⟧` (`backend/src/utils/time.ts`, `stamp`), remplacée par l'heure de l'appareil par `localizeTimes` (`frontend/src/lib/format.ts`) dans les alertes, le diagnostic et la chronologie, et par le service worker des notifications (`public/push-worker.js`). Exceptions affichées comme telles : horaires des tâches planifiées (expressions cron, UTC) et découpage par jour UTC des coûts Claude.
