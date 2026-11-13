@@ -3,6 +3,8 @@ import { api, type AppOverview } from "../lib/api";
 import { dateTime, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 
+const sizeLabel = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo` : `${Math.max(1, Math.round(n / 1024))} Ko`);
+
 interface ImportItem {
   id: string;
   at: string;
@@ -11,6 +13,8 @@ interface ImportItem {
   file: string;
   detail: string;
   procedures?: number;
+  /** Taille du document en octets (imports depuis Procedia v0.60.0). */
+  size?: number | null;
   cause: string | null;
 }
 
@@ -152,7 +156,7 @@ export function ImportsPanel({ app }: { app: AppOverview }) {
                 </td>
                 <td>
                   <strong>{i.file}</strong>
-                  <div className="small muted">{i.author}</div>
+                  <div className="small muted">{i.author}{i.size ? ` · ${sizeLabel(i.size)}` : ""}</div>
                 </td>
                 <td className="small">
                   {i.ok ? i.detail : (

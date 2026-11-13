@@ -1,6 +1,6 @@
 {
   "name": "supervision-backend",
-  "version": "0.26.0",
+  "version": "0.27.0",
   "private": true,
   "description": "API de supervision : disponibilité des applis, alertes, journaux et actions super administrateur",
   "main": "dist/index.js",

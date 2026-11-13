@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.27.0 — 2026-11-13
+
+- **Imports Procedia : taille du document.** Chaque import affiche désormais la taille du document (ex. « 16 Mo ») sous le nom du fichier, pour repérer les gros documents derrière les arrêts de mémoire. La taille est fournie par Procedia à partir de sa v0.60.0 : les imports plus anciens n'en ont pas.
+
 ## v0.26.0 — 2026-11-13
 
 Demandé le 2026-11-13 (incident Procedia : arrêts « mémoire saturée »).
