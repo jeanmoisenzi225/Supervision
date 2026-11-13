@@ -385,3 +385,6 @@ button, a, input, select, summary { touch-action: manipulation; }
 :where(html.standalone, html.standalone *) { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; }
 html.standalone { overscroll-behavior: none; touch-action: pan-x pan-y; }
 html.standalone input, html.standalone textarea, html.standalone [contenteditable="true"], html.standalone .selectable { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+
+/* Page de démarrage : couvre aussi la bande du bas que certains appareils (écran intérieur de l'iPhone Duo, application installée) laissent hors de la zone « fixe » : l'élément déborde de 200 px sous l'écran et son contenu reste centré sur la partie visible. */
+.splash { bottom: -200px; padding-bottom: 200px; min-height: 100lvh; }

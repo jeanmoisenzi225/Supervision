@@ -29,6 +29,17 @@ export function Splash() {
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
 
+  // Pendant la page de démarrage, le fond de la page prend sa couleur : aucune bande d'une autre teinte ne peut apparaître.
+  useEffect(() => {
+    if (!show) return;
+    const root = document.documentElement;
+    const before = root.style.backgroundColor;
+    root.style.backgroundColor = "#0a1033";
+    return () => {
+      root.style.backgroundColor = before;
+    };
+  }, [show]);
+
   useEffect(() => {
     if (!show) return;
     const a = window.setTimeout(() => setLeaving(true), LOGO_MS);

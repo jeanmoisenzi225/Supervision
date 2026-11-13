@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.35.3 — 2026-11-13
+
+- **Correction : bande d'une autre teinte en bas de la page de démarrage.** Sur l'iPhone Duo (application installée), la page de démarrage laissait voir en bas une bande plus claire (≈ 80 px) : l'écran n'était pas couvert jusqu'au bord. La page de démarrage **déborde maintenant de 200 px sous l'écran** (son contenu reste centré sur la partie visible : écart mesuré 0 px) et le **fond de la page prend sa couleur** pendant son affichage, de sorte qu'aucune bande d'une autre teinte ne puisse apparaître.
+
 ## v0.35.2 — 2026-11-13
 
 Demandé le 2026-11-13 : « en PWA, le zoom ne doit absolument pas être possible, aucune action qui ressemble à du web ne doit être possible. »
