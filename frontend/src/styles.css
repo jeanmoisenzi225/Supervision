@@ -338,3 +338,34 @@ html, body { overscroll-behavior-y: contain; }
   .billing-page-brand { gap: 9px; }
   .billing-page-brand img { width: 88px; max-height: 58px; }
 }
+
+/* Page de démarrage NJMDev (v0.33.0) : 4 s, comme Procedia. Logo dessiné par balayages (N, JM, soulignement), éclat, nom, barre. */
+.splash { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; background: #0a1033; color: #fff; opacity: 1; transition: opacity 0.4s ease; }
+.splash.is-leaving { opacity: 0; pointer-events: none; }
+.splash-logo { position: relative; width: min(64vw, 340px); aspect-ratio: 505 / 315; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5)); animation: splash-logo-in 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.splash-part { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.splash-part-n { clip-path: inset(0 52% 12% 0); animation: splash-wipe-n 1s cubic-bezier(0.5, 0, 0.2, 1) 0.2s both; }
+.splash-part-jm { clip-path: inset(0 0 12% 46%); animation: splash-wipe-jm 1.1s cubic-bezier(0.5, 0, 0.2, 1) 0.95s both; }
+.splash-part-line { clip-path: inset(88% 50% 0 0); animation: splash-wipe-line 0.7s cubic-bezier(0.5, 0, 0.2, 1) 1.9s both; }
+.splash-shine { position: absolute; top: -10%; bottom: -10%; width: 22%; left: -30%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent); mix-blend-mode: overlay; transform: skewX(-12deg); animation: splash-shine 1.1s ease-in-out 2.1s both; pointer-events: none; }
+.splash-name { margin: 0.2rem 0 0; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.32em; text-indent: 0.32em; animation: splash-rise 0.9s ease-out 2.3s both; }
+.splash-tag { margin: 0; font-size: 0.8rem; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.62); animation: splash-fade 1s ease-out 2.9s both; }
+.splash-bar { position: relative; width: 120px; height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); overflow: hidden; animation: splash-fade 0.9s ease-out 3s both; }
+.splash-bar::after { content: ""; position: absolute; inset: 0; width: 40%; border-radius: 3px; background: linear-gradient(90deg, #6366f1, #8b9cf7); animation: splash-run 1.1s ease-in-out infinite; }
+@keyframes splash-logo-in { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes splash-wipe-n { from { clip-path: inset(0 100% 12% 0); } to { clip-path: inset(0 52% 12% 0); } }
+@keyframes splash-wipe-jm { from { clip-path: inset(0 100% 12% 46%); } to { clip-path: inset(0 0 12% 46%); } }
+@keyframes splash-wipe-line { from { clip-path: inset(88% 100% 0 0); } to { clip-path: inset(88% 50% 0 0); } }
+@keyframes splash-shine { 0% { left: -30%; opacity: 0; } 20% { opacity: 1; } 100% { left: 110%; opacity: 0; } }
+@keyframes splash-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes splash-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes splash-run { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo, .splash-part, .splash-shine, .splash-name, .splash-tag, .splash-bar { animation: none; }
+  .splash-part-n { clip-path: inset(0 52% 12% 0); }
+  .splash-part-jm { clip-path: inset(0 0 12% 46%); }
+  .splash-part-line { clip-path: inset(88% 50% 0 0); }
+  .splash-shine { display: none; }
+  .splash-bar::after { animation: none; width: 100%; }
+}
+@media print { .splash { display: none; } }

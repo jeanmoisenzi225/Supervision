@@ -15,6 +15,7 @@ import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { LogsPage } from "./pages/LogsPage";
 import { Settings } from "./pages/Settings";
+import { Splash } from "./components/Splash";
 
 export function App() {
   const [loggedIn, setLoggedIn] = useState(Boolean(getToken()));
@@ -30,10 +31,19 @@ export function App() {
     setLoggedIn(false);
   };
 
-  if (!loggedIn) return <Login onLogin={() => setLoggedIn(true)} />;
+  // La page de démarrage reste montée à la connexion : elle ne se rejoue pas.
+  if (!loggedIn) {
+    return (
+      <>
+        <Splash />
+        <Login onLogin={() => setLoggedIn(true)} />
+      </>
+    );
+  }
 
   return (
     <BrowserRouter>
+      <Splash />
       <PullToRefresh />
       <Routes>
         <Route index element={<Home onLogout={logout} />} />

@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.33.0 — 2026-11-13
+
+Demandé le 2026-11-13 : « une petite animation pour l'entrée dans NJMDev, de même durée que Procedia ».
+
+- **Page de démarrage NJMDev.** À chaque ouverture de l'application installée (écran d'accueil, fenêtre dédiée), le logo se dessine en trois balayages (le N, le JM, puis le soulignement), un éclat le traverse, puis le nom « NJMDev », « Supervision · Facturation » et une barre de chargement apparaissent. **Durée : 4 secondes** (celle de l'animation du logo de Procedia), puis fondu de 0,4 s. Elle se joue aussi quand les animations sont réduites (version fixe). `?splash=1` à la fin de l'adresse la force dans un navigateur pour la voir. Une sortie de veille n'est pas une ouverture.
+
 ## v0.32.1 — 2026-11-13
 
 - **Correction : un redémarrage dû à une mise en ligne n'est plus une alerte.** Le 13/11 à 12:47:58 UTC, l'alerte « Procedia — redémarrage du service » s'est ouverte alors que le service venait d'être redéployé (Procedia v0.62.0, déploiement lancé à 12:47:14, mémoire normale : 221 Mo). La Supervision recoupe maintenant chaque redémarrage avec les déploiements Render : s'il suit un déploiement (lancé dans les 15 minutes précédentes), il est classé « redémarrage pour une mise en ligne », en information, sans notification, et ne compte pas dans les « redémarrages en boucle ». La chronologie le marque de la même façon. Un redémarrage avec mémoire élevée reste une alerte critique, déploiement ou non.
