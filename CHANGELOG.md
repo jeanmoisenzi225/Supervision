@@ -1,6 +1,10 @@
 # Journal des versions
 
-## v0.25.1 — 2026-11-13
+## v0.26.0 — 2026-11-13
+
+Demandé le 2026-11-13 (incident Procedia : arrêts « mémoire saturée »).
+
+- **Alerte sur les arrêts du service signalés par Render.** Toutes les 10 minutes, la Supervision lit les événements « service arrêté » (`server_failed`) de chaque service Render d'une appli. Un arrêt pour **mémoire saturée** ouvre l'alerte « service arrêté : mémoire saturée » (avertissement, notification push) ; chaque nouvel arrêt incrémente son compteur ; elle se referme seule après 2 heures sans arrêt. Les autres arrêts (« par la plateforme ») sont signalés de la même façon. Render publie ces événements 15 à 30 minutes après l'arrêt réel : l'alerte est tardive mais rend visibles les boucles de redémarrage. Nécessite `RENDER_API_KEY` (déjà configurée).
 
 - **Correction : espace de travail Claude non rattaché à son appli.** Sur la page Coûts, la carte Procedia n'affichait que « Espace par défaut » (74,95 $) : l'espace « Procedia » (8,50 $) restait à part. Le rattachement exigeait un nom **identique au caractère près** ; un espace en trop (fréquent à la saisie sur téléphone), une espace insécable, la casse ou un accent suffisaient à le faire échouer. Il est désormais **tolérant** : le nom de l'espace doit contenir le nom donné dans `<APPLI>_CLAUDE_WORKSPACE`, sans tenir compte de la casse, des accents ni des espaces en trop. Les noms des espaces s'affichent entre guillemets pour repérer ces écarts.
 
