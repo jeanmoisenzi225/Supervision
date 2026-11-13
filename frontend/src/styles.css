@@ -380,3 +380,8 @@ button, a, input, select, summary { touch-action: manipulation; }
 }
 /* Écran peu haut (écran extérieur d'un appareil pliable tourné : ≈ 406 px) : la barre du haut défile avec la page au lieu de rester fixe. */
 @media (max-height: 520px) { .topbar { position: static; } }
+
+/* Application installée (PWA) : aucun réflexe de navigateur web (zoom, sélection, menu contextuel, rebond), voir lib/standalone.ts. Règles à spécificité nulle : un `user-select: text` explicite (ex. jeton à copier) l'emporte. */
+:where(html.standalone, html.standalone *) { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; }
+html.standalone { overscroll-behavior: none; touch-action: pan-x pan-y; }
+html.standalone input, html.standalone textarea, html.standalone [contenteditable="true"], html.standalone .selectable { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }

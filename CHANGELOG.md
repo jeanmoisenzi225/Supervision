@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.35.2 — 2026-11-13
+
+Demandé le 2026-11-13 : « en PWA, le zoom ne doit absolument pas être possible, aucune action qui ressemble à du web ne doit être possible. »
+
+- **Application installée : plus aucun réflexe de navigateur web.** Quand la Supervision est ouverte comme application installée : pas de zoom (pincer, double toucher, Ctrl + molette), pas de sélection de texte (sauf les champs de saisie et les codes à copier : mot de passe temporaire, secret de double authentification), pas de menu contextuel ni d'aperçu de lien à l'appui long, pas de glisser d'images ni de liens, pas de rebond de défilement du navigateur. Dans un navigateur, rien ne change.
+
 ## v0.35.1 — 2026-11-13
 
 Suite de la demande « optimisons pour l'iPhone Duo », après lecture des sources Apple et WebKit (tailles réelles d'écran : Safari 27.1, session « Prepare your app for iPhone Duo »).
