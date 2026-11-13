@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.35.7 — 2026-11-13
+
+- **iPhone Duo, écran intérieur : plus de défilement parasite de 82 px.** Les mesures de l'appareil (iOS 27.2.1, application installée) montrent que la zone de mise en page de la page (`100svh` = `clientHeight`, 869 px en portrait, 587 en paysage) est 82 px plus courte que l'écran (`100vh` = `100dvh` = `100lvh`, 951 et 669 px). Une page haute de 100vh dépassait donc la zone de mise en page et défilait pour rien. La page est calée sur `100svh` (sans effet sur les autres appareils) ; un élément fixe, lui, couvre bien tout l'écran. Détail dans `docs/iphone-duo.md`.
+
 ## v0.35.6 — 2026-11-13
 
 - **Mesure de l'écran : hauteurs des unités CSS.** La page `/ecran` affiche aussi la hauteur réelle de `100vh`, `100dvh`, `100svh`, `100lvh`, d'un élément fixe plein écran et le décalage de la zone visible, pour comprendre l'écart de 80 px mesuré sur l'écran intérieur entre `innerHeight` et `clientHeight`. Les mesures de l'appareil (iOS 27.2.1) sont consignées dans `docs/iphone-duo.md`.

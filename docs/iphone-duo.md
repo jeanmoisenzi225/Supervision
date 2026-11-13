@@ -91,6 +91,8 @@ Constats :
 3. **`screen.width × screen.height` vaut toujours 466 × 678** (l'écran extérieur), même sur l'écran intérieur : ne jamais s'en servir.
 4. **Hauteur** : sur l'écran intérieur, `innerHeight` dépasse `clientHeight` de 80 à 82 px (949 / 869 ; 669 / 587). Un élément « fixe » plein écran (`inset: 0`) mesure alors 80 px de moins que l'écran : c'est la **bande d'une autre teinte** vue en bas de la page de démarrage (corrigée en v0.35.3 et v0.62.5 par un débordement de 200 px).
 5. Marge haute de 82 px et basse de 34 px sur l'écran intérieur en portrait.
+6. **Unités de hauteur (2e mesure, écran intérieur)** : `100vh = 100dvh = 100lvh` = hauteur de l'écran (951 en portrait, 669 en paysage) ; **`100svh` = `clientHeight` = 869 en portrait, 587 en paysage**, soit 82 px de moins ; un élément fixe de 100 % mesure la hauteur complète (951 / 669) et son cadre atteint bien les bords de l'écran. Donc : un élément **fixe** couvre tout l'écran, mais une page « en flux » de `100vh` dépasse la zone de mise en page de 82 px et **défile pour rien** ; la caler sur `100svh` supprime ce défilement (le fond de `html`, de la même couleur, remplit les 82 px restants).
+7. Retournée à 180° (`portrait-secondary`), la page garde les mêmes marges (haut 82, bas 34) : la barre d'état reste en haut du côté physique du haut de l'appareil, pas du contenu.
 
 ## Sources
 

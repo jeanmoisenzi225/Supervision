@@ -388,3 +388,6 @@ html.standalone input, html.standalone textarea, html.standalone [contenteditabl
 
 /* Page de démarrage : couvre aussi la bande du bas que certains appareils (écran intérieur de l'iPhone Duo, application installée) laissent hors de la zone « fixe » : l'élément déborde de 200 px sous l'écran et son contenu reste centré sur la partie visible. */
 .splash { bottom: -200px; padding-bottom: 200px; min-height: 100lvh; }
+
+/* Hauteur de page de l'iPhone Duo (écran intérieur, application installée) : la zone de mise en page (svh = clientHeight) est 82 px plus courte que l'écran (vh = dvh = lvh) ; une page haute de 100vh dépasse donc d'autant et défile pour rien. On la cale sur la hauteur de mise en page ; le fond de la page (html) prolonge la même couleur jusqu'au bord. */
+.shell, .login { min-height: 100svh; }
