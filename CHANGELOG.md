@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.38.0 — 2026-11-16
+
+Refonte visuelle, lot 1 (maquette validée le 2026-11-16). Les autres pages gardent leur disposition ; elles prennent les nouvelles couleurs.
+
+- **Nouvelle identité visuelle** : fond graphite chaud, texte blanc cassé, vert menthe pour le nominal, ambre pour ce qui demande attention ; plus de bleu nuit ni d'accent violet. **Thème clair ou sombre** (bouton « Clair / sombre » dans l'en-tête, choix mémorisé sur l'appareil, appliqué avant l'affichage pour éviter tout flash).
+- **En-tête qui ne reste plus figé** : il se retire quand on descend dans la page et revient dès qu'on remonte (accueil, Supervision, Facturation) ; plus de hauteur utile, surtout sur téléphone.
+- **Accueil refait** : le **brief du jour** (titre écrit d'après l'état réel des applis, alertes ouvertes en encadré, disponibilité sur 24 h de chaque appli), les **objectifs de la semaine**, les modules, et à droite la **constellation** : NJMDev au centre, une application par nœud (anneau = disponibilité 24 h, couleur = état, temps de réponse), liaisons animées. Survoler ou toucher un nom ou un nœud met l'application en évidence ; la fiche s'ouvre d'un clic.
+- **Logos des projets** (MGA, Autonova, Yiri Invest, EDEN Supervision, Procedia) ; My Family a une pastille « MF » en attendant son logo.
+- Les animations sont coupées pour les personnes qui ont demandé moins de mouvement dans leur système.
+
 ## v0.37.0 — 2026-11-16
 
 Demandé le 2026-11-16 : superviser les documents supprimés, voir la descente de la mémoire, remonter les procédures cibles par personne et les incohérences. Nécessite **Procedia v0.63.0** (nouveaux rapports signés) ; avant sa mise en ligne, les panneaux indiquent que le rapport n'est pas encore disponible.

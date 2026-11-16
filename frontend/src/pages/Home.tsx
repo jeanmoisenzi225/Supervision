@@ -1,75 +1,176 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { AppMark, Constellation } from "../components/Constellation";
 import { Brand } from "../components/Brand";
 import { WeeklyObjectives } from "../components/WeeklyObjectives";
-import { api, type AppOverview } from "../lib/api";
+import { api, type Alert, type AppOverview } from "../lib/api";
+import { STATUS_LABEL, timeAgo } from "../lib/format";
+import { toggleTheme } from "../lib/theme";
+import { useAutoHide } from "../lib/useAutoHide";
 import { usePolling } from "../lib/usePolling";
 import { APP_VERSION } from "../version";
 
-/** Menu général de NJMDev : un module par carte (NJM Supervision et NJM Facturation ouverts, NJM Website à venir). */
+/** Titre du brief, écrit d'après l'état réel des applications. */
+function headline(apps: AppOverview[]): string {
+  const watched = apps.filter((a) => a.status !== "not_deployed" && a.status !== "paused");
+  const bad = watched.filter((a) => a.status === "down" || a.status === "degraded");
+  if (!watched.length) return "Aucune application n'est encore surveillée.";
+  if (!bad.length) return "Tout fonctionne.";
+  const names = bad.map((a) => a.name);
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}`;
+  return bad.length === watched.length ? "Toutes les applications sont en difficulté." : `Tout fonctionne, sauf ${list}.`;
+}
+
+/** Texte qui s'écrit lettre par lettre au chargement, puis change en fondu. */
+function useTypewriter(text: string): string {
+  const [shown, setShown] = useState("");
+  const first = useRef(true);
+  useEffect(() => {
+    if (!first.current || !text) {
+      setShown(text);
+      return;
+    }
+    first.current = false;
+    let i = 0;
+    const t = setInterval(() => {
+      i++;
+      setShown(text.slice(0, i));
+      if (i >= text.length) clearInterval(t);
+    }, 26);
+    return () => clearInterval(t);
+  }, [text]);
+  return shown;
+}
+
+const sev = (s: Alert["severity"]) => (s === "critical" ? "bad" : s === "warning" ? "warn" : "");
+
+/** Accueil NJMDev (v0.38.0) : le brief du jour à gauche, la constellation des applications à droite. */
 export function Home({ onLogout }: { onLogout: () => void }) {
+  const head = useRef<HTMLElement>(null);
+  useAutoHide(head);
   const { data } = usePolling(() => api<{ apps: AppOverview[] }>("/overview"), 30_000);
+  const { data: alerts } = usePolling(() => api<Alert[]>("/alerts?status=open"), 30_000);
+  const { data: billing } = usePolling(() => Promise.all([api<unknown[]>("/billing/clients"), api<unknown[]>("/billing/invoices")]).then(([c, i]) => ({ clients: c.length, invoices: i.length })), 60_000);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [focus, setFocus] = useState<string | null>(null);
+
   const apps = data?.apps ?? [];
   const watched = apps.filter((a) => a.status !== "not_deployed" && a.status !== "paused");
   const down = watched.filter((a) => a.status === "down" || a.status === "degraded");
-  const { data: billing } = usePolling(
-    () => Promise.all([api<unknown[]>("/billing/clients"), api<unknown[]>("/billing/invoices")]).then(([c, i]) => ({ clients: c.length, invoices: i.length })),
-    60_000
-  );
-  const billingSummary = !billing ? "Chargement…" : `${billing.clients} client(s) · ${billing.invoices} facture(s) prévisionnelle(s) ou brouillon(s)`;
-  const alerts = apps.reduce((n, a) => n + a.openAlerts, 0);
-  const summary = !data ? "Chargement…" : down.length ? `${down.length} appli(s) en difficulté · ${alerts} alerte(s)` : `Tout fonctionne · ${watched.length} appli(s) · ${alerts} alerte(s)`;
+  const ok = watched.length - down.length;
+  const open = alerts ?? [];
+  const title = useTypewriter(data ? headline(apps) : "");
+  const sel = apps.find((a) => a.key === selected) ?? null;
+  const today = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <div className="shell home">
-      <header className="home-head">
+      <header className="home-head" ref={head}>
         <Brand size={34} />
-        <button className="link" onClick={onLogout}>
-          Déconnexion
-        </button>
+        <span className="topbar-actions">
+          <button className="link" onClick={() => toggleTheme()}>
+            Clair / sombre
+          </button>
+          <button className="link" onClick={onLogout}>
+            Déconnexion
+          </button>
+        </span>
       </header>
-      <main className="content">
-        <p className="muted home-intro">Le poste de pilotage de NJMDev. Choisissez un module.</p>
-        <div className="modules">
-          <Link to="/supervision" className="card module-card">
-            <span className="module-icon">
-              <svg viewBox="0 0 64 64" width="36" height="36" aria-hidden="true">
-                <polyline points="8,36 22,36 28,20 36,46 42,30 56,30" fill="none" stroke="#22c55e" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            <span className="module-body">
-              <strong>NJM Supervision</strong>
-              <span className="small muted">Disponibilité, alertes, journaux, ressources, clients, backlog et administration de toutes les applis.</span>
-              <span className={`small module-status ${down.length ? "bad" : data ? "ok" : ""}`}>{summary}</span>
-            </span>
-          </Link>
-          <Link to="/facturation" className="card module-card">
-            <span className="module-icon">
-              <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" fill="none" stroke="#6366f1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 3h9l4 4v14H6z" />
-                <path d="M15 3v4h4M9 12h7M9 16h7M9 8h3" />
-              </svg>
-            </span>
-            <span className="module-body">
-              <strong>NJM Facturation</strong>
-              <span className="small muted">Clients, factures prévisionnelles d'après les coûts d'hébergement, lignes libres, aperçu et PDF.</span>
-              <span className="small module-status">{billingSummary}</span>
-            </span>
-          </Link>
-          <div className="card module-card disabled" aria-disabled="true">
-            <span className="module-icon">
-              <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" />
-              </svg>
-            </span>
-            <span className="module-body">
-              <strong>NJM Website</strong>
-              <span className="small muted">Sites internet des clients.</span>
-              <span className="pill">Bientôt</span>
-            </span>
-          </div>
+      <main className="home-grid">
+        <div className="home-left">
+          <div className="eyebrow">{today}</div>
+          <h1 className="home-title">
+            {title}
+            {data && title.length < headline(apps).length && <span className="cursor" />}
+          </h1>
+          <p className="muted home-sub">
+            {data ? `${watched.length} application(s) surveillée(s) · ${open.length} alerte(s) active(s)` : "Chargement…"}
+          </p>
+
+          {open.slice(0, 3).map((a) => (
+            <div key={a.id} className={`attention ${sev(a.severity)}`}>
+              <strong>{a.title}</strong>
+              {a.detail && <span className="muted small">{a.detail}</span>}
+              <span className="attention-foot">
+                <span className="muted small">{timeAgo(a.openedAt)}</span>
+                <Link to="/supervision/alertes" className="small">
+                  Voir les alertes →
+                </Link>
+              </span>
+            </div>
+          ))}
+
+          {watched.length > 0 && (
+            <p className="home-nar">
+              Disponibilité sur 24 h :{" "}
+              {watched.map((a) => {
+                const up = a.checks.map((c) => c.uptime24h).filter((x): x is number => x !== null);
+                const v = up.length ? Math.min(...up) : null;
+                return (
+                  <button key={a.key} className={`chipapp ${a.status !== "ok" ? "warn" : ""}`} onPointerEnter={() => setFocus(a.key)} onPointerLeave={() => setFocus(null)} onClick={() => setSelected(selected === a.key ? null : a.key)}>
+                    <AppMark appKey={a.key} size={16} />
+                    {a.name}
+                    <b>{v !== null ? `${String(v).replace(".", ",")} %` : "—"}</b>
+                  </button>
+                );
+              })}
+            </p>
+          )}
+
+          <section className="home-block">
+            <WeeklyObjectives />
+          </section>
+
+          <section className="home-block">
+            <div className="eyebrow">Modules</div>
+            <div className="home-modules">
+              <Link to="/supervision" className="home-module">
+                <strong>NJM Supervision</strong>
+                <span className="muted small">Disponibilité, alertes, journaux, coûts et administration.</span>
+                <span className="small">{data ? (down.length ? `${down.length} appli(s) en difficulté` : "Tout fonctionne") : "Chargement…"}</span>
+              </Link>
+              <Link to="/facturation" className="home-module">
+                <strong>NJM Facturation</strong>
+                <span className="muted small">Clients, factures prévisionnelles, lignes libres, aperçu et PDF.</span>
+                <span className="small">{billing ? `${billing.clients} client(s) · ${billing.invoices} facture(s)` : "Chargement…"}</span>
+              </Link>
+              <div className="home-module disabled" aria-disabled="true">
+                <strong>NJM Website</strong>
+                <span className="muted small">Sites internet des clients.</span>
+                <span className="pill">Bientôt</span>
+              </div>
+            </div>
+          </section>
         </div>
-        <WeeklyObjectives />
+
+        <aside className="home-right">
+          <div className="home-kpis">
+            <div><small>Applications</small><b>{apps.length}</b></div>
+            <div><small>Nominal</small><b className="ok-t">{ok}</b></div>
+            <div><small>Surveillance</small><b className="warn-t">{down.length}</b></div>
+            <div><small>Alertes</small><b className="warn-t">{open.length}</b></div>
+          </div>
+          {apps.length > 0 && <Constellation apps={apps} selected={selected} focus={focus} onSelect={(k) => setSelected(selected === k ? null : k)} onFocus={setFocus} />}
+          <div className="home-sel">
+            {sel ? (
+              <>
+                <div className="home-sel-head">
+                  <AppMark appKey={sel.key} size={30} />
+                  <div>
+                    <strong>{sel.name}</strong>
+                    <div className="muted small">{sel.description}</div>
+                  </div>
+                  <span className={`pill ${sel.status === "ok" ? "" : "pill-warn"}`}>{STATUS_LABEL[sel.status]}</span>
+                </div>
+                <Link to={`/supervision/applis/${sel.key}`} className="small">
+                  Ouvrir la fiche →
+                </Link>
+              </>
+            ) : (
+              <span className="muted small">Touchez une application pour la détailler.</span>
+            )}
+          </div>
+        </aside>
       </main>
       <footer className="footer">NJMDev v{APP_VERSION}</footer>
     </div>

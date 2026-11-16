@@ -206,3 +206,17 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [ ] Mise en ligne : la partie Procedia (nouvelles routes de rapport, sans changer les écrans) suit le rituel de poussée de Procedia (aucun import en cours, accord du propriétaire) ; la partie Supervision se déploie ensuite.
 - Lien : l'audit BNI du 2026-11-14 (chantier 98 de Procedia) a identifié les incohérences à détecter (doublons d'import, mauvaise catégorie, étapes sans suite).
 - Livré dans la v0.37.0 : onglet « Qualité » (documents, cibles par personne, incohérences), retour de la mémoire au repos et alerte sur l'onglet « En direct ». Reste : mise en ligne de Procedia v0.63.0 (rapports), puis de cette version.
+
+## 20. Refonte visuelle de la Supervision (2026-11-16) 🚧 (lot 1 : v0.38.0)
+
+- Demande (propriétaire) : une refonte moins « générique », très axée tech et belle ; logos de chaque projet ; garder le brief et les animations. Maquette complète validée le 2026-11-16 (accueil « brief + constellation », rejeu, carte des coûts, rivière de Procedia, assistant Malick / Malicka, palette de recherche).
+- Décision : l'en-tête ne reste pas figé (il se retire en descendant et revient en remontant) ; thème clair ou sombre au choix.
+- [x] Lot 1 (v0.38.0) : couleurs et thème clair / sombre, en-tête non figé, accueil (brief, objectifs, constellation reliée aux vraies données), logos.
+- [ ] Lot 2 : tableau de bord et fiche d'application (liste ou constellation, diagnostic replié, rejeu des 6 dernières heures, onglets restylés).
+- [ ] Lot 3 : Alertes, Journaux (flux en direct), Backlog, Claude, Coûts (carte), Réglages.
+- [ ] Lot 4 : Facturation (liste, éditeur, aperçu) ; envoi par e-mail avec le chantier 18.
+- [ ] Palette de recherche (Ctrl ou ⌘ + K) sur toutes les pages.
+- [ ] Brief enrichi : narration d'après les événements, rejeu et rivière de Procedia (rapports du chantier 19).
+- [ ] Malick et Malicka (chantier 97 de Procedia) : service de réponse à définir.
+- [ ] Logo de My Family (pastille « MF » en attendant).
+
