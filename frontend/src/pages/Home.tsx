@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Brand } from "../components/Brand";
+import { WeeklyObjectives } from "../components/WeeklyObjectives";
 import { api, type AppOverview } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
 import { APP_VERSION } from "../version";
@@ -68,6 +69,7 @@ export function Home({ onLogout }: { onLogout: () => void }) {
             </span>
           </div>
         </div>
+        <WeeklyObjectives />
       </main>
       <footer className="footer">NJMDev v{APP_VERSION}</footer>
     </div>

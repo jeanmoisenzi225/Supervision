@@ -284,3 +284,16 @@ model BillingInvoiceLine {
   total           Decimal        @db.Decimal(14, 2)
   @@index([invoiceId, position])
 }
+
+/// Objectif de la semaine (page d'accueil NJMDev, v0.36.0). Un objectif non validé
+/// est reporté sur la semaine suivante : il reste rattaché à sa semaine de création
+/// (`weekStart`, lundi 00:00 UTC) et apparaît dans chaque semaine jusqu'à sa validation.
+model Objective {
+  id        String    @id @default(cuid())
+  title     String
+  weekStart DateTime
+  doneAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([weekStart])
+}

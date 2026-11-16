@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.36.0 — 2026-11-16
+
+Demandé le 2026-11-16 : une section d'objectifs de la semaine sur la page d'accueil, avec report sur la semaine suivante.
+
+- **Objectifs de la semaine** (page d'accueil NJMDev, sous les modules) : on ajoute autant d'objectifs que l'on veut, on les **valide au fur et à mesure** d'une case à cocher (et on peut les rouvrir dans la semaine), on modifie leur texte d'un appui, on les supprime. Une **barre de progression** montre les objectifs validés sur le total de la semaine.
+- **Report automatique** : un objectif non validé passe **sur la semaine suivante** (pastille « reporté », « reporté ×2 »…). Une semaine va du lundi au dimanche (heure d'Abidjan = UTC).
+- **Historique** : les flèches ‹ › parcourent les semaines passées (lecture seule, avec leur progression) ; « Cette semaine » ramène à la semaine en cours. Un objectif validé une semaine passée reste validé.
+- Technique : table `Objective` (migration `20261116100000_objectives`), routes `GET/POST /api/objectives`, `PATCH/DELETE /api/objectives/:id` réservées au super administrateur ; test des semaines et du report (`tests/objectives.test.ts`). Détail dans `docs/architecture.md`.
+
 ## v0.35.7 — 2026-11-13
 
 - **iPhone Duo, écran intérieur : plus de défilement parasite de 82 px.** Les mesures de l'appareil (iOS 27.2.1, application installée) montrent que la zone de mise en page de la page (`100svh` = `clientHeight`, 869 px en portrait, 587 en paysage) est 82 px plus courte que l'écran (`100vh` = `100dvh` = `100lvh`, 951 et 669 px). Une page haute de 100vh dépassait donc la zone de mise en page et défilait pour rien. La page est calée sur `100svh` (sans effet sur les autres appareils) ; un élément fixe, lui, couvre bien tout l'écran. Détail dans `docs/iphone-duo.md`.

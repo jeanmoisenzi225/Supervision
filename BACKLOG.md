@@ -168,14 +168,15 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [ ] Mesurer sur l'appareil (iOS 27.2.1, application installée) les marges de sécurité et la zone donnée à la page : Réglages › Affichage › Mesurer l'écran (`/ecran`), captures dans l'application puis dans Safari.
 - [ ] Colonne laissée à droite (rail de la barre d'état) : aucune solution web connue ; Apple étudie un affichage bord à bord simplifié. À réexaminer après la mesure.
 
-## 17. Objectifs de la semaine sur la page d'accueil (2026-11-16)
+## 17. Objectifs de la semaine sur la page d'accueil (2026-11-16) ✅ (v0.36.0)
 
 - Demande (propriétaire) : sur la page d'accueil de la Supervision NJMDev, sous les modules, une section **« Objectifs de la semaine »**. On y ajoute **autant d'objectifs que l'on veut** et on **les valide au fur et à mesure** quand ils sont atteints.
 - Exemple d'usage donné (semaine du 16 novembre 2026) : faire la facturation de Procedia et envoyer la facture d'Autonova ; stabiliser Procedia ; faire un retour sur l'ensemble des imports effectués par les consultants (incohérences, doublons).
 - À cadrer avec le propriétaire avant de développer :
-  - [ ] Ajout, modification, suppression, validation par case à cocher (décochage possible), saisie rapide au clavier et au doigt (iPhone, iPhone Duo).
-  - [ ] Notion de semaine : objectifs rattachés à la semaine en cours (lundi à dimanche) ; ce qui n'est pas validé en fin de semaine : reporté à la semaine suivante ou archivé (à choisir).
-  - [ ] Historique des semaines précédentes consultable, avec la progression (objectifs validés / total).
-  - [ ] Stockage dans la base de la Supervision (table dédiée, migration) ; accès réservé au propriétaire ; aucune donnée client dans les objectifs.
-  - [ ] Barre de progression de la semaine sur la page d'accueil ; option : lien d'un objectif vers un chantier du backlog.
-  - [ ] Documentation (`docs/`) et version à mettre à jour avec le développement.
+  - [x] Ajout, modification, suppression, validation par case à cocher (décochage possible), saisie rapide au clavier et au doigt (iPhone, iPhone Duo).
+  - [x] Notion de semaine : objectifs rattachés à la semaine en cours (lundi à dimanche) ; ce qui n'est pas validé en fin de semaine : reporté à la semaine suivante ou archivé (décidé le 2026-11-16 : reporté sur la semaine suivante).
+  - [x] Historique des semaines précédentes consultable, avec la progression (objectifs validés / total).
+  - [x] Stockage dans la base de la Supervision (table dédiée, migration) ; accès réservé au propriétaire ; aucune donnée client dans les objectifs.
+  - [x] Barre de progression de la semaine sur la page d'accueil.
+  - [x] Documentation (`docs/architecture.md`) et version (v0.36.0) mises à jour.
+  - Non repris dans cette première version : lien d'un objectif vers un chantier du backlog (option).
