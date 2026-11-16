@@ -19,7 +19,8 @@ export function useStagedHide(ref: RefObject<HTMLElement | null>): void {
       const el = ref.current;
       if (!el) return;
       const list = levels();
-      hidden = Math.max(0, Math.min(hidden, list.length));
+      // Le niveau le plus proche du contenu reste toujours figé : on ne retire jamais le dernier.
+      hidden = Math.max(0, Math.min(hidden, list.length - 1));
       let offset = 0;
       for (let i = 0; i < hidden; i++) offset += list[i].offsetHeight;
       el.style.transform = offset ? `translateY(-${offset}px)` : "";
@@ -37,7 +38,7 @@ export function useStagedHide(ref: RefObject<HTMLElement | null>): void {
         } else if (d > 0) {
           acc = acc > 0 ? acc + d : d;
           if (acc >= STEP_DOWN) {
-            hidden++;
+            hidden = Math.min(hidden + 1, Math.max(0, levels().length - 1));
             acc = 0;
           }
         } else if (d < 0) {

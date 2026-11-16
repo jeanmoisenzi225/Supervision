@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.41.1 — 2026-11-16
+
+- **En-tête par niveaux** : le niveau le plus proche du contenu reste désormais toujours affiché. Avec un seul niveau (accueil), il reste figé ; avec deux, seul le premier se retire au défilement, et ainsi de suite.
+
 ## v0.41.0 — 2026-11-16
 
 Demandé le 2026-11-16 : un accueil épuré, les informations d'une appli seulement quand on clique sur son logo, une constellation plus grande et plus lumineuse, le thème rangé dans un bouton Paramètres.
