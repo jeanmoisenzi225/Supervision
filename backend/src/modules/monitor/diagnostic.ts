@@ -8,6 +8,7 @@ import { listJobs } from "../jobs/jobs.service";
 import { DISK_ALERT, EXPIRY_WARN_DAYS, getAppResources, MEMORY_ALERT } from "../resources/resources.service";
 import { last, percent } from "../resources/units";
 import { checkNow } from "./monitor";
+import { signAdminRequest } from "../../utils/adminSignature";
 
 export type DiagStatus = "ok" | "warn" | "ko" | "info";
 
@@ -23,6 +24,19 @@ const RANK: Record<DiagStatus, number> = { info: 0, ok: 1, warn: 2, ko: 3 };
 /** État d'ensemble : le pire des points vérifiés (fonction pure, testée). */
 export function overallStatus(items: DiagItem[]): DiagStatus {
   return items.reduce<DiagStatus>((worst, i) => (RANK[i.status] > RANK[worst] ? i.status : worst), "ok");
+}
+
+/**
+ * État du lien d'envoi des journaux. Une appli n'écrit un journal que lorsqu'il se passe quelque chose
+ * (démarrage, erreur, import…) : un silence de plus d'un jour n'est donc qu'une information, pas un
+ * avertissement. Seule l'absence totale de journal (lien jamais branché) en est un.
+ */
+export function logsStatus(lastReceivedAt: Date | null, now = new Date()): { status: DiagStatus; detail: string } {
+  if (!lastReceivedAt) return { status: "warn", detail: "Aucun journal reçu : vérifier SUPERVISION_URL et SUPERVISION_INGEST_TOKEN dans l'appli." };
+  const recent = now.getTime() - lastReceivedAt.getTime() < 24 * 3600_000;
+  return recent
+    ? { status: "ok", detail: `Dernier journal reçu ${ago(lastReceivedAt)}.` }
+    : { status: "info", detail: `Dernier journal reçu ${ago(lastReceivedAt)}. L'appli n'envoie un journal que lors d'un événement (démarrage, erreur, import) : ce silence est normal si elle fonctionne.` };
 }
 
 export function uptimeStatus(pct: number | null): DiagStatus {
@@ -231,19 +245,21 @@ export async function runDiagnostic(app: AppTarget) {
     items.push({ id: "logs", label: "Journaux", status: "info", detail: "Non branchés." });
   } else {
     const last = await prisma.logEntry.findFirst({ where: { appKey: app.key }, orderBy: { id: "desc" }, select: { receivedAt: true } });
-    items.push({
-      id: "logs",
-      label: "Journaux",
-      status: !last ? "warn" : Date.now() - last.receivedAt.getTime() < 24 * 3600_000 ? "ok" : "warn",
-      detail: last ? `Dernier journal reçu ${ago(last.receivedAt)}.` : "Aucun journal reçu : vérifier SUPERVISION_URL et SUPERVISION_INGEST_TOKEN dans l'appli.",
-    });
+    const logs = logsStatus(last?.receivedAt ?? null);
+    items.push({ id: "logs", label: "Journaux", status: logs.status, detail: logs.detail });
   }
 
   // 6. Actions d'administration de l'appli.
   if (app.adminUrl && app.adminToken) {
     try {
+      // Les applis refusent tout appel non signé (protocole signé, voir utils/adminSignature.ts).
+      const timestamp = Date.now();
       const res = await fetch(`${app.adminUrl}/supervision/actions`, {
-        headers: { Authorization: `Bearer ${app.adminToken}` },
+        headers: {
+          Accept: "application/json",
+          "X-Supervision-Timestamp": String(timestamp),
+          "X-Supervision-Signature": signAdminRequest(app.adminToken, timestamp, "GET", "/actions", ""),
+        },
         signal: AbortSignal.timeout(15_000),
       });
       items.push({ id: "admin", label: "Actions de l'appli", status: res.ok ? "ok" : "ko", detail: res.ok ? "Joignables." : `L'appli a répondu ${res.status}.` });

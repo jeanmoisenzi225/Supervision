@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.36.1 — 2026-11-16
+
+- **Correction : fausse alerte « Actions de l'appli : l'appli a répondu 401 ».** Le diagnostic d'une appli envoyait encore l'ancienne requête (jeton seul) ; les applis n'acceptent plus que le protocole signé et répondaient donc 401 à chaque fois, alors que les actions elles-mêmes fonctionnaient. Le diagnostic signe maintenant sa requête comme les vraies actions.
+- **Correction : voyant « Journaux » orange à tort.** Une appli n'envoie un journal que lors d'un événement (démarrage, erreur, import) : un silence de plus de 24 h n'est plus un avertissement mais une information (« ce silence est normal si elle fonctionne »). L'avertissement reste pour l'appli qui n'a jamais envoyé de journal (lien non branché).
+
 ## v0.36.0 — 2026-11-16
 
 Demandé le 2026-11-16 : une section d'objectifs de la semaine sur la page d'accueil, avec report sur la semaine suivante.
