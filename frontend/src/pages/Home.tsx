@@ -6,7 +6,7 @@ import { WeeklyObjectives } from "../components/WeeklyObjectives";
 import { api, type Alert, type AppOverview } from "../lib/api";
 import { STATUS_LABEL, timeAgo } from "../lib/format";
 import { toggleTheme } from "../lib/theme";
-import { useAutoHide } from "../lib/useAutoHide";
+import { useStagedHide } from "../lib/useStagedHide";
 import { usePolling } from "../lib/usePolling";
 import { APP_VERSION } from "../version";
 
@@ -46,8 +46,8 @@ const sev = (s: Alert["severity"]) => (s === "critical" ? "bad" : s === "warning
 
 /** Accueil NJMDev (v0.38.0) : le brief du jour à gauche, la constellation des applications à droite. */
 export function Home({ onLogout }: { onLogout: () => void }) {
-  const head = useRef<HTMLElement>(null);
-  useAutoHide(head);
+  const head = useRef<HTMLDivElement>(null);
+  useStagedHide(head);
   const { data } = usePolling(() => api<{ apps: AppOverview[] }>("/overview"), 30_000);
   const { data: alerts } = usePolling(() => api<Alert[]>("/alerts?status=open"), 30_000);
   const { data: billing } = usePolling(() => Promise.all([api<unknown[]>("/billing/clients"), api<unknown[]>("/billing/invoices")]).then(([c, i]) => ({ clients: c.length, invoices: i.length })), 60_000);
@@ -65,7 +65,8 @@ export function Home({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="shell home">
-      <header className="home-head" ref={head}>
+      <div className="hstack" id="hstack" ref={head}>
+        <header className="lvl home-head">
         <Brand size={34} />
         <span className="topbar-actions">
           <button className="link" onClick={() => toggleTheme()}>
@@ -76,6 +77,7 @@ export function Home({ onLogout }: { onLogout: () => void }) {
           </button>
         </span>
       </header>
+      </div>
       <main className="home-grid">
         <div className="home-left">
           <div className="eyebrow">{today}</div>

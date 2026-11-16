@@ -494,3 +494,13 @@ button.primary { color: var(--bg); }
 @media (prefers-reduced-motion: reduce) { .c-flow, .c-pulse, .cursor, .attention::before { animation: none !important; } .topbar, .home-head { transition: none; } }
 [data-theme="light"] .brand-mark img, [data-theme="light"] .c-hub { filter: invert(1); }
 .home-title { min-height: 56px; }
+
+/* En-tête par niveaux (v0.38.1) : une rangée .lvl par niveau, retirées l'une après l'autre au défilement */
+.hstack { position: sticky; top: 0; z-index: 10; transition: transform 0.28s ease; will-change: transform; }
+.lvl { background: color-mix(in srgb, var(--bg) 94%, transparent); border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); }
+.hstack .topbar, .hstack .home-head { position: static; background: none; border-bottom: 0; backdrop-filter: none; transition: none; }
+.hstack .topbar { flex-wrap: nowrap; justify-content: space-between; padding-bottom: 8px; }
+.hstack .subbar { padding: 0 16px 8px; margin: 0; flex: none; max-width: none; }
+.hstack .tabs-lvl .tabs { margin: 0; padding: 4px 16px 0; border-bottom: 0; }
+.hstack .tabs-lvl { border-top: 1px solid var(--border); }
+@media (prefers-reduced-motion: reduce) { .hstack { transition: none; } }

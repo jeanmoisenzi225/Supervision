@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.38.1 — 2026-11-16
+
+- **En-tête par niveaux.** Les rangées de l'en-tête se retirent **l'une après l'autre** quand on descend dans la page (barre NJMDev, puis navigation du module, puis onglets d'une fiche d'appli) et reviennent **par niveau** quand on remonte, en commençant par celui qui touche le contenu. Environ 70 px de défilement retirent un niveau, 40 px en font revenir un ; en haut de page, tout est visible. Avant, l'en-tête partait d'un bloc.
+- La barre NJMDev (marque, thème, déconnexion) et la navigation du module (Tableau de bord, Alertes…) sont maintenant deux rangées distinctes ; les onglets d'une fiche d'appli deviennent un niveau de plus.
+
 ## v0.38.0 — 2026-11-16
 
 Refonte visuelle, lot 1 (maquette validée le 2026-11-16). Les autres pages gardent leur disposition ; elles prennent les nouvelles couleurs.

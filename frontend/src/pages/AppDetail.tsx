@@ -4,6 +4,7 @@ import { AlertsList } from "../components/AlertsList";
 import { DiagnosticPanel } from "../components/DiagnosticPanel";
 import { PauseControls } from "../components/PauseControls";
 import { LogsView } from "../components/LogsView";
+import { StackLevel } from "../components/StackLevel";
 import { StatusBadge } from "../components/StatusBadge";
 import { api, type AppOverview } from "../lib/api";
 import { dateTime, pauseLabel, timeAgo } from "../lib/format";
@@ -64,45 +65,47 @@ export function AppDetail() {
       )}
       <DiagnosticPanel app={app} onDone={() => void refresh()} />
 
-      <div className="tabs">
-        <button className={tab === "dispo" ? "active" : ""} onClick={() => setTab("dispo")}>
-          Disponibilité
-        </button>
-        <button className={tab === "direct" ? "active" : ""} onClick={() => setTab("direct")}>
-          En direct
-        </button>
-        <button className={tab === "chrono" ? "active" : ""} onClick={() => setTab("chrono")}>
-          Chronologie
-        </button>
-        <button className={tab === "clients" ? "active" : ""} onClick={() => setTab("clients")}>
-          Clients
-        </button>
-        <button className={tab === "ressources" ? "active" : ""} onClick={() => setTab("ressources")}>
-          Ressources
-        </button>
-        <button className={tab === "taches" ? "active" : ""} onClick={() => setTab("taches")}>
-          Tâches
-        </button>
-        {app.key === "procedia" && (
-          <button className={tab === "imports" ? "active" : ""} onClick={() => setTab("imports")}>
-            Imports
+      <StackLevel>
+        <div className="tabs">
+          <button className={tab === "dispo" ? "active" : ""} onClick={() => setTab("dispo")}>
+            Disponibilité
           </button>
-        )}
-        {app.key === "procedia" && (
-          <button className={tab === "qualite" ? "active" : ""} onClick={() => setTab("qualite")}>
-            Qualité
+          <button className={tab === "direct" ? "active" : ""} onClick={() => setTab("direct")}>
+            En direct
           </button>
-        )}
-        <button className={tab === "journaux" ? "active" : ""} onClick={() => setTab("journaux")}>
-          Journaux
-        </button>
-        <button className={tab === "alertes" ? "active" : ""} onClick={() => setTab("alertes")}>
-          Alertes {app.openAlerts ? `(${app.openAlerts})` : ""}
-        </button>
-        <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>
-          Administration
-        </button>
-      </div>
+          <button className={tab === "chrono" ? "active" : ""} onClick={() => setTab("chrono")}>
+            Chronologie
+          </button>
+          <button className={tab === "clients" ? "active" : ""} onClick={() => setTab("clients")}>
+            Clients
+          </button>
+          <button className={tab === "ressources" ? "active" : ""} onClick={() => setTab("ressources")}>
+            Ressources
+          </button>
+          <button className={tab === "taches" ? "active" : ""} onClick={() => setTab("taches")}>
+            Tâches
+          </button>
+          {app.key === "procedia" && (
+            <button className={tab === "imports" ? "active" : ""} onClick={() => setTab("imports")}>
+              Imports
+            </button>
+          )}
+          {app.key === "procedia" && (
+            <button className={tab === "qualite" ? "active" : ""} onClick={() => setTab("qualite")}>
+              Qualité
+            </button>
+          )}
+          <button className={tab === "journaux" ? "active" : ""} onClick={() => setTab("journaux")}>
+            Journaux
+          </button>
+          <button className={tab === "alertes" ? "active" : ""} onClick={() => setTab("alertes")}>
+            Alertes {app.openAlerts ? `(${app.openAlerts})` : ""}
+          </button>
+          <button className={tab === "admin" ? "active" : ""} onClick={() => setTab("admin")}>
+            Administration
+          </button>
+        </div>
+      </StackLevel>
 
       {tab === "dispo" && (
         <>

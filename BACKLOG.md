@@ -210,7 +210,7 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 ## 20. Refonte visuelle de la Supervision (2026-11-16) 🚧 (lot 1 : v0.38.0)
 
 - Demande (propriétaire) : une refonte moins « générique », très axée tech et belle ; logos de chaque projet ; garder le brief et les animations. Maquette complète validée le 2026-11-16 (accueil « brief + constellation », rejeu, carte des coûts, rivière de Procedia, assistant Malick / Malicka, palette de recherche).
-- Décision : l'en-tête ne reste pas figé (il se retire en descendant et revient en remontant) ; thème clair ou sombre au choix.
+- Décision : l'en-tête ne reste pas figé : **par niveaux** (chaque rangée se retire l'une après l'autre en descendant et revient par niveau en remontant, v0.38.1) ; thème clair ou sombre au choix.
 - [x] Lot 1 (v0.38.0) : couleurs et thème clair / sombre, en-tête non figé, accueil (brief, objectifs, constellation reliée aux vraies données), logos.
 - [ ] Lot 2 : tableau de bord et fiche d'application (liste ou constellation, diagnostic replié, rejeu des 6 dernières heures, onglets restylés).
 - [ ] Lot 3 : Alertes, Journaux (flux en direct), Backlog, Claude, Coûts (carte), Réglages.
@@ -219,4 +219,13 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [ ] Brief enrichi : narration d'après les événements, rejeu et rivière de Procedia (rapports du chantier 19).
 - [ ] Malick et Malicka (chantier 97 de Procedia) : service de réponse à définir.
 - [ ] Logo de My Family (pastille « MF » en attendant).
+
+### Maquette et application : ce qui est réel (2026-11-16)
+
+- **Déjà réel (v0.38.0)** : titre du brief, alertes ouvertes, disponibilité sur 24 h, objectifs de la semaine, modules, constellation, thème clair / sombre, en-tête par niveaux. Les autres pages n'ont pris que les couleurs.
+- **Maquette seulement, données déjà disponibles** : rejeu des 6 dernières heures (relevés, alertes, redémarrages et mises en ligne Render déjà enregistrés, voir l'onglet Chronologie), carte des coûts et de la mémoire (coûts et ressources déjà relevés), palette de recherche, flux de journaux en direct, diagnostic replié, brief narratif sur imports / mémoire / documents (rapports de Procedia v0.63.0).
+- **Maquette seulement, données à créer** : rivière de Procedia (manque le total des procédures supprimées et les saisies manuelles), trafic par heure (requêtes), trafic sortant par appli (relevé Render à ajouter), Malick et Malicka (chantier 97 de Procedia).
+- **L'application réelle est plus complète que la maquette** sur : onglets Imports et Qualité de Procedia, facturation, réglages de sécurité, actions d'administration. À ne pas appauvrir.
+- Données de la maquette **inventées** : chiffres de l'assistant, journaux, montants de facture, dépenses Claude, noms de comptes.
+- Ordre proposé pour le lot 2 : rejeu avec les vraies données, palette de recherche, diagnostic replié ; rivière et assistant plus tard.
 
