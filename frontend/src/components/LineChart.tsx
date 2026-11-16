@@ -13,6 +13,8 @@ interface Props {
   rangeHours: number;
   /** Arrêts du service (v0.28.0) : trait vertical rouge (mémoire saturée) ou orange (autre arrêt). */
   marks?: { at: number; kind: "memory" | "other" }[];
+  /** Périodes à teinter (imports en cours, v0.37.0) ; `to` null = jusqu'à la fin de la période affichée. */
+  bands?: { from: number; to: number | null; label?: string }[];
 }
 
 const W = 600;
@@ -28,7 +30,7 @@ function timeLabel(t: number, rangeHours: number): string {
 }
 
 /** Courbe d'une seule série, avec limite et seuil facultatifs, réticule et infobulle au survol ou au toucher. */
-export function LineChart({ title, points, format, limit, threshold, rangeHours, marks = [] }: Props) {
+export function LineChart({ title, points, format, limit, threshold, rangeHours, marks = [], bands = [] }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<number | null>(null);
 
@@ -118,6 +120,17 @@ export function LineChart({ title, points, format, limit, threshold, rangeHours,
               </text>
             </g>
           )}
+          {bands
+            .filter((b) => (b.to ?? geo.t1) >= geo.t0 && b.from <= geo.t1)
+            .map((b) => {
+              const x0 = geo.x(Math.max(b.from, geo.t0));
+              const x1 = geo.x(Math.min(b.to ?? geo.t1, geo.t1));
+              return (
+                <rect key={b.from} className="band" x={x0} y={PAD.top} width={Math.max(2, x1 - x0)} height={H - PAD.top - PAD.bottom}>
+                  <title>{b.label ?? "Import en cours"}</title>
+                </rect>
+              );
+            })}
           {marks
             .filter((m) => m.at >= geo.t0 && m.at <= geo.t1)
             .map((m) => (

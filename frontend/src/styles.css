@@ -413,3 +413,14 @@ html.standalone input, html.standalone textarea, html.standalone [contenteditabl
 .objectives-add { display: flex; gap: 8px; }
 .objectives-add input { flex: 1; min-width: 0; }
 @media (pointer: coarse) { .objective-check { width: 44px; height: 44px; } .objectives-nav .link { min-width: 44px; min-height: 44px; } }
+
+/* Courbes : périodes d'import teintées ; suivi de la qualité (v0.37.0) */
+.chart .band { fill: var(--info); opacity: 0.16; }
+.quality-types { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.quality-types li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); font-size: 14px; }
+.quality-types li.zero { opacity: 0.55; }
+.sev-high { color: #fca5a5; }
+.sev-medium { color: #fcd34d; }
+.sev-low { color: var(--muted); }
+.table th { text-align: left; font-weight: 600; color: var(--muted); padding: 6px 4px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.table-scroll { overflow-x: auto; }

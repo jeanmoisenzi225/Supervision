@@ -16,11 +16,22 @@ interface Sample {
   uptimeSec: number | null;
   error: string | null;
 }
+interface Episode {
+  startAt: number;
+  endAt: number | null;
+  baselineMb: number | null;
+  peakMb: number | null;
+  lastMb: number | null;
+  restAt: number | null;
+  restAfterSec: number | null;
+  interrupted: boolean;
+}
 interface LiveData {
   supported: boolean;
   minutes: number;
   samples: Sample[];
   restarts: { at: number; lastRssMb: number | null; kind: "memory" | "other" }[];
+  episodes?: Episode[];
   last: Sample | null;
   current: { at: number; report: { imports?: { running: number; usedMb?: number; budgetMb?: number }; runningImports?: { id: string; sinceSec: number; sizeMb: number | null }[] } } | null;
 }
@@ -118,7 +129,8 @@ export function LivePanel({ app }: { app: AppOverview }) {
           )}
         </div>
       )}
-      <LineChart title="Mémoire réelle du service" points={rss} format={formatBytes} rangeHours={minutes / 60} limit={{ value: 512 * 1024 * 1024, label: "limite 512 Mo" }} threshold={{ value: 512 * 1024 * 1024 * 0.8, label: "alerte 80 %" }} marks={data.restarts.map((r) => ({ at: r.at, kind: r.kind }))} />
+      <LineChart title="Mémoire réelle du service" points={rss} format={formatBytes} rangeHours={minutes / 60} limit={{ value: 512 * 1024 * 1024, label: "limite 512 Mo" }} threshold={{ value: 512 * 1024 * 1024 * 0.8, label: "alerte 80 %" }} marks={data.restarts.map((r) => ({ at: r.at, kind: r.kind }))} bands={(data.episodes ?? []).map((e) => ({ from: e.startAt, to: e.endAt }))} />
+      <Episodes episodes={data.episodes ?? []} />
       {data.restarts.length > 0 && (
         <ul className="small">
           {data.restarts.map((r) => (
@@ -132,5 +144,57 @@ export function LivePanel({ app }: { app: AppOverview }) {
       <LineChart title="Retard de la boucle d'événements (pic)" points={lag} format={(v) => `${Math.round(v)} ms`} rangeHours={minutes / 60} marks={data.restarts.map((r) => ({ at: r.at, kind: r.kind }))} />
       <p className="muted small">Relevé toutes les 15 secondes, page actualisée toutes les 5 secondes{updatedAt ? ` (dernière : ${updatedAt.toLocaleTimeString("fr-FR")})` : ""}. Conservé 7 jours.</p>
     </section>
+  );
+}
+
+const clock = (at: number) => new Date(at).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+/** Imports sur la période et retour de la mémoire à son niveau de base (la teinte bleue de la courbe). */
+function Episodes({ episodes }: { episodes: Episode[] }) {
+  if (episodes.length === 0) return <p className="muted small">Aucun import sur la période : pas de retour de mémoire à mesurer.</p>;
+  const rests = episodes.filter((e) => e.restAfterSec !== null).map((e) => e.restAfterSec!);
+  const avg = rests.length ? Math.round(rests.reduce((a, b) => a + b, 0) / rests.length) : null;
+  return (
+    <div>
+      <h4 style={{ margin: "12px 0 6px" }}>
+        Imports et retour de la mémoire au repos
+        {avg !== null && <span className="muted small"> · retour moyen en {duration(avg)}</span>}
+      </h4>
+      <div className="table-scroll">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Début</th>
+              <th>Durée</th>
+              <th className="num">Base</th>
+              <th className="num">Pic</th>
+              <th>Retour au repos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...episodes].reverse().map((e) => (
+              <tr key={e.startAt}>
+                <td className="small">{clock(e.startAt)}</td>
+                <td className="small">{e.endAt ? duration(Math.round((e.endAt - e.startAt) / 1000)) : "en cours"}</td>
+                <td className="num">{e.baselineMb !== null ? mb(e.baselineMb) : "—"}</td>
+                <td className="num">{e.peakMb !== null ? mb(e.peakMb) : "—"}</td>
+                <td className="small">
+                  {e.endAt === null
+                    ? "import en cours"
+                    : e.restAt !== null
+                      ? `✓ en ${duration(e.restAfterSec!)}`
+                      : e.interrupted
+                        ? "interrompu par un nouvel import"
+                        : e.baselineMb === null
+                          ? "base inconnue"
+                          : `pas encore (${e.lastMb !== null ? mb(e.lastMb) : "?"})`}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted small">Retour au repos = mémoire à moins de 15 % (30 Mo au minimum) au-dessus du niveau d'avant l'import. Alerte si elle n'est pas redescendue 15 minutes après la fin d'un import.</p>
+    </div>
   );
 }

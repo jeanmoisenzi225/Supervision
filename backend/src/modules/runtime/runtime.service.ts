@@ -1,3 +1,4 @@
+import { importEpisodes, notSettled, restLimit } from "./rest";
 import { apps, type AppTarget } from "../../config/apps";
 import { prisma } from "../../db/prisma";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
@@ -188,8 +189,23 @@ export async function watchTrends(app: AppTarget, report: RuntimeReport, now = n
   }
   // Redémarrages en boucle : 3 en une heure.
   const since = new Date(now.getTime() - RESTART_LOOP.windowMs);
-  const rows = await prisma.runtimeSample.findMany({ where: { appKey: app.key, at: { gte: since } }, orderBy: { at: "asc" }, select: { at: true, ok: true, startedAt: true, rssMb: true } });
+  const rows = await prisma.runtimeSample.findMany({ where: { appKey: app.key, at: { gte: since } }, orderBy: { at: "asc" }, select: { at: true, ok: true, startedAt: true, rssMb: true, imports: true } });
   const n = restartsWithin(detectRestarts(rows), now, RESTART_LOOP.windowMs);
+  // Mémoire non redescendue 15 minutes après la fin d'un import (v0.37.0).
+  const restFp = `mem-no-rest:${app.key}`;
+  const stuck = notSettled(importEpisodes(rows.map((r) => ({ at: r.at.getTime(), ok: r.ok, rssMb: r.rssMb, imports: r.imports }))), now.getTime());
+  if (stuck && stuck.baselineMb !== null) {
+    await raiseAlert({
+      appKey: app.key,
+      kind: "app",
+      severity: "warning",
+      title: `${app.name} — la mémoire ne redescend pas après un import (${Math.round(stuck.lastMb ?? 0)} Mo, base ${Math.round(stuck.baselineMb)} Mo)`,
+      detail: `Import terminé à ${stamp(new Date(stuck.endAt!))}, pic ${Math.round(stuck.peakMb ?? 0)} Mo : la mémoire est toujours au-dessus de ${Math.round(restLimit(stuck.baselineMb))} Mo (base + 15 %) depuis plus de 15 minutes, signe possible d'une fuite. Voir l'onglet « En direct ».`,
+      fingerprint: restFp,
+    });
+  } else {
+    await resolveAlert(app.key, restFp, `${app.name} — la mémoire est redescendue`);
+  }
   const loopFp = `restart-loop:${app.key}`;
   if (n >= RESTART_LOOP.count) {
     await raiseAlert({ appKey: app.key, kind: "app", severity: "critical", title: `${app.name} — redémarrages en boucle : ${n} en 1 heure`, detail: "Le service redémarre sans cesse (souvent mémoire saturée). Voir l'onglet « En direct » et « Chronologie ».", fingerprint: loopFp });

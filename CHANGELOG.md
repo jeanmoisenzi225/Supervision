@@ -1,5 +1,17 @@
 # Journal des versions
 
+## v0.37.0 — 2026-11-16
+
+Demandé le 2026-11-16 : superviser les documents supprimés, voir la descente de la mémoire, remonter les procédures cibles par personne et les incohérences. Nécessite **Procedia v0.63.0** (nouveaux rapports signés) ; avant sa mise en ligne, les panneaux indiquent que le rapport n'est pas encore disponible.
+
+- **Onglet « Qualité » de Procedia** (3 vues) :
+  - **Documents** : documents supprimés (à la validation ou automatiquement) avec le cumul et le détail par jour sur 7, 30 ou 90 jours, documents encore conservés (nombre, taille, échéances), répartition par client et dernières suppressions (fichier, personne) ;
+  - **Procédures cibles** : actuelles, validées, cibles créées et validées, avec l'avancement ; **par personne**, par client et par catégorie ;
+  - **Incohérences** : compteurs par type et gravité (document importé plusieurs fois, même document dans plusieurs catégories, cible sans actuelle validée, numéro de fichier qui ne correspond pas à la catégorie, brouillon dont le document va expirer, anomalies de structure), liste filtrable par gravité ou par type, bouton « Recalculer ».
+- **Onglet « En direct » : retour de la mémoire au repos.** Les périodes d'import sont teintées en bleu sur la courbe de mémoire, et un tableau donne pour chaque import le niveau de base, le pic et le **temps mis par la mémoire pour redescendre** (à moins de 15 %, 30 Mo au minimum, au-dessus du niveau d'avant l'import). Un import lancé avant le retour au repos garde le niveau de base du précédent.
+- **Nouvelle alerte** « la mémoire ne redescend pas après un import » : si 15 minutes après la fin d'un import la mémoire est toujours au-dessus du niveau de base + 15 % (signe possible d'une fuite).
+- Technique : routes `GET /api/apps/:key/qualite/{documents,cibles,incoherences}` (relais des rapports signés de Procedia), `episodes` dans `GET /api/apps/:key/runtime` (`backend/src/modules/runtime/rest.ts`), tests `tests/rest.test.ts`. Détail dans `docs/architecture.md`.
+
 ## v0.36.1 — 2026-11-16
 
 - **Correction : fausse alerte « Actions de l'appli : l'appli a répondu 401 ».** Le diagnostic d'une appli envoyait encore l'ancienne requête (jeton seul) ; les applis n'acceptent plus que le protocole signé et répondaient donc 401 à chaque fois, alors que les actions elles-mêmes fonctionnaient. Le diagnostic signe maintenant sa requête comme les vraies actions.

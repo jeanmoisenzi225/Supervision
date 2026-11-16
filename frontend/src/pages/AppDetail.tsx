@@ -10,13 +10,14 @@ import { dateTime, pauseLabel, timeAgo } from "../lib/format";
 import { usePolling } from "../lib/usePolling";
 import { AdminPanel } from "./AdminPanel";
 import { ImportsPanel } from "./ImportsPanel";
+import { QualityPanel } from "./QualityPanel";
 import { JobsPanel } from "./JobsPanel";
 import { LivePanel } from "./LivePanel";
 import { TimelinePanel } from "./TimelinePanel";
 import { TenantsPanel } from "./TenantsPanel";
 import { ResourcesPanel } from "./ResourcesPanel";
 
-type Tab = "dispo" | "direct" | "chrono" | "clients" | "ressources" | "taches" | "imports" | "journaux" | "alertes" | "admin";
+type Tab = "dispo" | "direct" | "chrono" | "clients" | "ressources" | "taches" | "imports" | "qualite" | "journaux" | "alertes" | "admin";
 
 interface ChecksData {
   hourly: { checkId: string; hour: string; total: number; ok: number; avgLatencyMs: number }[];
@@ -85,6 +86,11 @@ export function AppDetail() {
         {app.key === "procedia" && (
           <button className={tab === "imports" ? "active" : ""} onClick={() => setTab("imports")}>
             Imports
+          </button>
+        )}
+        {app.key === "procedia" && (
+          <button className={tab === "qualite" ? "active" : ""} onClick={() => setTab("qualite")}>
+            Qualité
           </button>
         )}
         <button className={tab === "journaux" ? "active" : ""} onClick={() => setTab("journaux")}>
@@ -193,6 +199,8 @@ export function AppDetail() {
       {tab === "taches" && <JobsPanel app={app} />}
 
       {tab === "imports" && <ImportsPanel app={app} />}
+
+      {tab === "qualite" && <QualityPanel app={app} />}
 
       {tab === "alertes" && <AlertsList app={app.key} />}
 

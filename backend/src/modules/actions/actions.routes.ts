@@ -140,6 +140,27 @@ actionsRouter.get("/:key/imports", async (req, res) => {
   }
 });
 
+/** Suivi de la qualité (Procedia v0.63.0) : documents supprimés, cibles par personne, incohérences, relayés depuis les rapports signés. */
+const QUALITY_REPORTS = ["documents", "cibles", "incoherences"] as const;
+actionsRouter.get("/:key/qualite/:name", async (req, res) => {
+  const app = getApp(req.params.key);
+  const name = QUALITY_REPORTS.find((n) => n === req.params.name);
+  if (!name) throw new HttpError(404, "Rapport inconnu");
+  if (!app.adminUrl || !app.adminToken) return res.json({ configured: false });
+  const qs = new URLSearchParams();
+  for (const k of ["days", "refresh"] as const) {
+    const v = req.query[k];
+    if (typeof v === "string" && /^[\w:.\-]{1,10}$/.test(v)) qs.set(k, v);
+  }
+  try {
+    const r = await callApp<Record<string, unknown>>(app, `/supervision/reports/${name}${qs.size ? `?${qs}` : ""}`);
+    res.json({ configured: true, ...r });
+  } catch (err) {
+    const message = (err as Error).message;
+    res.json(/répondu 404/.test(message) ? { configured: true, notReady: true } : { configured: true, error: message });
+  }
+});
+
 actionsRouter.get("/:key/tenants/:id", async (req, res) => {
   const app = getApp(req.params.key);
   if (!/^[\w.:@-]{1,100}$/.test(req.params.id)) throw new HttpError(400, "Identifiant invalide");
