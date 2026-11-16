@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.41.0 — 2026-11-16
+
+Demandé le 2026-11-16 : un accueil épuré, les informations d'une appli seulement quand on clique sur son logo, une constellation plus grande et plus lumineuse, le thème rangé dans un bouton Paramètres.
+
+- **Accueil épuré** : il ne montre plus que la **constellation**, le **brief** (état global, alertes ouvertes), les **objectifs de la semaine** et le **rejeu**. Plus de pastilles par appli, plus de phrases propres à Procedia, plus de cartes de modules.
+- **Fenêtre d'appli à fond transparent** : un clic sur un logo de la constellation ouvre une fenêtre en verre dépoli avec les informations clés de l'appli (état, disponibilité 24 h, temps de réponse, alertes, dernier journal, vérifications, lien vers la fiche). Pour **Procedia**, la fenêtre ajoute ce qui lui est propre : documents supprimés et conservés, dernier import (pic de mémoire, retour au repos), incohérences. Fermeture : clic à côté, ✕ ou Échap.
+- **Constellation plus grande et plus lumineuse** : nœuds et logos agrandis, halo qui respire, anneaux et liaisons qui brillent, plus de place dans la page.
+- **Bouton « Paramètres »** dans tous les en-têtes : thème clair ou sombre, Réglages, Mesurer l'écran, Se déconnecter. Les liens Supervision et Facturation de l'accueil passent dans l'en-tête.
+
 ## v0.40.0 — 2026-11-16
 
 Refonte visuelle, lots 2 bis, 3 et 4 : les pages existantes prennent le nouveau style et l'accueil raconte Procedia.

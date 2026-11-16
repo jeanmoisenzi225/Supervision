@@ -207,7 +207,7 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - Lien : l'audit BNI du 2026-11-14 (chantier 98 de Procedia) a identifié les incohérences à détecter (doublons d'import, mauvaise catégorie, étapes sans suite).
 - Livré dans la v0.37.0 : onglet « Qualité » (documents, cibles par personne, incohérences), retour de la mémoire au repos et alerte sur l'onglet « En direct ». Reste : mise en ligne de Procedia v0.63.0 (rapports), puis de cette version.
 
-## 20. Refonte visuelle de la Supervision (2026-11-16) 🚧 (lots 1 à 4 : v0.38.0 à v0.40.0)
+## 20. Refonte visuelle de la Supervision (2026-11-16) 🚧 (v0.38.0 à v0.41.0)
 
 - Demande (propriétaire) : une refonte moins « générique », très axée tech et belle ; logos de chaque projet ; garder le brief et les animations. Maquette complète validée le 2026-11-16 (accueil « brief + constellation », rejeu, carte des coûts, rivière de Procedia, assistant Malick / Malicka, palette de recherche).
 - Décision : l'en-tête ne reste pas figé : **par niveaux** (chaque rangée se retire l'une après l'autre en descendant et revient par niveau en remontant, v0.38.1) ; thème clair ou sombre au choix.
@@ -229,4 +229,5 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - **L'application réelle est plus complète que la maquette** sur : onglets Imports et Qualité de Procedia, facturation, réglages de sécurité, actions d'administration. À ne pas appauvrir.
 - Données de la maquette **inventées** : chiffres de l'assistant, journaux, montants de facture, dépenses Claude, noms de comptes.
 - Ordre proposé pour le lot 2 : rejeu avec les vraies données, palette de recherche, diagnostic replié ; rivière et assistant plus tard.
+- [x] Accueil épuré (v0.41.0, 2026-11-16) : constellation, brief, rejeu et objectifs seulement ; infos d'une appli dans une fenêtre à fond transparent ouverte depuis son logo (celles de Procedia y comprises) ; constellation plus grande et lumineuse ; thème rangé dans « Paramètres ».
 

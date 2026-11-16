@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { toggleTheme } from "../lib/theme";
 import { PaletteButton } from "./CommandPalette";
+import { SettingsMenu } from "./SettingsMenu";
 import { useStagedHide } from "../lib/useStagedHide";
 import { APP_VERSION } from "../version";
 import { Brand } from "./Brand";
@@ -19,12 +19,7 @@ export function Layout({ onLogout }: { onLogout: () => void }) {
           </NavLink>
           <span className="topbar-actions">
             <PaletteButton />
-            <button className="link" onClick={() => toggleTheme()}>
-              Clair / sombre
-            </button>
-            <button className="link" onClick={onLogout}>
-              Déconnexion
-            </button>
+            <SettingsMenu onLogout={onLogout} />
           </span>
         </header>
         <nav className="lvl subbar nav">
