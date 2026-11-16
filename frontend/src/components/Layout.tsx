@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { toggleTheme } from "../lib/theme";
+import { PaletteButton } from "./CommandPalette";
 import { useStagedHide } from "../lib/useStagedHide";
 import { APP_VERSION } from "../version";
 import { Brand } from "./Brand";
@@ -17,6 +18,7 @@ export function Layout({ onLogout }: { onLogout: () => void }) {
             <Brand module="Supervision" />
           </NavLink>
           <span className="topbar-actions">
+            <PaletteButton />
             <button className="link" onClick={() => toggleTheme()}>
               Clair / sombre
             </button>

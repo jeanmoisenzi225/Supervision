@@ -23,12 +23,14 @@ export function DiagnosticPanel({ app, onDone }: { app: AppOverview; onDone: () 
   const [diag, setDiag] = useState<Diagnostic | null>(null);
   const [busy, setBusy] = useState<"diag" | "restart" | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [open, setOpen] = useState(false);
 
   async function run() {
     setBusy("diag");
     setMessage(null);
     try {
       setDiag(await api<Diagnostic>(`/apps/${app.key}/diagnostic`, { method: "POST" }));
+      setOpen(true);
       onDone();
     } catch (err) {
       setMessage({ ok: false, text: (err as Error).message });
@@ -73,7 +75,20 @@ export function DiagnosticPanel({ app, onDone }: { app: AppOverview; onDone: () 
               · {new Date(diag.at).toLocaleTimeString("fr-FR")} · {(diag.durationMs / 1000).toFixed(1)} s
             </span>
           </p>
-          <ul className="diag-items">
+          <div className="row wrap diag-sum">
+            {(["ok", "warn", "ko", "info"] as DiagStatus[]).map((k) => {
+              const n = diag.items.filter((i) => i.status === k).length;
+              return n ? (
+                <span key={k} className={`pill diag-pill-${k}`}>
+                  {n} {k === "ok" ? "ok" : k === "warn" ? "à regarder" : k === "ko" ? "en échec" : "info"}
+                </span>
+              ) : null;
+            })}
+            <button className="link" onClick={() => setOpen(!open)}>
+              {open ? "Masquer le détail ▴" : "Voir le détail ▾"}
+            </button>
+          </div>
+          {open && <ul className="diag-items">
             {diag.items.map((i) => (
               <li key={i.id}>
                 <span className={`dot ${i.status === "ko" ? "ko" : i.status}`} />
@@ -83,7 +98,7 @@ export function DiagnosticPanel({ app, onDone }: { app: AppOverview; onDone: () 
                 </div>
               </li>
             ))}
-          </ul>
+          </ul>}
           {app.integration.render && (
             <div className="row wrap">
               <button onClick={restartAll} disabled={busy !== null}>

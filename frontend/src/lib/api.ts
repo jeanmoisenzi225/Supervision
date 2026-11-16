@@ -137,3 +137,26 @@ export interface LogEntry {
   context: Record<string, unknown> | null;
   requestId: string | null;
 }
+
+/** Rejeu (v0.39.0) : état de chaque appli case par case, et événements (alertes, redémarrages, mises en ligne). */
+export interface ReplayCell {
+  s: "ok" | "w" | "b" | null;
+  ms: number | null;
+  mem: number | null;
+}
+export interface ReplayEvent {
+  at: number;
+  appKey: string;
+  kind: string;
+  level: "critical" | "warning" | "ok" | "info";
+  title: string;
+  detail?: string;
+}
+export interface ReplayData {
+  from: number;
+  to: number;
+  stepMin: number;
+  n: number;
+  apps: { key: string; cells: ReplayCell[] }[];
+  events: ReplayEvent[];
+}

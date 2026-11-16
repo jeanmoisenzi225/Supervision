@@ -14,6 +14,7 @@ import { billingRouter } from "./modules/billing/billing.routes";
 import { ingestRouter, logsRouter } from "./modules/logs/logs.routes";
 import { monitorRouter } from "./modules/monitor/monitor.routes";
 import { objectivesRouter } from "./modules/objectives/objectives.routes";
+import { replayRouter } from "./modules/replay/replay.routes";
 import { pushRouter } from "./modules/push/push.routes";
 
 export function createApp() {
@@ -49,6 +50,7 @@ export function createApp() {
   app.use("/api/push", pushRouter);
   app.use("/api/billing", billingRouter);
   app.use("/api/objectives", objectivesRouter);
+  app.use("/api/replay", replayRouter);
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Route inconnue" }));
 

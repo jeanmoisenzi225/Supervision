@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.39.0 — 2026-11-16
+
+Refonte visuelle, lot 2 : tableau de bord, rejeu, recherche et diagnostic.
+
+- **Rejeu des 6 dernières heures** sur l'accueil, à partir des **vraies mesures** : une ligne par appli, une case toutes les 5 minutes (vert = nominal, ambre = dégradé, rouge = arrêt, gris = pas de relevé), les événements (alertes, redémarrages, mises en ligne Render) en points sur la ligne. On fait glisser le curseur ou on lance la lecture (×240, ×900) : la **constellation** prend l'état de chaque appli à ce moment-là (couleur, temps de réponse) et le **titre du brief** se réécrit d'après l'événement le plus proche. « Revenir à maintenant » remet l'état en direct.
+- **Tableau de bord refait** : titre et compteurs, **liste** (logo, état, disponibilité 24 h, temps de réponse, alertes, dernier journal) ou **constellation**, et grille de disponibilité des 24 dernières heures pour toutes les applis (une case = 15 minutes).
+- **Recherche Ctrl ou ⌘ + K** sur toutes les pages (et bouton « Rechercher » dans l'en-tête) : aller à une page, à une appli, changer de thème, se déconnecter.
+- **Diagnostic replié** sur la fiche d'une appli : après le lancement, un résumé (« 5 ok · 1 à regarder ») et un bouton « Voir le détail ».
+- Technique : route `GET /api/replay?hours=6&step=5` (cases d'état par appli d'après les vérifications et les relevés en direct, événements de la chronologie ; calcul mis en cache 60 s), `buildCells` testé (`tests/replay.test.ts`). Détail dans `docs/architecture.md`.
+
 ## v0.38.1 — 2026-11-16
 
 - **En-tête par niveaux.** Les rangées de l'en-tête se retirent **l'une après l'autre** quand on descend dans la page (barre NJMDev, puis navigation du module, puis onglets d'une fiche d'appli) et reviennent **par niveau** quand on remonte, en commençant par celui qui touche le contenu. Environ 70 px de défilement retirent un niveau, 40 px en font revenir un ; en haut de page, tout est visible. Avant, l'en-tête partait d'un bloc.

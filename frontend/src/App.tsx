@@ -11,6 +11,7 @@ import { BillingPage } from "./pages/BillingPage";
 import { CostsPage } from "./pages/CostsPage";
 import { ClaudePage } from "./pages/ClaudePage";
 import { Dashboard } from "./pages/Dashboard";
+import { CommandPalette } from "./components/CommandPalette";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
 import { LogsPage } from "./pages/LogsPage";
@@ -48,6 +49,7 @@ export function App() {
     <BrowserRouter>
       <Splash />
       <PullToRefresh />
+      <CommandPalette onLogout={logout} />
       <Routes>
         <Route index element={<Home onLogout={logout} />} />
         <Route
