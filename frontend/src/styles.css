@@ -576,3 +576,27 @@ button.primary { color: var(--bg); }
   .dash-table .small { display: none; }
   .dash-table td strong + .small { display: none; }
 }
+
+/* Lot 3 (v0.40.0) : titres de page, alertes, carte des coûts, fiche d'appli */
+.content h1, .page-head h1 { font: 600 34px/1.15 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.02em; margin: 4px 0 8px; }
+.content .eyebrow { margin-top: 4px; }
+.app-hero { display: flex; align-items: center; gap: 14px; }
+.app-hero h1 { margin: 0; }
+.card { border-radius: 14px; }
+.metric { border-radius: 12px; }
+.metric-value { font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: -0.03em; }
+.alert { border-left: 3px solid var(--muted); }
+.alert-open { border-left-color: var(--warn); }
+.alert-acknowledged { border-left-color: var(--muted); }
+.alert-resolved { border-left-color: var(--ok); }
+.table th { text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 4px; border-bottom: 1px solid var(--border); }
+.treemap { position: relative; border: 1px solid var(--border); background: var(--surface); border-radius: 14px; overflow: hidden; margin-bottom: 14px; }
+.tm-cell { position: absolute; padding: 3px; transition: left 0.5s ease, top 0.5s ease, width 0.5s ease, height 0.5s ease; }
+.tm-in { width: 100%; height: 100%; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; position: relative; overflow: hidden; background: color-mix(in srgb, var(--c) 13%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 45%, var(--border)); }
+.tm-in:hover { border-color: var(--c); }
+.tm-ok { --c: var(--ok); } .tm-warn { --c: var(--warn); } .tm-bad { --c: var(--bad); } .tm-off { --c: var(--muted); }
+.tm-in strong { font-size: 14px; }
+.tm-big { font: 500 24px/1.15 ui-monospace, monospace; margin-top: 4px; }
+.tm-logo { position: absolute; right: 10px; top: 10px; }
+.chipnum { display: inline-block; padding: 0 8px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--border); font-size: 0.86em; white-space: nowrap; }
+.chipnum.ok { color: var(--ok); } .chipnum.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }

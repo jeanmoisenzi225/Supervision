@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { Treemap } from "../components/Treemap";
 import { api } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
 
@@ -29,10 +31,12 @@ const KIND: Record<Line["kind"], string> = { service: "Service", database: "Base
 
 /** Page « Coûts » : coût mensuel estimé de chaque appli (hébergement Render, offres actuelles) et dépenses Claude du mois. */
 export function CostsPage() {
+  const nav = useNavigate();
   const { data, error } = usePolling(() => api<Billing>("/hosting-costs"), 10 * 60_000);
 
   return (
     <>
+      <div className="eyebrow">Supervision</div>
       <h1>Coûts</h1>
       <p className="muted small">
         Coût d'hébergement et d'IA par appli : l'<strong>hébergement Render</strong> est une estimation mensuelle calculée d'après les offres actuelles de chaque service et base (tarifs publics de Render
@@ -66,6 +70,10 @@ export function CostsPage() {
           {data.totals.unknown > 0 && (
             <p className="small">⚠️ {data.totals.unknown} ligne(s) d'une offre Render inconnue de la table des tarifs : non comptée(s). À ajouter dans <code>hosting/prices.ts</code>.</p>
           )}
+          <Treemap
+            items={data.apps.map((a) => ({ key: a.key, name: a.name, value: a.totalUsd, tone: a.render.unknown ? "warn" : "ok", label: usd(a.totalUsd), sub: `Render ${usd(a.render.usd)}${a.claude.usd ? ` · Claude ${usd(a.claude.usd)}` : ""}` }))}
+            onPick={(k) => nav(`/supervision/applis/${k}/ressources`)}
+          />
           {data.apps.map((app) => (
             <section key={app.key} className="card">
               <h3>

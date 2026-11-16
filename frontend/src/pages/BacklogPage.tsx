@@ -246,6 +246,7 @@ export function BacklogPage() {
 
   return (
     <>
+      <div className="eyebrow">Supervision</div>
       <h1>Backlog</h1>
       <p className="muted small">
         Lu dans le backlog de chaque dépôt toutes les 15 minutes : le statut d'un chantier change dès que son évolution est livrée et notée dans le backlog.

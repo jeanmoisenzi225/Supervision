@@ -6,6 +6,7 @@ export function LogsPage() {
   const { data } = usePolling(() => api<{ apps: AppOverview[] }>("/overview"), 60_000);
   return (
     <>
+      <div className="eyebrow">Supervision</div>
       <h1>Journaux</h1>
       <LogsView apps={data?.apps.map((a) => ({ key: a.key, name: a.name }))} />
     </>

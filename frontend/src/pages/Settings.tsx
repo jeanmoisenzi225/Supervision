@@ -1,3 +1,4 @@
+import { getTheme, setTheme, type Theme } from "../lib/theme";
 import { useEffect, useState } from "react";
 import { TwoFactorSettings } from "../components/TwoFactorSettings";
 import { PauseControls } from "../components/PauseControls";
@@ -68,6 +69,7 @@ export function Settings() {
 
   return (
     <>
+      <div className="eyebrow">Supervision</div>
       <h1>Réglages</h1>
       <TwoFactorSettings />
       <section className="card">
@@ -100,6 +102,9 @@ export function Settings() {
         <h3>Affichage</h3>
         <p className="muted small">Mesure la zone d'écran réellement donnée à l'application (taille, marges de sécurité, repères colorés). Utile pour régler l'affichage sur un appareil pliable.</p>
         <a className="button" href="/ecran">Mesurer l'écran</a>
+        <h3 style={{ marginTop: 18 }}>Thème</h3>
+        <p className="muted small">Clair ou sombre, mémorisé sur cet appareil.</p>
+        <ThemeChoice />
       </section>
 
       <section className="card">
@@ -108,5 +113,18 @@ export function Settings() {
         <p className="muted small">Version {APP_VERSION}</p>
       </section>
     </>
+  );
+}
+
+function ThemeChoice() {
+  const [theme, set] = useState<Theme>(getTheme());
+  return (
+    <div className="seg">
+      {(["dark", "light"] as const).map((t) => (
+        <button key={t} className={theme === t ? "active" : ""} onClick={() => (setTheme(t), set(t))}>
+          {t === "dark" ? "Sombre" : "Clair"}
+        </button>
+      ))}
+    </div>
   );
 }

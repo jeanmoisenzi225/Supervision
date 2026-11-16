@@ -53,6 +53,45 @@ function replayHeadline(r: ReplayData, t: number, apps: AppOverview[]): string {
   return bad.length ? `${bad.join(" et ")} ${bad.length > 1 ? "sont" : "est"} en difficulté à ce moment-là.` : "Tout est nominal. Rien à signaler.";
 }
 
+interface DocsReport { configured?: boolean; notReady?: boolean; error?: string; kept?: { count: number; expiringSoon: number }; deleted?: { manualInPeriod: number; autoInPeriod: number } }
+interface RuntimeReport { supported?: boolean; episodes?: { endAt: number | null; peakMb: number | null; restAfterSec: number | null; interrupted: boolean; lastMb: number | null; baselineMb: number | null }[] }
+interface IncoReport { configured?: boolean; notReady?: boolean; deferred?: boolean; total?: number }
+
+/** Paragraphes du brief sur Procedia (imports, mémoire, documents, incohérences), d'après ses rapports signés. */
+function procediaBrief(docs: DocsReport | null, rt: RuntimeReport | null, inco: IncoReport | null): React.ReactNode[] {
+  const out: React.ReactNode[] = [];
+  if (docs?.deleted && docs.kept) {
+    out.push(
+      <p key="docs" className="home-nar">
+        Cette semaine, les consultants ont supprimé <span className="chipnum ok">{docs.deleted.manualInPeriod} document(s)</span> en validant leurs procédures, et <span className="chipnum">{docs.deleted.autoInPeriod}</span> ont été purgés automatiquement. Il en reste <span className="chipnum">{docs.kept.count}</span> en attente
+        {docs.kept.expiringSoon ? (
+          <>
+            , dont <span className="chipnum warn">{docs.kept.expiringSoon} à supprimer sous 3 jours ouvrés</span>
+          </>
+        ) : null}
+        .
+      </p>
+    );
+  }
+  const last = rt?.episodes?.[rt.episodes.length - 1];
+  if (last && last.peakMb !== null) {
+    out.push(
+      <p key="mem" className="home-nar">
+        Dernier import de Procedia : pic de mémoire à <span className="chipnum warn">{Math.round(last.peakMb)} Mo</span>
+        {last.endAt === null ? ", import en cours." : last.restAfterSec !== null ? <>, retour au repos en <span className="chipnum ok">{Math.max(1, Math.round(last.restAfterSec / 60))} min</span>.</> : last.interrupted ? ", interrompu par un nouvel import." : <>, mémoire pas encore redescendue ({Math.round(last.lastMb ?? 0)} Mo).</>}
+      </p>
+    );
+  }
+  if (inco && !inco.deferred && typeof inco.total === "number") {
+    out.push(
+      <p key="inco" className="home-nar">
+        <span className={`chipnum ${inco.total ? "warn" : "ok"}`}>{inco.total} incohérence(s)</span> relevée(s) dans les procédures de Procedia. <Link to="/supervision/applis/procedia" className="small">Voir la fiche →</Link>
+      </p>
+    );
+  }
+  return out;
+}
+
 const sev = (s: Alert["severity"]) => (s === "critical" ? "bad" : s === "warning" ? "warn" : "");
 
 /** Accueil NJMDev (v0.38.0) : le brief du jour à gauche, la constellation des applications à droite. */
@@ -63,6 +102,9 @@ export function Home({ onLogout }: { onLogout: () => void }) {
   const { data: alerts } = usePolling(() => api<Alert[]>("/alerts?status=open"), 30_000);
   const { data: billing } = usePolling(() => Promise.all([api<unknown[]>("/billing/clients"), api<unknown[]>("/billing/invoices")]).then(([c, i]) => ({ clients: c.length, invoices: i.length })), 60_000);
   const { data: replay } = usePolling(() => api<ReplayData>("/replay?hours=6&step=5"), 60_000);
+  const { data: docs } = usePolling(() => api<DocsReport>("/apps/procedia/qualite/documents?days=7"), 5 * 60_000);
+  const { data: rt } = usePolling(() => api<RuntimeReport>("/apps/procedia/runtime?minutes=360"), 5 * 60_000);
+  const { data: inco } = usePolling(() => api<IncoReport>("/apps/procedia/qualite/incoherences"), 10 * 60_000);
   const [t, setT] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
@@ -137,6 +179,8 @@ export function Home({ onLogout }: { onLogout: () => void }) {
               })}
             </p>
           )}
+
+          {procediaBrief(docs, rt, inco)}
 
           <section className="home-block">
             <WeeklyObjectives />

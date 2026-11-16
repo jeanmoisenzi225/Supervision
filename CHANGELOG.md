@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.40.0 — 2026-11-16
+
+Refonte visuelle, lots 2 bis, 3 et 4 : les pages existantes prennent le nouveau style et l'accueil raconte Procedia.
+
+- **Brief de l'accueil enrichi** avec les rapports de Procedia : documents supprimés cette semaine (à la validation et automatiques), documents encore conservés et ceux à supprimer sous 3 jours ouvrés, dernier import (pic de mémoire et temps de retour au repos), nombre d'incohérences relevées. Les phrases n'apparaissent que si le rapport est disponible.
+- **Coûts : carte à cases** (taille = coût estimé de chaque appli, clic = ressources de l'appli) au-dessus des tableaux.
+- **Titres de pages** harmonisés (repère de module, grand titre) : Alertes, Journaux, Backlog, Claude, Coûts, Réglages, Facturation. **Fiche d'appli** avec le logo du projet. **Alertes** avec un liseré de couleur selon l'état (ouverte, prise en compte, résolue). Tableaux, compteurs et cartes alignés sur les nouvelles couleurs.
+- **Réglages : choix du thème** clair ou sombre.
+- Les pages de la Facturation (clients, factures, aperçu A4) gardent leurs fonctions ; elles prennent les nouveaux titres et couleurs.
+
 ## v0.39.0 — 2026-11-16
 
 Refonte visuelle, lot 2 : tableau de bord, rejeu, recherche et diagnostic.

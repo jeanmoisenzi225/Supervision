@@ -7,6 +7,7 @@ export function AlertsPage() {
   const names = { claude: "Claude", ...Object.fromEntries((data?.apps ?? []).map((a) => [a.key, a.name])) };
   return (
     <>
+      <div className="eyebrow">Supervision</div>
       <h1>Alertes</h1>
       <AlertsList appNames={names} />
     </>

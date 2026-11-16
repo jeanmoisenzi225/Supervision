@@ -207,15 +207,15 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - Lien : l'audit BNI du 2026-11-14 (chantier 98 de Procedia) a identifié les incohérences à détecter (doublons d'import, mauvaise catégorie, étapes sans suite).
 - Livré dans la v0.37.0 : onglet « Qualité » (documents, cibles par personne, incohérences), retour de la mémoire au repos et alerte sur l'onglet « En direct ». Reste : mise en ligne de Procedia v0.63.0 (rapports), puis de cette version.
 
-## 20. Refonte visuelle de la Supervision (2026-11-16) 🚧 (lots 1 et 2 : v0.38.0 à v0.39.0)
+## 20. Refonte visuelle de la Supervision (2026-11-16) 🚧 (lots 1 à 4 : v0.38.0 à v0.40.0)
 
 - Demande (propriétaire) : une refonte moins « générique », très axée tech et belle ; logos de chaque projet ; garder le brief et les animations. Maquette complète validée le 2026-11-16 (accueil « brief + constellation », rejeu, carte des coûts, rivière de Procedia, assistant Malick / Malicka, palette de recherche).
 - Décision : l'en-tête ne reste pas figé : **par niveaux** (chaque rangée se retire l'une après l'autre en descendant et revient par niveau en remontant, v0.38.1) ; thème clair ou sombre au choix.
 - [x] Lot 1 (v0.38.0) : couleurs et thème clair / sombre, en-tête non figé, accueil (brief, objectifs, constellation reliée aux vraies données), logos.
 - [x] Lot 2 (v0.39.0) : tableau de bord (liste ou constellation, grille 24 h), rejeu des 6 dernières heures avec les vraies mesures, recherche Ctrl ou ⌘ + K, diagnostic replié.
-- [ ] Lot 2 bis : onglets de la fiche d'appli restylés (En direct, Chronologie, Ressources, Imports, Qualité…) ; brief enrichi (imports, mémoire, documents).
-- [ ] Lot 3 : Alertes, Journaux (flux en direct), Backlog, Claude, Coûts (carte), Réglages.
-- [ ] Lot 4 : Facturation (liste, éditeur, aperçu) ; envoi par e-mail avec le chantier 18.
+- [x] Lot 2 bis (v0.40.0) : brief enrichi (documents, dernier import, incohérences de Procedia), fiche d'appli avec logo ; les onglets gardent leur disposition avec les nouvelles couleurs.
+- [x] Lot 3 (v0.40.0) : titres harmonisés, alertes avec liseré, coûts en carte à cases, réglages avec choix du thème. Journaux (déjà en direct), Backlog et Claude : titres et couleurs.
+- [x] Lot 4 (v0.40.0) : Facturation : titres et couleurs. Reste, avec le chantier 18 : envoi par e-mail, éditeur de lignes en direct et aperçu A4 refaits comme la maquette.
 - [x] Palette de recherche (Ctrl ou ⌘ + K) sur toutes les pages (v0.39.0).
 - [ ] Brief enrichi : narration d'après les événements, rejeu et rivière de Procedia (rapports du chantier 19).
 - [ ] Malick et Malicka (chantier 97 de Procedia) : service de réponse à définir.

@@ -4,6 +4,7 @@ import { AlertsList } from "../components/AlertsList";
 import { DiagnosticPanel } from "../components/DiagnosticPanel";
 import { PauseControls } from "../components/PauseControls";
 import { LogsView } from "../components/LogsView";
+import { AppMark } from "../components/Constellation";
 import { StackLevel } from "../components/StackLevel";
 import { StatusBadge } from "../components/StatusBadge";
 import { api, type AppOverview } from "../lib/api";
@@ -51,9 +52,12 @@ export function AppDetail() {
         ← Tableau de bord
       </Link>
       <div className="page-head">
-        <div>
-          <h1>{app.name}</h1>
-          <p className="muted">{app.description}</p>
+        <div className="app-hero">
+          <AppMark appKey={app.key} size={52} />
+          <div>
+            <h1>{app.name}</h1>
+            <p className="muted">{app.description}</p>
+          </div>
         </div>
         <StatusBadge status={app.status} />
       </div>

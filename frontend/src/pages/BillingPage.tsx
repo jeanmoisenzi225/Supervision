@@ -198,7 +198,7 @@ export function BillingPage() {
   }
 
   return <>
-    <div className="page-head"><div className="billing-page-brand"><div><h1>Facturation</h1><p className="muted small">Répertoire clients et préparation des factures.</p></div></div><button className="primary" onClick={newDraft}>+ Nouvelle facture prévisionnelle</button></div>
+    <div className="page-head"><div className="billing-page-brand"><div><div className="eyebrow">Facturation</div><h1>Facturation</h1><p className="muted small">Répertoire clients et préparation des factures.</p></div></div><button className="primary" onClick={newDraft}>+ Nouvelle facture prévisionnelle</button></div>
     <div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>La structure juridique et le régime de TVA ne sont pas encore configurés. Aucun numéro de facture ne sera attribué.</span></div></div>
     {notice && <p className="success small">{notice}</p>}{error && <p className="error small">{error}</p>}
     <div className="tabs">

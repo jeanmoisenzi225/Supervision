@@ -27,6 +27,7 @@ export function ClaudePage() {
 
   return (
     <>
+      <div className="eyebrow">Supervision</div>
       <h1>Claude</h1>
       <p className="muted small">
         Dépenses de ton organisation Anthropic (toutes applis confondues). Le crédit épuisé et la clé refusée sont détectés dans les journaux de chaque appli et remontent
