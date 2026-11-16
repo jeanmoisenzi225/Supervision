@@ -180,3 +180,16 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
   - [x] Barre de progression de la semaine sur la page d'accueil.
   - [x] Documentation (`docs/architecture.md`) et version (v0.36.0) mises à jour.
   - Non repris dans cette première version : lien d'un objectif vers un chantier du backlog (option).
+
+## 18. Messagerie e-mail intégrée à NJMDev (2026-11-16)
+
+- Demande (propriétaire) : intégrer **notre propre messagerie e-mail** dans l'application, pour ne plus avoir besoin de créer une adresse Gmail (ou autre) et **envoyer les devis, factures, etc. directement depuis l'application**.
+- À cadrer avec le propriétaire avant de développer :
+  - [ ] Périmètre de la première version : **envoi seul** depuis l'application (devis, factures, relances) ; la **réception** et la lecture des réponses (boîte de réception) seront une étape suivante, à décider.
+  - [ ] Adresse d'expéditeur : un **nom de domaine à NJMDev** est nécessaire (adresse du type `facturation@<domaine>`) ; choix du domaine, et des adresses (facturation, contact, une par client ?).
+  - [ ] Moyen d'envoi : service d'envoi d'e-mails transactionnels par API ou SMTP (à comparer : coût, plan gratuit, délivrabilité, région), plutôt qu'un serveur de messagerie à héberger soi-même ; configuration du domaine (SPF, DKIM, DMARC) pour que les messages n'arrivent pas en courrier indésirable.
+  - [ ] Envoi depuis le module Facturation : bouton « Envoyer » sur un devis ou une facture, objet et message modifiables (modèles), PDF en pièce jointe, destinataire repris de la fiche client, copie à NJMDev.
+  - [ ] Journal des envois : date, destinataire, objet, pièce jointe, état (envoyé, remis, rejeté) rattaché à la facture ou au devis ; relance si échec.
+  - [ ] Sécurité : clé du service d'envoi en variable d'environnement (jamais dans le dépôt), envoi réservé au super administrateur, limite d'envois, aucun envoi automatique sans validation.
+  - [ ] Réception (étape suivante) : boîte de réception dans l'application, réponses rattachées au client et à la facture.
+  - [ ] Documentation (`docs/`), version et statut à mettre à jour avec le développement.
