@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.41.2 — 2026-11-17
+
+- **Backlog My Family** : la Supervision lit désormais `docs/BACKLOG.md` sur la branche `njmdev/my-family` (au lieu de `main`).
+
 ## v0.41.1 — 2026-11-16
 
 - **En-tête par niveaux** : le niveau le plus proche du contenu reste désormais toujours affiché. Avec un seul niveau (accueil), il reste figé ; avec deux, seul le premier se retire au défilement, et ainsi de suite.

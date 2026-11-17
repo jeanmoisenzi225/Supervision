@@ -8,7 +8,7 @@ export const BACKLOG_SOURCES = [
   { key: "mga", label: "MGA", repo: "jeanmoisenzi225/Mon-Garage-Auto", branch: "main", path: "BACKLOG.md", form: "sections" },
   { key: "procedia", label: "Procedia", repo: "jeanmoisenzi225/Procedia", branch: "njmdev/procedia", path: "BACKLOG.md", form: "sections" },
   { key: "yiri", label: "Yiri Invest", repo: "jeanmoisenzi225/JmDev", branch: "main", path: "agent-whatsapp-brvm/ROADMAP.md", form: "sections" },
-  { key: "my-family", label: "My Family", repo: "jeanmoisenzi225/My-Family", branch: "main", path: "docs/BACKLOG.md", form: "stories" },
+  { key: "my-family", label: "My Family", repo: "jeanmoisenzi225/My-Family", branch: "njmdev/my-family", path: "docs/BACKLOG.md", form: "stories" },
   { key: "supervision", label: "Supervision", repo: "jeanmoisenzi225/Supervision", branch: "main", path: "BACKLOG.md", form: "sections" },
 ] as const;
 
