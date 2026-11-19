@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.42.0 — 2026-11-19
+
+Demandé le 2026-11-19 : brancher Famille N'ZI (My Family) à la Supervision, dont on ne voyait que les déploiements.
+
+- **Disponibilité** : l'API (`/api/health`) et l'appli web de Famille N'ZI sont vérifiées toutes les 5 minutes (offre gratuite Render : délai de réveil de 90 s). Les temps de réponse, la disponibilité et les alertes apparaissent comme pour les autres applis.
+- **Administration** : adresse de base des routes `/api/supervision` connue par défaut (résumé des effectifs ; aucune donnée personnelle).
+- Journaux et alertes : l'appli envoie ses journaux avec `SUPERVISION_URL` et `SUPERVISION_INGEST_TOKEN` (valeur de `MY_FAMILY_INGEST_TOKEN`).
+
 ## v0.41.2 — 2026-11-17
 
 - **Backlog My Family** : la Supervision lit désormais `docs/BACKLOG.md` sur la branche `njmdev/my-family` (au lieu de `main`).

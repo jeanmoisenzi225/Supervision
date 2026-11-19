@@ -45,9 +45,9 @@ describe("configuration des applis", () => {
   it("donne un délai long aux services mis en veille (offre gratuite)", () => {
     const env: Record<string, string> = { YIRI_URLS: "api|API|https://p.onrender.com/api/health", YIRI_INGEST_TOKEN: "t" };
     const apps = buildApps((n) => env[n] ?? "");
-    const sleeping = apps.find((a) => a.sleepsWhenIdle);
-    // Aucune appli n'est en offre gratuite depuis le passage de Procedia en Starter : le délai long ne vaut que pour sleepsWhenIdle.
-    expect(sleeping).toBeUndefined();
+    // Seule My Family est en offre gratuite (phase de test) depuis le passage de Procedia en Starter : le délai long ne vaut que pour sleepsWhenIdle.
+    expect(apps.filter((a) => a.sleepsWhenIdle).map((a) => a.key)).toEqual(["my-family"]);
+    expect(apps.find((a) => a.key === "my-family")!.checks.every((c) => c.timeoutMs === 90_000)).toBe(true);
     expect(apps.find((a) => a.key === "yiri")!.checks[0].timeoutMs).toBe(15_000);
     expect(apps.find((a) => a.key === "yiri")!.ingestToken).toBe("t");
   });
@@ -69,6 +69,15 @@ describe("sujet des notifications", async () => {
 });
 
 describe("adresses par défaut", () => {
+  it("surveille Famille N'ZI sans variable : API et appli web, délai de réveil long", () => {
+    const fam = buildApps(() => "").find((a) => a.key === "my-family")!;
+    expect(fam.checks.map((c) => [c.id, c.url, c.expect])).toEqual([
+      ["api", "https://nzi-family-api.onrender.com/api/health", "health"],
+      ["app", "https://nzi-family.onrender.com/", "2xx"],
+    ]);
+    expect(fam.adminUrl).toBe("https://nzi-family-api.onrender.com/api");
+  });
+
   it("surveille Procedia sans variable, chaque minute (offre payante, service qui ne s'endort plus)", () => {
     const procedia = buildApps(() => "").find((a) => a.key === "procedia")!;
     expect(procedia.checks.map((c) => c.url)).toEqual([
