@@ -75,6 +75,10 @@ Côté supervision : adresse d'administration connue par défaut pour MGA, Yiri,
 
 Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètres, résultat). Une action marquée `danger` affiche un avertissement.
 
+## 3 ter. État en direct (rapport `runtime`)
+
+Option `reports` de `supervisionAdminRouter` : `reports: { runtime: async () => ({ startedAt, uptimeSec, rssMb, heapUsedMb, externalMb, loopLagMaxMs }) }`. La Supervision l'interroge toutes les 15 secondes (ses relevés alimentent la page « En direct », les courbes de mémoire et les alertes de redémarrage ou de saturation). Une appli en offre gratuite qui s'endort (My Family) est interrogée au rythme de ses vérifications, soit toutes les 5 minutes.
+
 ## 3 bis. Clients de l'appli
 
 Option `tenants` de `supervisionAdminRouter` (Node) ou de `supervision_fastapi_router` (Python) : `{ label, list, detail }`.

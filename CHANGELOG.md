@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.43.0 — 2026-11-19
+
+Demandé le 2026-11-19 : le logo de Famille N'ZI n'apparaissait pas et peu d'informations remontaient.
+
+- **Logo** : My Family affiche le portrait de Famille N'ZI (chargé depuis l'adresse publique de son application, sans copie dans ce dépôt public).
+- **État en direct** : les applis en offre gratuite sont désormais interrogées (toutes les 5 minutes) ; avant, elles ne l'étaient jamais. Le module Node accepte l'option `reports` (`GET /supervision/reports/:name`).
+
 ## v0.42.0 — 2026-11-19
 
 Demandé le 2026-11-19 : brancher Famille N'ZI (My Family) à la Supervision, dont on ne voyait que les déploiements.

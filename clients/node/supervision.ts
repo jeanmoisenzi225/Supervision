@@ -287,6 +287,8 @@ export interface SupervisionAdminOptions {
    * Caractéristiques et activité seulement, jamais de données confidentielles
    * du client (chiffre d'affaires, montants, contenu de ses dossiers).
    */
+  /** Rapports en lecture seule, signés (`GET /supervision/reports/:name`) : par exemple `runtime` (état en direct du service). */
+  reports?: Record<string, (query: Record<string, unknown>) => Promise<unknown>>;
   tenants?: { label: string; list: () => Promise<TenantSummary[]>; detail: (id: string) => Promise<TenantDetail | null> };
 }
 
@@ -297,6 +299,7 @@ interface Req {
   headers: Record<string, string | string[] | undefined>;
   params: Record<string, string>;
   body?: { params?: Record<string, unknown>; by?: string };
+  query?: Record<string, unknown>;
 }
 interface Res {
   status(code: number): Res;
@@ -339,6 +342,15 @@ export function supervisionAdminRouter<R extends RouterLike>(RouterFactory: () =
     "/summary",
     guard(async (_req, res) => {
       res.json({ metrics: options.summary ? await options.summary() : [] });
+    })
+  );
+
+  router.get(
+    "/reports/:name",
+    guard(async (req, res) => {
+      const report = options.reports?.[req.params.name];
+      if (!report) return res.status(404).json({ error: "Rapport inconnu" });
+      res.json(await report(req.query ?? {}));
     })
   );
 
