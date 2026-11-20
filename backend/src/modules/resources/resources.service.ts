@@ -7,6 +7,7 @@ import { isPaused } from "../pause/pause.service";
 import { daysUntil, last, maxBuckets, percent, RANGES, sumSeries, toBytes, type RangeKey } from "./units";
 import { failuresSince, type RenderEvent } from "../renderEvents/renderEvents.service";
 import { renderFetch } from "../actions/render";
+import { fetchDeletions, realSizeSeries, type RealSizeSeries } from "./realsize";
 
 type Points = [number, number][];
 
@@ -45,6 +46,8 @@ export interface DatabaseResources {
   diskFromSamples: boolean;
   tables: { name: string; bytes: number }[];
   connections: Points;
+  /** Taille réelle des données (relevée toutes les 5 minutes d'après le rapport de l'appli) ; absente si l'appli ne la fournit pas. */
+  real: RealSizeSeries | null;
   errors: string[];
 }
 
@@ -138,7 +141,7 @@ async function serviceResources(id: string, start: Date, resolution: number, fin
   };
 }
 
-async function databaseResources(db: Awaited<ReturnType<typeof listPostgres>>[number], start: Date, resolution: number): Promise<DatabaseResources> {
+async function databaseResources(db: Awaited<ReturnType<typeof listPostgres>>[number], start: Date, resolution: number, app: AppTarget): Promise<DatabaseResources> {
   const errors: string[] = [];
   const [disk, connections, sizes] = await Promise.all([
     safe(errors, "historique du disque", `disk-usage:${db.id}:${resolution}`, () => fetchMetric("disk-usage", db.id, start, resolution), []),
@@ -164,6 +167,11 @@ async function databaseResources(db: Awaited<ReturnType<typeof listPostgres>>[nu
     diskFromSamples,
     tables: sizes.tables.slice(0, 8),
     connections: sumSeries(connections.map((x) => x.points)),
+    real: await (async () => {
+      const series = await realSizeSeries(app.key, start, resolution).catch(() => null);
+      if (series) series.deletions = await fetchDeletions(app, Math.ceil((Date.now() - start.getTime()) / 86_400_000)).catch(() => []);
+      return series;
+    })(),
     errors,
   };
 }
@@ -207,7 +215,7 @@ export async function getAppResources(app: AppTarget, range: RangeKey, fresh = f
     const services = (await Promise.all(ids.map((id) => serviceResources(id, start, resolution, fine).catch(() => null)))).filter(
       (s): s is ServiceResources => s !== null
     );
-    const databases = await Promise.all(matchPostgres(app.renderMatch.names, pgs).map((db) => databaseResources(db, start, resolution)));
+    const databases = await Promise.all(matchPostgres(app.renderMatch.names, pgs).map((db) => databaseResources(db, start, resolution, app)));
     return { configured: true, services, databases, checks: await checkLatency(app, start, resolution) };
   });
 }

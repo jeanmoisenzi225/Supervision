@@ -61,4 +61,12 @@ export function maxBuckets(points: [number, number][], bucketSec: number): [numb
   return [...out.entries()].sort((a, b) => a[0] - b[0]);
 }
 
+/** Regroupe une série par pas de `bucketSec` secondes en gardant la DERNIÈRE valeur de chaque pas (fonction pure, testée). */
+export function lastBuckets(points: [number, number][], bucketSec: number): [number, number][] {
+  const ms = bucketSec * 1000;
+  const out = new Map<number, [number, number]>();
+  for (const p of [...points].sort((a, b) => a[0] - b[0])) out.set(Math.floor(p[0] / ms) * ms, p);
+  return [...out.values()];
+}
+
 export type RangeKey = keyof typeof RANGES;

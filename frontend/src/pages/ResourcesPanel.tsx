@@ -35,6 +35,7 @@ interface Resources {
     daysLeft: number | null;
     disk: Points;
     diskFromSamples: boolean;
+    real: { live: [number, number][]; disk: [number, number][]; latest: { at: number; liveBytes: number; diskBytes: number; reusableBytes: number } | null; deletions: { at: number; count: number; manual: number; auto: number }[] } | null;
     tables: { name: string; bytes: number }[];
     connections: Points;
     errors: string[];
@@ -197,6 +198,13 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
                   <span className="muted small">{planLabel(db.plan)}</span>
                 </div>
               )}
+              {db.real?.latest && (
+                <div className="card metric">
+                  <span className="muted small">Données réelles</span>
+                  <span className="metric-value">{formatBytes(db.real.latest.liveBytes)}</span>
+                  <span className="muted small">dont {formatBytes(db.real.latest.reusableBytes)} de place libérée non rendue au disque</span>
+                </div>
+              )}
               {db.connections.length > 0 && (
                 <div className="card metric">
                   <span className="muted small">Connexions actives</span>
@@ -223,6 +231,25 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
               limit={size ? { value: size, label: `taille ${db.diskSizeGB} Go` } : null}
               threshold={size ? { value: size * 0.8, label: "alerte 80 %" } : null}
             />
+            )}
+            {db.real && db.real.live.length > 0 && (
+              <>
+                <LineChart
+                  title="Taille réelle des données (en direct)"
+                  points={db.real.live}
+                  compare={db.real.disk.length > 1 ? { points: db.real.disk, label: "disque occupé" } : null}
+                  events={db.real.deletions.map((d) => ({
+                    at: d.at,
+                    count: d.count,
+                    label: `${d.count} document${d.count > 1 ? "s" : ""} supprimé${d.count > 1 ? "s" : ""}${d.manual ? ` · ${d.manual} à la validation` : ""}${d.auto ? ` · ${d.auto} automatique${d.auto > 1 ? "s" : ""}` : ""} · ${new Date(d.at).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`,
+                  }))}
+                  format={formatBytes}
+                  rangeHours={hours}
+                />
+                <p className="muted small">
+                  Les données réelles baissent dès qu'un document est supprimé ; chaque repère rouge « −N » marque le moment où N documents ont été supprimés (à la validation ou automatiquement). L'espace disque, lui, reste au niveau du pic : PostgreSQL ne le rend pas, mais le réutilise pour les prochains imports, sans qu'il faille compacter la base. Relevé toutes les 5 minutes.
+                </p>
+              </>
             )}
             {db.diskFromSamples && db.disk.length <= 1 && (
               <p className="muted small">L'historique de la taille se construit : la Supervision la relève toutes les heures, la courbe apparaîtra au fil des jours.</p>

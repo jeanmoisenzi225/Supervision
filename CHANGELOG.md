@@ -8,6 +8,14 @@ Demandé le 2026-11-20 : reprendre dans les documents de prestation les coûts e
 - **Documents** : le détail apparaît dans la demande de règlement (lignes et total) et dans l'article 4 de la convention (4.4). Si le montant convenu diffère du total du détail, une zone « expliquer l'écart » est ajoutée.
 - Tableau des montants du PDF : les intitulés longs passent à la ligne sans être coupés. Nouvelle colonne `lines` (migration `20261120150000_service_docs_lines`).
 
+Demandé le 2026-11-20 : suivre l'évolution **réelle** de la base en direct. Sur Procedia, la taille mesurée par Render restait à 1,5 Go alors que les documents conservés n'en représentaient plus que 1,2 : PostgreSQL ne rend pas au disque la place des lignes supprimées (il la réutilise pour les prochains imports).
+
+- **Taille réelle des données** : la Supervision relève toutes les 5 minutes le rapport signé `GET /supervision/reports/database` de l'appli (disque occupé, données encore utiles, place libérée réutilisable) et en trace la courbe, sans jamais compacter la base. Elle baisse dès qu'un document est supprimé.
+- **Ressources, base** : nouvelle carte « Données réelles » (avec la place libérée non rendue) et courbe « Taille réelle des données (en direct) » avec, en pointillé, l'espace disque occupé. La jauge de disque Render reste affichée.
+- **Repères de suppression sur la courbe** : chaque moment où des documents ont été supprimés (à la validation ou automatiquement, regroupés par 10 minutes) s'affiche en direct sur la courbe par un trait rouge et un « −N » ; l'infobulle donne le détail et l'heure. Les suppressions sont lues dans le rapport de l'appli à chaque affichage (jamais de nom de fichier).
+- Une appli qui ne propose pas ce rapport (404) est laissée tranquille une heure. Aucun changement de base de données : les relevés vont dans `ResourceSample` (clés `dbreal:<appli>` et `dbdisk:<appli>`, gardées 90 jours).
+- Procedia v0.64.0 fournit le rapport.
+
 ## v0.44.0 — 2026-11-20
 
 Demandé le 2026-11-20 : formaliser une prestation de développement réalisée pour une entreprise ivoirienne, depuis NJM Facturation.

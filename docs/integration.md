@@ -79,6 +79,10 @@ Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètre
 
 Option `reports` de `supervisionAdminRouter` : `reports: { runtime: async () => ({ startedAt, uptimeSec, rssMb, heapUsedMb, externalMb, loopLagMaxMs }) }`. La Supervision l'interroge toutes les 15 secondes (ses relevés alimentent la page « En direct », les courbes de mémoire et les alertes de redémarrage ou de saturation). Une appli en offre gratuite qui s'endort (My Family) est interrogée au rythme de ses vérifications, soit toutes les 5 minutes.
 
+## 3 quater. Taille réelle de la base (rapport `database`)
+
+Option `reports` : `reports: { database: async () => ({ at, diskBytes, liveBytes, reusableBytes, documents: { count, storedBytes, tableBytes } }) }`. `diskBytes` : place occupée sur le disque ; `liveBytes` : données encore utiles ; `reusableBytes` : la différence (place libérée par des suppressions, que PostgreSQL réutilise sans la rendre au disque). La Supervision l'interroge toutes les 5 minutes (`modules/resources/realsize.ts`) et en trace la courbe dans Ressources. Avec `?days=N` (1 à 90), le rapport ajoute `deletions: [{ at, count, manual, auto }]` : les suppressions de documents regroupées par 10 minutes, dont la Supervision fait des repères « −N » sur la courbe. Aucune donnée de client dans ce rapport. Procedia le fournit depuis la v0.64.0.
+
 ## 3 bis. Clients de l'appli
 
 Option `tenants` de `supervisionAdminRouter` (Node) ou de `supervision_fastapi_router` (Python) : `{ label, list, detail }`.
