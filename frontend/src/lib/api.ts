@@ -42,6 +42,8 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
         ...(isFreshRequested() ? { "X-Refresh": "1" } : {}),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      // Jamais de réponse gardée en cache par le navigateur (iPhone) : une alerte résolue doit disparaître aussitôt.
+      cache: "no-store",
     });
   } catch {
     throw new ApiError(0, "Serveur de supervision injoignable");

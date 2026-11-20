@@ -150,6 +150,11 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
     lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, recent: pushRecent(prev?.recent ?? [], report.rssMb) });
   }
   await watchTrends(app, report, now).catch((e) => console.error(`[tendance] ${app.key}`, (e as Error).message));
+  // Redémarrage dû à une mise en ligne : simple information, close d'elle-même au bout d'une heure, sans notification.
+  await prisma.alert.updateMany({
+    where: { appKey: app.key, fingerprint: `restart-deploy:${app.key}`, status: { in: ["open", "acknowledged"] }, openedAt: { lt: new Date(now.getTime() - 60 * 60_000) } },
+    data: { status: "resolved", resolvedAt: now },
+  }).catch((e) => console.error(`[alertes] ${app.key}`, (e as Error).message));
   const lr = lastRestart.get(app.key);
   if (lr && now.getTime() - lr.getTime() > QUIET_MS) {
     lastRestart.delete(app.key);

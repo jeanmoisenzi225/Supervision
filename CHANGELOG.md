@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.46.1 — 2026-11-20
+
+- **Accueil** : les alertes résolues ne restent plus affichées. Les réponses de l'API ne sont plus gardées en cache par le navigateur (cause probable sur iPhone), et l'accueil ne montre que les alertes ouvertes d'avertissement ou critiques ; les alertes d'information (redémarrage pour une mise en ligne) restent dans la page Alertes.
+- **Redémarrage pour une mise en ligne** : cette alerte d'information se ferme désormais d'elle-même au bout d'une heure (elle restait ouverte indéfiniment), sans notification.
+- **Dates des alertes** : l'accueil affiche l'heure locale au lieu des repères `⟦2026-11-20T13:21:34Z⟧`.
+
 ## v0.46.0 — 2026-11-20
 
 Demandé le 2026-11-20 : reprendre dans les documents de prestation les coûts et intitulés des composants des applis, comme pour la facture prévisionnelle.

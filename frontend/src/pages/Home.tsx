@@ -8,7 +8,7 @@ import { Replay } from "../components/Replay";
 import { Brand } from "../components/Brand";
 import { WeeklyObjectives } from "../components/WeeklyObjectives";
 import { api, type Alert, type AppOverview, type ReplayData } from "../lib/api";
-import { timeAgo } from "../lib/format";
+import { localizeTimes, timeAgo } from "../lib/format";
 import { useStagedHide } from "../lib/useStagedHide";
 import { usePolling } from "../lib/usePolling";
 import { APP_VERSION } from "../version";
@@ -70,7 +70,8 @@ export function Home({ onLogout }: { onLogout: () => void }) {
   const apps = data?.apps ?? [];
   const watched = apps.filter((a) => a.status !== "not_deployed" && a.status !== "paused");
   const down = watched.filter((a) => a.status === "down" || a.status === "degraded");
-  const open = alerts ?? [];
+  // L'accueil ne montre que ce qui demande de l'attention : les alertes d'information (mise en ligne…) restent dans la page Alertes.
+  const open = (alerts ?? []).filter((a) => a.status === "open" && a.severity !== "info");
   const full = data ? (t !== null && replay ? replayHeadline(replay, t, apps) : headline(apps)) : "";
   const title = useTypewriter(full);
   const overrides: StateOverride | null =
@@ -107,7 +108,7 @@ export function Home({ onLogout }: { onLogout: () => void }) {
           {open.slice(0, 3).map((a) => (
             <div key={a.id} className={`attention ${sev(a.severity)}`}>
               <strong>{a.title}</strong>
-              {a.detail && <span className="muted small">{a.detail}</span>}
+              {a.detail && <span className="muted small">{localizeTimes(a.detail)}</span>}
               <span className="attention-foot">
                 <span className="muted small">{timeAgo(a.openedAt)}</span>
                 <Link to="/supervision/alertes" className="small">
