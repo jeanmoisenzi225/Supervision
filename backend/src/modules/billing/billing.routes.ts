@@ -8,6 +8,9 @@ import { getHostingCosts } from "../hosting/hosting.service";
 import { forecastLines } from "./forecast";
 import { isAbsurdRate, usdRate, type FxMode } from "./fx";
 import { generateDraftInvoicePdf } from "./invoice-pdf";
+import { buildServiceDocs, DOC_FILENAMES, type DocKind, type ServiceDocData } from "./service-docs.content";
+import { renderServiceDocDocx } from "./service-docs.docx";
+import { renderServiceDocPdf } from "./service-docs.pdf";
 
 export const billingRouter = asyncRouter();
 billingRouter.use(requireAdmin);
@@ -59,7 +62,7 @@ const profileSchema = z.object({
   paymentDetails: z.string().max(1000).optional(),
   country: z.string().max(100).default("Côte d’Ivoire"),
   legalName: z.string().max(180).optional(),
-  legalForm: z.enum(["entreprise_individuelle"]).optional(),
+  legalForm: z.enum(["entreprise_individuelle", "personne_physique"]).optional(),
   businessAddress: z.string().max(500).optional(),
   rccm: z.string().max(60).optional(),
   ncc: z.string().max(40).optional(),
@@ -281,4 +284,78 @@ billingRouter.get("/fx", async (req, res) => {
   } catch (err) {
     throw new HttpError(502, (err as Error).message);
   }
+});
+
+// ---------- Dossiers de prestation (v0.42.0) : demande de règlement + convention de constatation des travaux ----------
+
+const text = (max: number) => z.string().trim().max(max).default("");
+const serviceDocSchema = z.object({
+  clientId: z.string().min(1),
+  reference: text(60), appName: z.string().trim().min(1).max(180), description: text(4000),
+  features: z.array(z.string().trim().max(300)).max(60).default([]),
+  technologies: text(500), workNature: text(2000), period: text(200), deliveryState: text(300), location: text(300),
+  amount: z.coerce.number().min(0).max(1e12).nullish(), currency: z.enum(["EUR", "XOF"]).default("EUR"),
+  paymentTerms: text(300), paymentDue: text(300), paymentCoordinates: text(1000),
+  clientLegalForm: text(120), clientRepresentative: text(180), clientRole: text(120), place: text(120),
+  emissionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish().or(z.literal("")),
+});
+
+billingRouter.get("/service-docs", async (_req, res) => {
+  res.json(await prisma.billingServiceDoc.findMany({ include: { client: true }, orderBy: { updatedAt: "desc" }, take: 200 }));
+});
+
+function serviceDocData(row: Awaited<ReturnType<typeof prisma.billingServiceDoc.findFirstOrThrow>> & { client: { name: string; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; email: string | null; phone: string | null } }, profile: Record<string, string | undefined>): ServiceDocData {
+  const c = row.client;
+  return {
+    appName: row.appName, description: row.description, features: row.features, technologies: row.technologies, workNature: row.workNature,
+    period: row.period, deliveryState: row.deliveryState, location: row.location,
+    amount: row.amount == null ? null : Number(row.amount), currency: row.currency === "XOF" ? "XOF" : "EUR",
+    paymentTerms: row.paymentTerms, paymentDue: row.paymentDue, paymentCoordinates: row.paymentCoordinates || profile.paymentDetails || "",
+    clientLegalForm: row.clientLegalForm, clientRepresentative: row.clientRepresentative, clientRole: row.clientRole, place: row.place,
+    reference: row.reference, emissionDate: row.emissionDate,
+    provider: { name: profile.legalName ?? "", address: profile.businessAddress ?? "", email: profile.contactEmail ?? "", phone: profile.phone ?? "", brand: profile.brandName || "NJMDev" },
+    client: { name: c.name, address: [c.billingAddress, [c.postalCode, c.city].filter(Boolean).join(" "), c.country].filter(Boolean).join(", "), rccm: c.rccm ?? "", ncc: c.ncc ?? "", email: c.email ?? "", phone: c.phone ?? "" },
+  };
+}
+
+function serviceDocPayload(input: z.infer<typeof serviceDocSchema>) {
+  const { emissionDate, amount, ...rest } = input;
+  return { ...rest, amount: amount == null ? null : new Prisma.Decimal(amount), emissionDate: emissionDate || null };
+}
+
+billingRouter.post("/service-docs", async (req, res) => {
+  const input = serviceDocSchema.parse(req.body);
+  if (!(await prisma.billingClient.findFirst({ where: { id: input.clientId, archivedAt: null } }))) throw new HttpError(400, "Sélectionne un client actif");
+  res.status(201).json(await prisma.billingServiceDoc.create({ data: serviceDocPayload(input), include: { client: true } }));
+});
+
+billingRouter.put("/service-docs/:id", async (req, res) => {
+  const input = serviceDocSchema.parse(req.body);
+  if (!(await prisma.billingServiceDoc.findUnique({ where: { id: req.params.id } }))) throw new HttpError(404, "Dossier introuvable");
+  if (!(await prisma.billingClient.findFirst({ where: { id: input.clientId, archivedAt: null } }))) throw new HttpError(400, "Sélectionne un client actif");
+  res.json(await prisma.billingServiceDoc.update({ where: { id: req.params.id }, data: serviceDocPayload(input), include: { client: true } }));
+});
+
+billingRouter.delete("/service-docs/:id", async (req, res) => {
+  if (!(await prisma.billingServiceDoc.findUnique({ where: { id: req.params.id } }))) throw new HttpError(404, "Dossier introuvable");
+  await prisma.billingServiceDoc.delete({ where: { id: req.params.id } });
+  res.json({ ok: true });
+});
+
+/** Télécharge un des deux documents du dossier, en PDF ou en Word modifiable ; généré à la demande, jamais conservé. */
+billingRouter.get("/service-docs/:id/:kind.:format", async (req, res) => {
+  const kind = z.enum(["demande", "convention"]).parse(req.params.kind) as DocKind;
+  const format = z.enum(["pdf", "docx"]).parse(req.params.format);
+  const row = await prisma.billingServiceDoc.findUnique({ where: { id: req.params.id }, include: { client: true } });
+  if (!row) throw new HttpError(404, "Dossier introuvable");
+  const setting = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
+  const profile = setting ? (JSON.parse(setting.value) as Record<string, string | undefined>) : {};
+  const docs = buildServiceDocs(serviceDocData(row, profile));
+  const { blocks, header } = docs[kind];
+  const body = format === "pdf" ? await renderServiceDocPdf(blocks, header, docs.brand) : await renderServiceDocDocx(blocks, header, docs.brand);
+  res.status(200)
+    .set("Content-Type", format === "pdf" ? "application/pdf" : "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    .set("Content-Disposition", `attachment; filename="${DOC_FILENAMES[kind]}.${format}"`)
+    .set("Cache-Control", "private, no-store")
+    .send(body);
 });

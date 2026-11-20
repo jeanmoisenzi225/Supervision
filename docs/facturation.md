@@ -60,3 +60,13 @@ Décision du propriétaire (2026-11-12) : à partir des coûts de la page « Co�
 ## Phase initiale
 
 La première phase doit rendre utilisables les clients et les brouillons, avec calculs et aperçu. Tant que l'identité juridique n'est pas renseignée, l'interface doit afficher explicitement que l'émission officielle est désactivée. Les factures de démonstration ne doivent jamais recevoir de numéro ressemblant à un numéro officiel.
+
+## Dossiers de prestation (v0.42.0)
+
+Onglet « Prestations » : une saisie (`BillingServiceDoc`, routes `/api/billing/service-docs`) produit deux documents téléchargeables en PDF et en Word (`GET /service-docs/:id/{demande|convention}.{pdf|docx}`), générés à la demande et jamais conservés.
+
+- **Demande de règlement** : explicitement « pas une facture fiscale », sans numéro de facture ni TVA, sans valeur de titre de créance.
+- **Convention de constatation des travaux** : prend effet à la dernière signature (jamais antidatée) ; constate les travaux antérieurs ; propriété intellectuelle en deux options (licence d'exploitation par défaut, cession délimitée avec rémunération distincte) ; titularité non présumée au profit d'une future société ; confidentialité, responsabilités, droit applicable.
+- **Prestataire** : repris du profil de facturation (Paramètres, rubrique « Prestataire ») ; statut « Personne physique » possible. **Client** : fiche client. Tout champ vide devient une zone surlignée « à compléter » ; aucun identifiant administratif n'est inventé.
+- **Technique** : contenu en blocs (`service-docs.content.ts`), rendu PDF (`pdfkit`, police Inter dans `backend/assets/fonts`) et Word (`docx`). Logo : `backend/assets/logo-njmdev.png`.
+- **Validation** : les points « ⚠ Validation » (fiscalité France et Côte d'Ivoire, droits d'auteur, loi et juridiction) sont à faire valider avant signature ou paiement.

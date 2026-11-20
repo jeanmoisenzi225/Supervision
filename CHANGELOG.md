@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.42.0 — 2026-11-20
+
+Demandé le 2026-11-20 : formaliser une prestation de développement réalisée pour une entreprise ivoirienne, depuis NJM Facturation.
+
+- **Onglet « Prestations »** dans NJM Facturation : une saisie (client, application, travaux, montant, devise, paiement) produit la **demande de règlement** (ce n'est pas une facture) et la **convention de constatation des travaux**, en **PDF** et en **Word** modifiable, avec le logo NJMDev, en-tête, pagination et espaces de signature.
+- **Prudence juridique intégrée** : aucun SIRET, RCCM, NCC ni TVA inventé (zones « à compléter » surlignées), NJMDev présenté comme identité visuelle et non comme société, convention sans effet rétroactif ni antidatage, licence et cession de droits distinguées, points « ⚠ Validation » signalés.
+- **Profil de facturation** : nouveau statut « Personne physique (aucune structure) » pour le prestataire.
+- Génération côté serveur (bibliothèques `pdfkit` et `docx`, police Inter embarquée), à la demande, sans stockage. Nouvelle table `BillingServiceDoc` (migration `20261120100000_service_docs`).
+
 ## v0.41.2 — 2026-11-17
 
 - **Backlog My Family** : la Supervision lit désormais `docs/BACKLOG.md` sur la branche `njmdev/my-family` (au lieu de `main`).
