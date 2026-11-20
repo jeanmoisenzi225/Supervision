@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
+import { ServiceDocsTab } from "../components/ServiceDocsTab";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
 
 type Client = { id: string; kind: string; name: string; email: string | null; phone: string | null; billingAddress: string | null; postalCode: string | null; city: string | null; country: string; rccm: string | null; ncc: string | null; vatNumber: string | null; appKeys?: string[] };
@@ -202,7 +203,7 @@ export function BillingPage() {
     <div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>La structure juridique et le régime de TVA ne sont pas encore configurés. Aucun numéro de facture ne sera attribué.</span></div></div>
     {notice && <p className="success small">{notice}</p>}{error && <p className="error small">{error}</p>}
     <div className="tabs">
-      {([["invoices", `Factures (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
+      {([["invoices", `Factures (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["docs", "Prestations"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
     </div>
     {tab === "invoices" && <section className="card"><h3>Factures prévisionnelles et brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun document enregistré.</p> : <div className="stack-small">{invoices.map((i) => <div className="service" key={i.id}>
         <div className="row wrap"><strong>{i.kind === "draft" ? "BROUILLON" : "PRÉVISIONNELLE"}</strong><span className="muted small">{i.period ? `${i.period} · ` : ""}{i.id.slice(-8).toUpperCase()}</span></div>
@@ -274,15 +275,18 @@ export function BillingPage() {
         <div className="row wrap"><button type="button" onClick={previewCurrentDraft} disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Aperçu A4</button><button className="primary" type="submit" disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Enregistrer le brouillon</button><button type="button" onClick={() => setTab("invoices")}>Annuler</button></div>
       </section>
     </form>}
+    {tab === "docs" && <ServiceDocsTab clients={clients} profileReady={Boolean(profile.legalName?.trim() && profile.businessAddress?.trim())} onNotice={setNotice} onError={setError} />}
     {tab === "settings" && <section className="card"><h3>Identité commerciale</h3><p className="muted small">Informations de marque uniquement, indépendantes de la future identité juridique.</p><form className="stack-small" onSubmit={saveProfile}>
       <label>Nom commercial<input value={profile.brandName} onChange={(e) => setProfile({ ...profile, brandName: e.target.value })}/></label>
       <label>E-mail<input type="email" value={profile.contactEmail} onChange={(e) => setProfile({ ...profile, contactEmail: e.target.value })}/></label>
       <label>Téléphone<input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })}/></label>
       <label>Site internet<input value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })}/></label>
       <label>Informations de paiement<textarea rows={3} value={profile.paymentDetails} onChange={(e) => setProfile({ ...profile, paymentDetails: e.target.value })}/></label>
-      <h3>Identité légale (à compléter après immatriculation)</h3>
-      <label>Nom et prénoms de l’exploitant<input value={profile.legalName ?? ""} onChange={(e) => setProfile({ ...profile, legalName: e.target.value })}/></label>
-      <label>Adresse professionnelle en Côte d’Ivoire<input value={profile.businessAddress ?? ""} onChange={(e) => setProfile({ ...profile, businessAddress: e.target.value })}/></label>
+      <h3>Prestataire (identité légale)</h3>
+      <p className="muted small">Sert aux documents de prestation. Tant qu’il n’y a pas de structure, tu agis en personne physique : ne renseigne ni RCCM, ni NCC, ni numéro de TVA que tu n’as pas.</p>
+      <label>Statut<select value={profile.legalForm ?? "personne_physique"} onChange={(e) => setProfile({ ...profile, legalForm: e.target.value })}><option value="personne_physique">Personne physique (aucune structure)</option><option value="entreprise_individuelle">Entreprise individuelle</option></select></label>
+      <label>Nom et prénoms<input value={profile.legalName ?? ""} onChange={(e) => setProfile({ ...profile, legalName: e.target.value })}/></label>
+      <label>Adresse (France ou Côte d’Ivoire)<input value={profile.businessAddress ?? ""} onChange={(e) => setProfile({ ...profile, businessAddress: e.target.value })}/></label>
       <div className="row wrap"><label>RCCM<input value={profile.rccm ?? ""} onChange={(e) => setProfile({ ...profile, rccm: e.target.value })}/></label><label>NCC<input value={profile.ncc ?? ""} onChange={(e) => setProfile({ ...profile, ncc: e.target.value })}/></label></div>
       <label>Régime fiscal (à confirmer)<input value={profile.taxRegime ?? ""} onChange={(e) => setProfile({ ...profile, taxRegime: e.target.value })}/></label>
       <label>Régime de TVA (à confirmer)<input value={profile.vatRegime ?? ""} onChange={(e) => setProfile({ ...profile, vatRegime: e.target.value })}/></label>

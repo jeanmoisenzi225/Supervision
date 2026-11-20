@@ -1,6 +1,6 @@
 # Journal des versions
 
-## v0.44.0 — 2026-11-20
+## v0.45.0 — 2026-11-20
 
 Demandé le 2026-11-20 : suivre l'évolution **réelle** de la base en direct. Sur Procedia, la taille mesurée par Render restait à 1,5 Go alors que les documents conservés n'en représentaient plus que 1,2 : PostgreSQL ne rend pas au disque la place des lignes supprimées (il la réutilise pour les prochains imports).
 
@@ -9,6 +9,15 @@ Demandé le 2026-11-20 : suivre l'évolution **réelle** de la base en direct. S
 - **Repères de suppression sur la courbe** : chaque moment où des documents ont été supprimés (à la validation ou automatiquement, regroupés par 10 minutes) s'affiche en direct sur la courbe par un trait rouge et un « −N » ; l'infobulle donne le détail et l'heure. Les suppressions sont lues dans le rapport de l'appli à chaque affichage (jamais de nom de fichier).
 - Une appli qui ne propose pas ce rapport (404) est laissée tranquille une heure. Aucun changement de base de données : les relevés vont dans `ResourceSample` (clés `dbreal:<appli>` et `dbdisk:<appli>`, gardées 90 jours).
 - Procedia v0.64.0 fournit le rapport.
+
+## v0.44.0 — 2026-11-20
+
+Demandé le 2026-11-20 : formaliser une prestation de développement réalisée pour une entreprise ivoirienne, depuis NJM Facturation.
+
+- **Onglet « Prestations »** dans NJM Facturation : une saisie (client, application, travaux, montant, devise, paiement) produit la **demande de règlement** (ce n'est pas une facture) et la **convention de constatation des travaux**, en **PDF** et en **Word** modifiable, avec le logo NJMDev, en-tête, pagination et espaces de signature.
+- **Prudence juridique intégrée** : aucun SIRET, RCCM, NCC ni TVA inventé (zones « à compléter » surlignées), NJMDev présenté comme identité visuelle et non comme société, convention sans effet rétroactif ni antidatage, licence et cession de droits distinguées, points « ⚠ Validation » signalés.
+- **Profil de facturation** : nouveau statut « Personne physique (aucune structure) » pour le prestataire.
+- Génération côté serveur (bibliothèques `pdfkit` et `docx`, police Inter embarquée), à la demande, sans stockage. Nouvelle table `BillingServiceDoc` (migration `20261120100000_service_docs`).
 
 ## v0.43.0 — 2026-11-19
 

@@ -231,6 +231,7 @@ model BillingClient {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   invoices       BillingInvoice[]
+  serviceDocs    BillingServiceDoc[]
   @@index([name])
   @@index([archivedAt])
 }
@@ -296,4 +297,35 @@ model Objective {
   createdAt DateTime  @default(now())
 
   @@index([weekStart])
+}
+
+/// Dossier de prestation (v0.42.0) : à partir d'une seule saisie, produit la demande de règlement
+/// et la convention de constatation des travaux (PDF et Word). Ce n'est pas une facture : aucun numéro fiscal.
+model BillingServiceDoc {
+  id                 String        @id @default(cuid())
+  clientId           String
+  client             BillingClient @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  reference          String        @default("")
+  appName            String
+  description        String        @default("")
+  features           String[]      @default([])
+  technologies       String        @default("")
+  workNature         String        @default("")
+  period             String        @default("")
+  deliveryState      String        @default("")
+  location           String        @default("")
+  amount             Decimal?      @db.Decimal(14, 2)
+  currency           String        @default("EUR")
+  paymentTerms       String        @default("")
+  paymentDue         String        @default("")
+  paymentCoordinates String        @default("")
+  clientLegalForm    String        @default("")
+  clientRepresentative String      @default("")
+  clientRole         String        @default("")
+  place              String        @default("")
+  /// Date d'émission de la demande (AAAA-MM-JJ) ; vide = date du jour au moment du téléchargement.
+  emissionDate       String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  @@index([clientId])
 }
