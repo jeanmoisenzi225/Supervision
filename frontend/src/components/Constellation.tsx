@@ -1,11 +1,11 @@
 import type { AppOverview } from "../lib/api";
 
-/** Logos des projets (public/logos) ; My Family n'en a pas encore : pastille à initiales. */
+/** Logos des projets (public/logos). Famille N'ZI : le portrait déjà publié par son application (non copié dans ce dépôt public). */
 export const LOGOS: Record<string, { src: string; wide?: boolean } | { initials: string }> = {
   mga: { src: "/logos/mga.svg" },
   "site-autonova": { src: "/logos/autonova.png", wide: true },
   yiri: { src: "/logos/yiri.png" },
-  "my-family": { initials: "MF" },
+  "my-family": { src: "https://nzi-family.onrender.com/icons/icon-192.png" },
   "eden-sup": { src: "/logos/eden.svg" },
   procedia: { src: "/logos/procedia.svg" },
 };

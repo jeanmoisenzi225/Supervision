@@ -20,7 +20,7 @@ Une section par appli, dans son propre dépôt, avec sa propre version :
 - [ ] **Yiri Invest** suite : alertes métier dédiées (récap ou BOC non parti à l'heure).
 - [x] **Procedia** : disponibilité surveillée (v0.1.4, 2026-10-31).
 - [x] **Procedia** v0.15.0 (2026-11-01) : module Node, `mirrorConsole` + `captureProcessErrors`, erreurs 500 et 5xx prévues avec modèle de route (jamais l'objet d'erreur : données de clients). À saisir sur `procedia-backend` : `SUPERVISION_URL`, `SUPERVISION_INGEST_TOKEN`.
-- [ ] **My Family** : à intégrer dès le premier backend.
+- [x] **My Family** : disponibilité, journaux et alertes, résumé d'administration (v0.42.0, 2026-11-19).
 - [x] **EDEN Supervision** (2026-11-08) : disponibilité API, gateway et interface web ; reconnaissance des services Render `eden-sup-*` ; collecte des journaux backend Python via le module commun. EDEN SUP conserve sa mission de supervision métier pour EDEN Telecom, NJMDev Supervision supervise l’application EDEN comme service du parc.
 - [ ] **Site Autonova** : surveillé par son adresse ; échec de construction à remonter par MGA (publication du site).
 
@@ -231,7 +231,7 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - Ordre proposé pour le lot 2 : rejeu avec les vraies données, palette de recherche, diagnostic replié ; rivière et assistant plus tard.
 - [x] Accueil épuré (v0.41.0, 2026-11-16) : constellation, brief, rejeu et objectifs seulement ; infos d'une appli dans une fenêtre à fond transparent ouverte depuis son logo (celles de Procedia y comprises) ; constellation plus grande et lumineuse ; thème rangé dans « Paramètres ».
 
-## 21. Documents de prestation : demande de règlement et convention (2026-11-20) ✅ (v0.42.0)
+## 21. Documents de prestation : demande de règlement et convention (2026-11-20) ✅ (v0.44.0)
 
 - [x] Demande de règlement (pas une facture) et convention de constatation des travaux, PDF et Word, intégrés à NJM Facturation (onglet Prestations).
 - [x] Prestataire en personne physique, sans identifiant administratif inventé.

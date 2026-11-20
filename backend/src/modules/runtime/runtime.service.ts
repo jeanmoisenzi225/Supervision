@@ -88,8 +88,15 @@ export function isMemoryRestart(recent: number[], afterDeploy: boolean): boolean
 const lastRestart = new Map<string, Date>();
 const QUIET_MS = 2 * 3600_000;
 
+/** Applis en offre gratuite (qui s'endorment) : relevé au rythme de leurs vérifications de disponibilité (5 min), pas toutes les 15 s. */
+const lastSleepyPoll = new Map<string, number>();
+
 export async function pollRuntime(app: AppTarget, now = new Date()): Promise<void> {
-  if (!app.adminUrl || !app.adminToken || app.sleepsWhenIdle) return;
+  if (!app.adminUrl || !app.adminToken) return;
+  if (app.sleepsWhenIdle) {
+    if (now.getTime() - (lastSleepyPoll.get(app.key) ?? 0) < app.intervalSec * 1000) return;
+    lastSleepyPoll.set(app.key, now.getTime());
+  }
   if (now.getTime() < (unsupported.get(app.key) ?? 0)) return;
   let report: RuntimeReport;
   try {

@@ -11,7 +11,7 @@ Adresses surveillées par défaut (`backend/src/config/apps.ts`) :
 | MGA | API `/health`, appli web | 1 min |
 | Site Autonova | page d'accueil | 5 min |
 | Yiri Invest | `/manifest.json`, `/app` | 1 min |
-| My Family | aucune (pas encore en ligne) | 5 min |
+| My Family | API `/api/health`, appli web | 5 min (offre gratuite Render : l'API s'endort, la vérification la réveille ; délai de 90 s) |
 | Procedia | API `/api/health`, appli web | 1 min |
 | EDEN Supervision | API backend, gateway, application web | 1 min |
 
@@ -71,9 +71,13 @@ L'appli expose trois routes sous `/api/supervision`, **signées** par la Supervi
 
 Aides prêtes à l'emploi : `supervisionAdminRouter(express.Router, { ingestToken, actions, summary })` à monter sur `/api/supervision` (Node, après `express.json()`) et `supervision_fastapi_router(actions, summary)` (Python/FastAPI). Une action qui lève une erreur renvoie 422 avec son message (refus lisible). Une valeur à montrer une seule fois (code, mot de passe temporaire) va dans `data.display` : jamais dans `message`, qui est tracé.
 
-Côté supervision : adresse d'administration connue par défaut pour MGA, Yiri et Procedia (`<PREFIXE>_ADMIN_URL` pour la remplacer).
+Côté supervision : adresse d'administration connue par défaut pour MGA, Yiri, Procedia et My Family (`<PREFIXE>_ADMIN_URL` pour la remplacer).
 
 Chaque action est confirmée dans l'interface et tracée (qui, quand, paramètres, résultat). Une action marquée `danger` affiche un avertissement.
+
+## 3 ter. État en direct (rapport `runtime`)
+
+Option `reports` de `supervisionAdminRouter` : `reports: { runtime: async () => ({ startedAt, uptimeSec, rssMb, heapUsedMb, externalMb, loopLagMaxMs }) }`. La Supervision l'interroge toutes les 15 secondes (ses relevés alimentent la page « En direct », les courbes de mémoire et les alertes de redémarrage ou de saturation). Une appli en offre gratuite qui s'endort (My Family) est interrogée au rythme de ses vérifications, soit toutes les 5 minutes.
 
 ## 3 bis. Clients de l'appli
 

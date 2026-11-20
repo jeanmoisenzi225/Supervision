@@ -61,7 +61,7 @@ Décision du propriétaire (2026-11-12) : à partir des coûts de la page « Co�
 
 La première phase doit rendre utilisables les clients et les brouillons, avec calculs et aperçu. Tant que l'identité juridique n'est pas renseignée, l'interface doit afficher explicitement que l'émission officielle est désactivée. Les factures de démonstration ne doivent jamais recevoir de numéro ressemblant à un numéro officiel.
 
-## Dossiers de prestation (v0.42.0)
+## Dossiers de prestation (v0.44.0)
 
 Onglet « Prestations » : une saisie (`BillingServiceDoc`, routes `/api/billing/service-docs`) produit deux documents téléchargeables en PDF et en Word (`GET /service-docs/:id/{demande|convention}.{pdf|docx}`), générés à la demande et jamais conservés.
 

@@ -107,9 +107,15 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     name: "My Family",
     description: "Plateforme d'organisation familiale (pilote NZI FAMILY)",
     intervalSec: 300,
+    // Offres gratuites Render pendant la phase de test (2026-11-18) : l'API s'endort après 15 minutes sans visite.
+    sleepsWhenIdle: true,
+    defaultAdminUrl: "https://nzi-family-api.onrender.com/api",
     renderNames: [/family/i],
     claudeNames: [/family/i],
-    defaultChecks: [],
+    defaultChecks: [
+      { id: "api", label: "API", url: "https://nzi-family-api.onrender.com/api/health", expect: "health" },
+      { id: "app", label: "Appli web", url: "https://nzi-family.onrender.com/", expect: "2xx" },
+    ],
   },
   {
     key: "eden-sup",

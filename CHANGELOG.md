@@ -1,6 +1,6 @@
 # Journal des versions
 
-## v0.42.0 — 2026-11-20
+## v0.44.0 — 2026-11-20
 
 Demandé le 2026-11-20 : formaliser une prestation de développement réalisée pour une entreprise ivoirienne, depuis NJM Facturation.
 
@@ -8,6 +8,21 @@ Demandé le 2026-11-20 : formaliser une prestation de développement réalisée 
 - **Prudence juridique intégrée** : aucun SIRET, RCCM, NCC ni TVA inventé (zones « à compléter » surlignées), NJMDev présenté comme identité visuelle et non comme société, convention sans effet rétroactif ni antidatage, licence et cession de droits distinguées, points « ⚠ Validation » signalés.
 - **Profil de facturation** : nouveau statut « Personne physique (aucune structure) » pour le prestataire.
 - Génération côté serveur (bibliothèques `pdfkit` et `docx`, police Inter embarquée), à la demande, sans stockage. Nouvelle table `BillingServiceDoc` (migration `20261120100000_service_docs`).
+
+## v0.43.0 — 2026-11-19
+
+Demandé le 2026-11-19 : le logo de Famille N'ZI n'apparaissait pas et peu d'informations remontaient.
+
+- **Logo** : My Family affiche le portrait de Famille N'ZI (chargé depuis l'adresse publique de son application, sans copie dans ce dépôt public).
+- **État en direct** : les applis en offre gratuite sont désormais interrogées (toutes les 5 minutes) ; avant, elles ne l'étaient jamais. Le module Node accepte l'option `reports` (`GET /supervision/reports/:name`).
+
+## v0.42.0 — 2026-11-19
+
+Demandé le 2026-11-19 : brancher Famille N'ZI (My Family) à la Supervision, dont on ne voyait que les déploiements.
+
+- **Disponibilité** : l'API (`/api/health`) et l'appli web de Famille N'ZI sont vérifiées toutes les 5 minutes (offre gratuite Render : délai de réveil de 90 s). Les temps de réponse, la disponibilité et les alertes apparaissent comme pour les autres applis.
+- **Administration** : adresse de base des routes `/api/supervision` connue par défaut (résumé des effectifs ; aucune donnée personnelle).
+- Journaux et alertes : l'appli envoie ses journaux avec `SUPERVISION_URL` et `SUPERVISION_INGEST_TOKEN` (valeur de `MY_FAMILY_INGEST_TOKEN`).
 
 ## v0.41.2 — 2026-11-17
 
