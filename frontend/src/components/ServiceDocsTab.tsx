@@ -20,11 +20,14 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
   const [editing, setEditing] = useState<string | null>(null);
   const [lines, setLines] = useState<DocLine[]>([]);
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const total = Math.round(lines.reduce((t, l) => t + l.quantity * l.unitPrice, 0) * 100) / 100;
+  const prec = form.currency === "XOF" ? 0 : 2;
+  const total = Math.round(lines.reduce((t, l) => t + Math.round(l.quantity * l.unitPrice * 10 ** prec) / 10 ** prec, 0) * 10 ** prec) / 10 ** prec;
   const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: form.currency === "XOF" ? "XOF" : "EUR", maximumFractionDigits: form.currency === "XOF" ? 0 : 2 }).format(n);
   const load = () => api<Doc[]>("/billing/service-docs").then(setDocs).catch((e) => onError(e.message));
   useEffect(() => { void load(); }, []);
   useEffect(() => { if (!form.clientId && clients.length) setForm((f) => ({ ...f, clientId: clients[0].id })); }, [clients]);
+  /** Nouveau dossier : les coûts du client sont repris tout de suite, et suivent la devise choisie. */
+  useEffect(() => { if (!editing && form.clientId) void importCosts(form.currency, form.clientId); }, [form.clientId, form.currency, editing]);
   const set = (k: keyof ReturnType<typeof blank>, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   async function save(e: FormEvent) {
@@ -42,10 +45,10 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   /** Reprend, tels quels, les composants et coûts des applis du client (comme la facture prévisionnelle). */
-  async function importCosts() {
+  async function importCosts(currency = form.currency, clientId = form.clientId) {
     setImportMsg(null);
     try {
-      const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId: form.clientId, currency: form.currency, date: form.emissionDate || undefined, includeClaude: true } });
+      const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId, currency, date: form.emissionDate || undefined, includeClaude: true } });
       const kept = lines.filter((l) => !r.lines.some((n) => n.description === l.description));
       setLines([...r.lines.map((l) => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice })), ...kept]);
       setImportMsg(r.lines.length === 0
@@ -92,9 +95,9 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
             <input style={{ width: 110 }} aria-label={`Prix unitaire ${i + 1}`} type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitPrice: Number(e.target.value) } : x)))}/>
             <button type="button" className="danger" onClick={() => setLines(lines.filter((_, j) => j !== i))}>✕</button>
           </div>)}
-          {lines.length > 0 && <div className="row wrap"><strong>Total du détail : {fmt(total)}</strong><button type="button" onClick={() => set("amount", String(total))}>Utiliser comme montant convenu</button></div>}
+          {lines.length > 0 && <div className="row wrap"><strong>Total du détail : {fmt(total)}</strong>{form.amount !== "" && Number(form.amount) !== total && <button type="button" onClick={() => set("amount", "")}>Revenir au total du détail</button>}</div>}
         </fieldset>
-        <div className="row wrap"><label>Montant convenu<input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => set("amount", e.target.value)}/></label><label>Devise<select value={form.currency} onChange={(e) => set("currency", e.target.value)}><option value="EUR">Euro (EUR)</option><option value="XOF">Franc CFA (FCFA)</option></select></label></div>
+        <div className="row wrap"><label>Montant convenu (vide = total du détail{lines.length ? ` : ${fmt(total)}` : ""})<input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => set("amount", e.target.value)} placeholder={lines.length ? String(total) : ""}/></label><label>Devise<select value={form.currency} onChange={(e) => { set("currency", e.target.value); if (editing && lines.length) void importCosts(e.target.value); }}><option value="EUR">Euro (EUR)</option><option value="XOF">Franc CFA (FCFA)</option></select></label></div>
         <div className="row wrap"><label>Mode de paiement<input value={form.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} placeholder="virement…"/></label><label>Échéance<input value={form.paymentDue} onChange={(e) => set("paymentDue", e.target.value)}/></label></div>
         <label>Coordonnées de paiement (vide = informations de paiement du profil)<textarea rows={2} value={form.paymentCoordinates} onChange={(e) => set("paymentCoordinates", e.target.value)}/></label>
         <div className="row wrap"><label>Référence<input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="DR-2026-001"/></label><label>Lieu<input value={form.place} onChange={(e) => set("place", e.target.value)}/></label><label>Date d’émission (vide = jour du téléchargement)<input type="date" value={form.emissionDate} onChange={(e) => set("emissionDate", e.target.value)}/></label></div>

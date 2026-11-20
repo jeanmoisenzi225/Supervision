@@ -30,6 +30,18 @@ describe("détail des composants", () => {
     expect(all).toContain("27,00 €");
     expect(all).toContain("expliquer l’écart");
   });
+  it("alimente le total avec les lignes quand aucun montant n'est saisi", () => {
+    const s = buildServiceDocs({ ...base, amount: null, lines: [{ description: "A", quantity: 1, unitPrice: 7 }, { description: "B", quantity: 1, unitPrice: 6.5 }] }, "2026-11-20");
+    const all = JSON.stringify(s);
+    expect(all).toContain("13,50 €");
+    expect(all).not.toContain("montant à compléter");
+    expect(all).not.toContain("expliquer l’écart");
+  });
+  it("en FCFA, le total est la somme des lignes arrondies", () => {
+    const all = JSON.stringify(buildServiceDocs({ ...base, currency: "XOF", amount: null, lines: [{ description: "A", quantity: 1, unitPrice: 4591.7 }, { description: "B", quantity: 1, unitPrice: 4263.72 }] }, "2026-11-20"));
+    expect(all).toContain("8 856 FCFA");
+    expect(all).not.toContain("8 855 FCFA");
+  });
   it("n'ajoute rien sans lignes", () => {
     expect(JSON.stringify(buildServiceDocs({ ...base, lines: [] }, "2026-11-20"))).not.toContain("Détail indicatif");
   });

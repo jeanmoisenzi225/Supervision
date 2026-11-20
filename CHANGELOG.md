@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.46.2 — 2026-11-20
+
+- **Prestations : total automatique.** Les coûts des applis du client sont repris dès l'ouverture d'un nouveau dossier (et au changement de client), puis reconvertis quand on change la devise (euro ou FCFA). Tant qu'aucun montant n'est saisi à la main, le **total des documents est la somme des lignes** : plus de « montant à compléter » quand le détail est connu. Un montant saisi à la main reste prioritaire, avec une zone « expliquer l'écart » s'il diffère.
+- **Arrondis** : chaque ligne est arrondie comme elle est affichée (0 décimale en FCFA) avant d'être additionnée : le total est toujours la somme des lignes lues.
+
 ## v0.46.1 — 2026-11-20
 
 - **Accueil** : les alertes résolues ne restent plus affichées. Les réponses de l'API ne sont plus gardées en cache par le navigateur (cause probable sur iPhone), et l'accueil ne montre que les alertes ouvertes d'avertissement ou critiques ; les alertes d'information (redémarrage pour une mise en ligne) restent dans la page Alertes.

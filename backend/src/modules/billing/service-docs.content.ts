@@ -44,7 +44,14 @@ const art = (n: number, title: string, ...items: (string | Block)[]): Block => (
 
 export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOString().slice(0, 10)) {
   const p = d.provider, c = d.client, nc = p.brand || "NJMDev";
-  const mont = formatAmount(d.amount, d.currency);
+  // Les lignes (coûts des applis, repris de la facturation) alimentent le total tant qu'aucun montant n'est saisi à la main.
+  const lines = (d.lines ?? []).filter((l) => l.description.trim());
+  // Chaque ligne est arrondie comme elle est affichée (0 décimale en FCFA), puis additionnée : le total est toujours la somme de ce qu'on lit.
+  const prec = d.currency === "XOF" ? 0 : 2;
+  const roundTo = (n: number) => Math.round(n * 10 ** prec) / 10 ** prec;
+  const lineAmounts = lines.map((l) => roundTo(l.quantity * l.unitPrice));
+  const lineSum = roundTo(lineAmounts.reduce((t, x) => t + x, 0));
+  const mont = formatAmount(d.amount ?? (lines.length ? lineSum : null), d.currency);
   const dateEm = frDate(d.emissionDate || today);
   const nomP = v(p.name, "nom et prénom du prestataire");
   const cli = v(c.name, "raison sociale du client");
@@ -66,11 +73,9 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     ...([c.email, c.phone].filter(Boolean).length ? [[c.email, c.phone].filter(Boolean).join(" · ")] : []),
   ];
   const lieu = v(d.place, "lieu");
-  const lines = (d.lines ?? []).filter((l) => l.description.trim());
-  const lineTotal = lines.reduce((t, l) => t + l.quantity * l.unitPrice, 0);
-  const lineRows: [string, string][] = lines.map((l) => [l.quantity === 1 ? l.description : `${l.description} (× ${l.quantity})`, formatAmount(Math.round(l.quantity * l.unitPrice * 100) / 100, d.currency)]);
-  const gap = lines.length && d.amount != null && Math.abs(lineTotal - d.amount) > 0.005;
-  const gapNote = gap ? ` Le montant convenu diffère du total du détail (${formatAmount(Math.round(lineTotal * 100) / 100, d.currency)}) : ⟦expliquer l’écart : remise, forfait, poste non détaillé⟧.` : "";
+  const lineRows: [string, string][] = lines.map((l, i) => [l.quantity === 1 ? l.description : `${l.description} (× ${l.quantity})`, formatAmount(lineAmounts[i], d.currency)]);
+  const gap = lines.length && d.amount != null && Math.abs(lineSum - d.amount) > 0.005;
+  const gapNote = gap ? ` Le montant convenu diffère du total du détail (${formatAmount(lineSum, d.currency)}) : ⟦expliquer l’écart : remise, forfait, poste non détaillé⟧.` : "";
   const eur = d.currency === "EUR";
 
   const demande: Block[] = [
@@ -130,7 +135,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
       `4.1. Les parties conviennent d’une rémunération forfaitaire de **${mont}**, nette de TVA ⟦à faire valider⟧, pour les travaux constatés à l’article 2.`,
       `4.2. En lettres : ⟦montant en lettres⟧ ${eur ? "euros" : "francs CFA"}.`,
       "4.3. Ce montant rémunère les travaux de développement. **Il ne rémunère pas la cession de droits d’auteur**, qui, si elle est retenue à l’article 8, fait l’objet d’une rémunération distincte précisée à cet article.",
-      ...(lines.length ? [`4.4. Détail indicatif des composants et coûts constatés pour l’application :`, { t: "list", items: lineRows.map(([a, b]) => `${a} : ${b}`) } as Block, ...(gap ? [`Le montant convenu diffère du total de ce détail (${formatAmount(Math.round(lineTotal * 100) / 100, d.currency)}) : ⟦expliquer l’écart⟧.`] : [])] : []),
+      ...(lines.length ? [`4.4. Détail indicatif des composants et coûts constatés pour l’application :`, { t: "list", items: lineRows.map(([a, b]) => `${a} : ${b}`) } as Block, ...(gap ? [`Le montant convenu diffère du total de ce détail (${formatAmount(lineSum, d.currency)}) : ⟦expliquer l’écart⟧.`] : [])] : []),
       "⚠ Validation : régime fiscal applicable (France et Côte d’Ivoire), retenue à la source éventuelle, convention fiscale, déclaration des revenus en France."),
     art(5, "Modalités de paiement",
       `5.1. Paiement par ${v(d.paymentTerms, "mode de paiement")}, à l’échéance suivante : ${v(d.paymentDue, "échéance")}.`,
