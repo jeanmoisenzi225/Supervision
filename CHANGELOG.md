@@ -1,12 +1,14 @@
 # Journal des versions
 
-## v0.45.0 — 2026-11-20
+## v0.46.0 — 2026-11-20
 
 Demandé le 2026-11-20 : reprendre dans les documents de prestation les coûts et intitulés des composants des applis, comme pour la facture prévisionnelle.
 
 - **Prestations** : bouton « Importer les coûts des applis du client » (mêmes lignes que la facture prévisionnelle : hébergement par service, base de données, stockage, et dépenses Claude, convertis dans la devise du dossier). Les lignes restent modifiables ; on peut en ajouter ou en retirer, et reprendre leur total comme montant convenu.
 - **Documents** : le détail apparaît dans la demande de règlement (lignes et total) et dans l'article 4 de la convention (4.4). Si le montant convenu diffère du total du détail, une zone « expliquer l'écart » est ajoutée.
 - Tableau des montants du PDF : les intitulés longs passent à la ligne sans être coupés. Nouvelle colonne `lines` (migration `20261120150000_service_docs_lines`).
+
+## v0.45.0 — 2026-11-20
 
 Demandé le 2026-11-20 : suivre l'évolution **réelle** de la base en direct. Sur Procedia, la taille mesurée par Render restait à 1,5 Go alors que les documents conservés n'en représentaient plus que 1,2 : PostgreSQL ne rend pas au disque la place des lignes supprimées (il la réutilise pour les prochains imports).
 
