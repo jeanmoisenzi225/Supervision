@@ -637,3 +637,12 @@ button.primary { color: var(--bg); }
 .popup-nar p { margin: 0 0 10px; line-height: 1.8; }
 .popup-foot { display: flex; gap: 16px; margin-top: 14px; font-size: 14px; }
 @media (max-width: 1100px) { .popup-kpis { grid-template-columns: repeat(2, 1fr); } .home-right { top: auto; height: auto; } .hstack .home-head { flex-wrap: wrap; row-gap: 6px; } .home-head .topbar-actions { flex-wrap: wrap; } }
+
+/* Courbe de comparaison (v0.43.0) : espace disque occupé face aux données réelles */
+.series-compare { fill: none; stroke: var(--muted, #8a8f9e); stroke-width: 1.6; stroke-dasharray: 5 4; opacity: .8; }
+
+/* Repères de suppression de documents sur la courbe (v0.44.0) */
+.event-line { stroke: #e5484d; stroke-width: 1; stroke-dasharray: 2 3; opacity: .75; }
+.event-dot { fill: #e5484d; stroke: var(--bg, #111); stroke-width: 1.5; }
+.event-pill { fill: #e5484d; }
+.event-text { fill: #fff; font-size: 9.5px; font-weight: 700; }

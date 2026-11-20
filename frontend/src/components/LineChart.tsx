@@ -15,6 +15,10 @@ interface Props {
   marks?: { at: number; kind: "memory" | "other" }[];
   /** Périodes à teinter (imports en cours, v0.37.0) ; `to` null = jusqu'à la fin de la période affichée. */
   bands?: { from: number; to: number | null; label?: string }[];
+  /** Seconde série de comparaison (v0.43.0), en pointillé gris : par exemple l'espace disque occupé face aux données réelles. */
+  compare?: { points: Points; label: string } | null;
+  /** Moments marquants avec un nombre (v0.44.0) : par exemple des documents supprimés. Trait vertical, point sur la courbe et « −N ». */
+  events?: { at: number; count: number; label: string }[];
 }
 
 const W = 600;
@@ -30,7 +34,7 @@ function timeLabel(t: number, rangeHours: number): string {
 }
 
 /** Courbe d'une seule série, avec limite et seuil facultatifs, réticule et infobulle au survol ou au toucher. */
-export function LineChart({ title, points, format, limit, threshold, rangeHours, marks = [], bands = [] }: Props) {
+export function LineChart({ title, points, format, limit, threshold, rangeHours, marks = [], bands = [], compare = null, events = [] }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<number | null>(null);
 
@@ -38,15 +42,16 @@ export function LineChart({ title, points, format, limit, threshold, rangeHours,
     if (points.length === 0) return null;
     const t0 = points[0][0];
     const t1 = points[points.length - 1][0] || t0 + 1;
-    const maxData = Math.max(...points.map((p) => p[1]));
+    const maxData = Math.max(...points.map((p) => p[1]), ...(compare?.points.map((p) => p[1]) ?? []));
     const yMax = Math.max(maxData, limit?.value ?? 0, threshold?.value ?? 0) * 1.08 || 1;
     const x = (t: number) => PAD.left + ((t - t0) / Math.max(1, t1 - t0)) * (W - PAD.left - PAD.right);
     const y = (v: number) => PAD.top + (1 - v / yMax) * (H - PAD.top - PAD.bottom);
     const line = points.map(([t, v], i) => `${i ? "L" : "M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join("");
+    const cmpLine = compare ? compare.points.filter((p) => p[0] >= t0 && p[0] <= t1).map(([t, v], i) => `${i ? "L" : "M"}${x(t).toFixed(1)},${y(v).toFixed(1)}`).join("") : "";
     const area = `${line}L${x(t1).toFixed(1)},${y(0)}L${x(t0).toFixed(1)},${y(0)}Z`;
     const ticks = [0, 0.5, 1].map((f) => f * yMax);
-    return { x, y, line, area, ticks, t0, t1 };
-  }, [points, limit, threshold]);
+    return { x, y, line, area, ticks, t0, t1, cmpLine };
+  }, [points, limit, threshold, compare]);
 
   if (!geo) {
     return (
@@ -73,7 +78,7 @@ export function LineChart({ title, points, format, limit, threshold, rangeHours,
   return (
     <figure className="chart">
       <figcaption>
-        {title} <span className="muted">· actuellement {format(latest)}</span>
+        {title} <span className="muted">· actuellement {format(latest)}{compare && compare.points.length > 0 ? ` · ${compare.label} ${format(compare.points[compare.points.length - 1][1])} (pointillé)` : ""}</span>
       </figcaption>
       <div className="chart-box">
         <svg
@@ -131,6 +136,23 @@ export function LineChart({ title, points, format, limit, threshold, rangeHours,
                 </rect>
               );
             })}
+          {events
+            .filter((e) => e.at >= geo.t0 && e.at <= geo.t1)
+            .map((e) => {
+              const near = points.reduce((b, p) => (Math.abs(p[0] - e.at) < Math.abs(b[0] - e.at) ? p : b), points[0]);
+              const x = geo.x(e.at), yv = geo.y(near[1]);
+              const txt = `−${e.count}`;
+              const w = 10 + txt.length * 6.5;
+              return (
+                <g key={e.at} className="event">
+                  <title>{e.label}</title>
+                  <line className="event-line" x1={x} x2={x} y1={PAD.top + 14} y2={H - PAD.bottom} />
+                  <circle className="event-dot" cx={x} cy={yv} r={3.5} />
+                  <rect className="event-pill" x={Math.min(Math.max(x - w / 2, PAD.left), W - PAD.right - w)} y={PAD.top} width={w} height={14} rx={7} />
+                  <text className="event-text" x={Math.min(Math.max(x, PAD.left + w / 2), W - PAD.right - w / 2)} y={PAD.top + 10.5} textAnchor="middle">{txt}</text>
+                </g>
+              );
+            })}
           {marks
             .filter((m) => m.at >= geo.t0 && m.at <= geo.t1)
             .map((m) => (
@@ -140,6 +162,7 @@ export function LineChart({ title, points, format, limit, threshold, rangeHours,
                 <text className="mark-icon" x={geo.x(m.at)} y={PAD.top + 9} textAnchor="middle">▲</text>
               </g>
             ))}
+          {compare && geo.cmpLine && <path className="series-compare" d={geo.cmpLine}><title>{compare.label}</title></path>}
           <path className="series-area" d={geo.area} />
           <path className="series-line" d={geo.line} />
           {hp && (
