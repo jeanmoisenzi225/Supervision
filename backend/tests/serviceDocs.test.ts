@@ -20,6 +20,21 @@ describe("contenu des documents de prestation", () => {
   });
 });
 
+describe("détail des composants", () => {
+  const base: any = { appName: "App", description: "", features: [], technologies: "", workNature: "", period: "", deliveryState: "", location: "", amount: 30, currency: "EUR", paymentTerms: "", paymentDue: "", paymentCoordinates: "", clientLegalForm: "", clientRepresentative: "", clientRole: "", place: "", reference: "", emissionDate: null, provider: { name: "", address: "", email: "", phone: "", brand: "NJMDev" }, client: { name: "", address: "", rccm: "", ncc: "", email: "", phone: "" } };
+  it("affiche les lignes dans les deux documents et signale un écart avec le montant convenu", () => {
+    const all = JSON.stringify(buildServiceDocs({ ...base, lines: [{ description: "App — hébergement : service api", quantity: 1, unitPrice: 7 }, { description: "App — base de données", quantity: 2, unitPrice: 10 }] }, "2026-11-20"));
+    expect(all).toContain("hébergement : service api");
+    expect(all).toContain("7,00 €");
+    expect(all).toContain("(× 2)");
+    expect(all).toContain("27,00 €");
+    expect(all).toContain("expliquer l’écart");
+  });
+  it("n'ajoute rien sans lignes", () => {
+    expect(JSON.stringify(buildServiceDocs({ ...base, lines: [] }, "2026-11-20"))).not.toContain("Détail indicatif");
+  });
+});
+
 // Nécessite une vraie base : TEST_DATABASE_URL=postgresql://... npx vitest run tests/serviceDocs.test.ts
 describe.skipIf(!process.env.TEST_DATABASE_URL)("API dossiers de prestation", () => {
   let app: ReturnType<typeof import("../src/app").createApp>;
@@ -37,7 +52,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("API dossiers de prestation", ()
   });
   afterAll(async () => { await prisma.billingServiceDoc.deleteMany(); await prisma.billingClient.delete({ where: { id: clientId } }); await prisma.$disconnect(); });
   it("crée un dossier puis télécharge les deux documents en PDF et en Word", async () => {
-    const created = await request(app).post("/api/billing/service-docs").set(auth).send({ clientId, appName: "App test", amount: 1500, currency: "EUR", features: ["A", "B"] });
+    const created = await request(app).post("/api/billing/service-docs").set(auth).send({ clientId, appName: "App test", amount: 1500, currency: "EUR", features: ["A", "B"], lines: [{ description: "Hébergement test", quantity: 1, unitPrice: 25 }] });
     expect(created.status).toBe(201);
     const id = created.body.id;
     for (const kind of ["demande", "convention"]) {

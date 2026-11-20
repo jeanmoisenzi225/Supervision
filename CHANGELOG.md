@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.45.0 — 2026-11-20
+
+Demandé le 2026-11-20 : reprendre dans les documents de prestation les coûts et intitulés des composants des applis, comme pour la facture prévisionnelle.
+
+- **Prestations** : bouton « Importer les coûts des applis du client » (mêmes lignes que la facture prévisionnelle : hébergement par service, base de données, stockage, et dépenses Claude, convertis dans la devise du dossier). Les lignes restent modifiables ; on peut en ajouter ou en retirer, et reprendre leur total comme montant convenu.
+- **Documents** : le détail apparaît dans la demande de règlement (lignes et total) et dans l'article 4 de la convention (4.4). Si le montant convenu diffère du total du détail, une zone « expliquer l'écart » est ajoutée.
+- Tableau des montants du PDF : les intitulés longs passent à la ligne sans être coupés. Nouvelle colonne `lines` (migration `20261120150000_service_docs_lines`).
+
 ## v0.44.0 — 2026-11-20
 
 Demandé le 2026-11-20 : formaliser une prestation de développement réalisée pour une entreprise ivoirienne, depuis NJM Facturation.

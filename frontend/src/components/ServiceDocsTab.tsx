@@ -6,7 +6,10 @@ type Doc = {
   id: string; clientId: string; client: ClientRef; reference: string; appName: string; description: string; features: string[]; technologies: string; workNature: string;
   period: string; deliveryState: string; location: string; amount: string | null; currency: string; paymentTerms: string; paymentDue: string; paymentCoordinates: string;
   clientLegalForm: string; clientRepresentative: string; clientRole: string; place: string; emissionDate: string | null; updatedAt: string;
+  lines?: DocLine[];
 };
+type DocLine = { description: string; quantity: number; unitPrice: number };
+type ForecastResponse = { lines: Array<DocLine & { source?: string }>; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string; rate?: number; rateInfo?: string };
 const blank = () => ({ clientId: "", reference: "", appName: "", description: "", features: "", technologies: "", workNature: "", period: "", deliveryState: "", location: "", amount: "", currency: "EUR", paymentTerms: "", paymentDue: "", paymentCoordinates: "", clientLegalForm: "", clientRepresentative: "", clientRole: "", place: "", emissionDate: "" });
 const money = (v: string | null, c: string) => (v == null ? "montant à compléter" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: c === "XOF" ? "XOF" : "EUR", maximumFractionDigits: c === "XOF" ? 0 : 2 }).format(Number(v)));
 
@@ -15,6 +18,10 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
   const [docs, setDocs] = useState<Doc[]>([]);
   const [form, setForm] = useState(blank());
   const [editing, setEditing] = useState<string | null>(null);
+  const [lines, setLines] = useState<DocLine[]>([]);
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const total = Math.round(lines.reduce((t, l) => t + l.quantity * l.unitPrice, 0) * 100) / 100;
+  const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: form.currency === "XOF" ? "XOF" : "EUR", maximumFractionDigits: form.currency === "XOF" ? 0 : 2 }).format(n);
   const load = () => api<Doc[]>("/billing/service-docs").then(setDocs).catch((e) => onError(e.message));
   useEffect(() => { void load(); }, []);
   useEffect(() => { if (!form.clientId && clients.length) setForm((f) => ({ ...f, clientId: clients[0].id })); }, [clients]);
@@ -23,16 +30,28 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
   async function save(e: FormEvent) {
     e.preventDefault(); onError(""); onNotice("");
     try {
-      const body = { ...form, features: form.features.split("\n").map((x) => x.trim()).filter(Boolean), amount: form.amount === "" ? null : Number(form.amount), emissionDate: form.emissionDate || null };
+      const body = { ...form, features: form.features.split("\n").map((x) => x.trim()).filter(Boolean), amount: form.amount === "" ? null : Number(form.amount), emissionDate: form.emissionDate || null, lines: lines.filter((l) => l.description.trim()) };
       await api(editing ? `/billing/service-docs/${editing}` : "/billing/service-docs", { method: editing ? "PUT" : "POST", body });
-      setForm({ ...blank(), clientId: form.clientId }); setEditing(null); await load();
+      setForm({ ...blank(), clientId: form.clientId }); setLines([]); setImportMsg(null); setEditing(null); await load();
       onNotice("Dossier enregistré. Télécharge la demande de règlement et la convention depuis la liste.");
     } catch (err) { onError((err as Error).message); }
   }
   function edit(d: Doc) {
-    setEditing(d.id);
+    setEditing(d.id); setLines((d.lines ?? []).map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice) }))); setImportMsg(null);
     setForm({ clientId: d.clientId, reference: d.reference, appName: d.appName, description: d.description, features: d.features.join("\n"), technologies: d.technologies, workNature: d.workNature, period: d.period, deliveryState: d.deliveryState, location: d.location, amount: d.amount == null ? "" : String(Number(d.amount)), currency: d.currency, paymentTerms: d.paymentTerms, paymentDue: d.paymentDue, paymentCoordinates: d.paymentCoordinates, clientLegalForm: d.clientLegalForm, clientRepresentative: d.clientRepresentative, clientRole: d.clientRole, place: d.place, emissionDate: d.emissionDate ?? "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  /** Reprend, tels quels, les composants et coûts des applis du client (comme la facture prévisionnelle). */
+  async function importCosts() {
+    setImportMsg(null);
+    try {
+      const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId: form.clientId, currency: form.currency, date: form.emissionDate || undefined, includeClaude: true } });
+      const kept = lines.filter((l) => !r.lines.some((n) => n.description === l.description));
+      setLines([...r.lines.map((l) => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice })), ...kept]);
+      setImportMsg(r.lines.length === 0
+        ? { ok: false, text: `Aucune ligne à importer pour ${r.apps.join(", ") || "ce client"} : ${r.skippedFree ? `${r.skippedFree} poste(s) gratuit(s) non repris. ` : "aucun coût trouvé. "}Rattache les applis au client (onglet Clients › Modifier).` }
+        : { ok: true, text: `${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ")} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.rateInfo ? `, taux : ${r.rateInfo}` : ""}). Modifiables ligne par ligne.${r.warnings.length ? " " + r.warnings.join(" ") : ""}` });
+    } catch (err) { setImportMsg({ ok: false, text: (err as Error).message }); }
   }
   async function remove(id: string) {
     if (!window.confirm("Supprimer ce dossier de prestation ?")) return;
@@ -63,6 +82,18 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
         <label>Nature des travaux<textarea rows={2} value={form.workNature} onChange={(e) => set("workNature", e.target.value)}/></label>
         <div className="row wrap"><label>Période<input value={form.period} onChange={(e) => set("period", e.target.value)} placeholder="de … à …"/></label><label>État de livraison<input value={form.deliveryState} onChange={(e) => set("deliveryState", e.target.value)}/></label></div>
         <label>Adresse de l’application ou du dépôt<input value={form.location} onChange={(e) => set("location", e.target.value)}/></label>
+        <fieldset className="stack-small"><legend className="small">Composants et coûts de l’application (facultatif)</legend>
+          <p className="muted small">Reprend les coûts d’hébergement et d’IA des applis rattachées au client (onglet Clients), comme pour la facture prévisionnelle. Le détail s’affiche dans les deux documents.</p>
+          <div className="row wrap"><button type="button" onClick={() => void importCosts()} disabled={!form.clientId}>Importer les coûts des applis du client</button><button type="button" onClick={() => setLines([...lines, { description: "", quantity: 1, unitPrice: 0 }])}>+ Ligne libre</button></div>
+          {importMsg && <p className="small" style={{ color: importMsg.ok ? "var(--ok)" : "var(--warn)" }}>{importMsg.text}</p>}
+          {lines.map((l, i) => <div className="row wrap" key={i}>
+            <input style={{ flex: "2 1 200px" }} aria-label={`Intitulé ${i + 1}`} value={l.description} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} placeholder="Intitulé du composant"/>
+            <input style={{ width: 70 }} aria-label={`Quantité ${i + 1}`} type="number" min="0" step="any" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) } : x)))}/>
+            <input style={{ width: 110 }} aria-label={`Prix unitaire ${i + 1}`} type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitPrice: Number(e.target.value) } : x)))}/>
+            <button type="button" className="danger" onClick={() => setLines(lines.filter((_, j) => j !== i))}>✕</button>
+          </div>)}
+          {lines.length > 0 && <div className="row wrap"><strong>Total du détail : {fmt(total)}</strong><button type="button" onClick={() => set("amount", String(total))}>Utiliser comme montant convenu</button></div>}
+        </fieldset>
         <div className="row wrap"><label>Montant convenu<input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => set("amount", e.target.value)}/></label><label>Devise<select value={form.currency} onChange={(e) => set("currency", e.target.value)}><option value="EUR">Euro (EUR)</option><option value="XOF">Franc CFA (FCFA)</option></select></label></div>
         <div className="row wrap"><label>Mode de paiement<input value={form.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} placeholder="virement…"/></label><label>Échéance<input value={form.paymentDue} onChange={(e) => set("paymentDue", e.target.value)}/></label></div>
         <label>Coordonnées de paiement (vide = informations de paiement du profil)<textarea rows={2} value={form.paymentCoordinates} onChange={(e) => set("paymentCoordinates", e.target.value)}/></label>

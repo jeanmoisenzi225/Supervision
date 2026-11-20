@@ -298,6 +298,7 @@ const serviceDocSchema = z.object({
   paymentTerms: text(300), paymentDue: text(300), paymentCoordinates: text(1000),
   clientLegalForm: text(120), clientRepresentative: text(180), clientRole: text(120), place: text(120),
   emissionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish().or(z.literal("")),
+  lines: z.array(z.object({ description: z.string().trim().min(1).max(500), quantity: z.coerce.number().positive().max(1e6), unitPrice: z.coerce.number().min(0).max(1e12) })).max(100).default([]),
 });
 
 billingRouter.get("/service-docs", async (_req, res) => {
@@ -313,6 +314,7 @@ function serviceDocData(row: Awaited<ReturnType<typeof prisma.billingServiceDoc.
     paymentTerms: row.paymentTerms, paymentDue: row.paymentDue, paymentCoordinates: row.paymentCoordinates || profile.paymentDetails || "",
     clientLegalForm: row.clientLegalForm, clientRepresentative: row.clientRepresentative, clientRole: row.clientRole, place: row.place,
     reference: row.reference, emissionDate: row.emissionDate,
+    lines: Array.isArray(row.lines) ? (row.lines as { description: string; quantity: number; unitPrice: number }[]) : [],
     provider: { name: profile.legalName ?? "", address: profile.businessAddress ?? "", email: profile.contactEmail ?? "", phone: profile.phone ?? "", brand: profile.brandName || "NJMDev" },
     client: { name: c.name, address: [c.billingAddress, [c.postalCode, c.city].filter(Boolean).join(" "), c.country].filter(Boolean).join(", "), rccm: c.rccm ?? "", ncc: c.ncc ?? "", email: c.email ?? "", phone: c.phone ?? "" },
   };

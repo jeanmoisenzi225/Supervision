@@ -7,6 +7,7 @@ export type ServiceDocData = {
   appName: string; description: string; features: string[]; technologies: string; workNature: string; period: string; deliveryState: string; location: string;
   amount: number | null; currency: "EUR" | "XOF"; paymentTerms: string; paymentDue: string; paymentCoordinates: string;
   clientLegalForm: string; clientRepresentative: string; clientRole: string; place: string; reference: string; emissionDate: string | null;
+  lines: { description: string; quantity: number; unitPrice: number }[];
   provider: { name: string; address: string; email: string; phone: string; brand: string };
   client: { name: string; address: string; rccm: string; ncc: string; email: string; phone: string };
 };
@@ -65,6 +66,11 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     ...([c.email, c.phone].filter(Boolean).length ? [[c.email, c.phone].filter(Boolean).join(" · ")] : []),
   ];
   const lieu = v(d.place, "lieu");
+  const lines = (d.lines ?? []).filter((l) => l.description.trim());
+  const lineTotal = lines.reduce((t, l) => t + l.quantity * l.unitPrice, 0);
+  const lineRows: [string, string][] = lines.map((l) => [l.quantity === 1 ? l.description : `${l.description} (× ${l.quantity})`, formatAmount(Math.round(l.quantity * l.unitPrice * 100) / 100, d.currency)]);
+  const gap = lines.length && d.amount != null && Math.abs(lineTotal - d.amount) > 0.005;
+  const gapNote = gap ? ` Le montant convenu diffère du total du détail (${formatAmount(Math.round(lineTotal * 100) / 100, d.currency)}) : ⟦expliquer l’écart : remise, forfait, poste non détaillé⟧.` : "";
   const eur = d.currency === "EUR";
 
   const demande: Block[] = [
@@ -83,8 +89,8 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     { t: "p", text: v(d.workNature, "nature des travaux : conception, développement, tests, mise en ligne, etc.") },
     { t: "p", text: `Période de réalisation : ${v(d.period, "période de réalisation")}. État à ce jour : ${v(d.deliveryState, "état de livraison")}.` },
     { t: "h2", text: "4. Montant demandé" },
-    { t: "amount", rows: [[`Prestation de développement informatique « ${app} »`, mont]], total: mont,
-      note: `Montant convenu entre les parties ⟦confirmer la date et la forme de cet accord⟧. Montant net, sans TVA : le prestataire n’est pas, à ce jour, assujetti à la TVA au titre de cette activité ⟦à faire valider⟧.${eur ? "" : " Montant exprimé en francs CFA : ⟦préciser la zone monétaire (XOF ou XAF)⟧."}` },
+    { t: "amount", rows: lines.length ? lineRows : [[`Prestation de développement informatique « ${app} »`, mont]], total: mont,
+      note: `${lines.length ? "Détail indicatif des composants et coûts, tels que relevés pour l’application. " : ""}Montant convenu entre les parties ⟦confirmer la date et la forme de cet accord⟧. Montant net, sans TVA : le prestataire n’est pas, à ce jour, assujetti à la TVA au titre de cette activité ⟦à faire valider⟧.${eur ? "" : " Montant exprimé en francs CFA : ⟦préciser la zone monétaire (XOF ou XAF)⟧."}${gapNote}` },
     { t: "h2", text: "5. Modalités et coordonnées de paiement" },
     { t: "kv", rows: [["Mode de paiement", v(d.paymentTerms, "mode de paiement")], ["Échéance", v(d.paymentDue, "échéance de paiement")], ["Coordonnées de paiement", v(d.paymentCoordinates, "IBAN / BIC ou autre moyen de paiement")], ["Libellé à indiquer", ref]] },
     { t: "p", text: "Les frais bancaires, notamment de virement international et de conversion de devise, sont à la charge de ⟦partie à préciser⟧." },
@@ -124,6 +130,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
       `4.1. Les parties conviennent d’une rémunération forfaitaire de **${mont}**, nette de TVA ⟦à faire valider⟧, pour les travaux constatés à l’article 2.`,
       `4.2. En lettres : ⟦montant en lettres⟧ ${eur ? "euros" : "francs CFA"}.`,
       "4.3. Ce montant rémunère les travaux de développement. **Il ne rémunère pas la cession de droits d’auteur**, qui, si elle est retenue à l’article 8, fait l’objet d’une rémunération distincte précisée à cet article.",
+      ...(lines.length ? [`4.4. Détail indicatif des composants et coûts constatés pour l’application :`, { t: "list", items: lineRows.map(([a, b]) => `${a} : ${b}`) } as Block, ...(gap ? [`Le montant convenu diffère du total de ce détail (${formatAmount(Math.round(lineTotal * 100) / 100, d.currency)}) : ⟦expliquer l’écart⟧.`] : [])] : []),
       "⚠ Validation : régime fiscal applicable (France et Côte d’Ivoire), retenue à la source éventuelle, convention fiscale, déclaration des revenus en France."),
     art(5, "Modalités de paiement",
       `5.1. Paiement par ${v(d.paymentTerms, "mode de paiement")}, à l’échéance suivante : ${v(d.paymentDue, "échéance")}.`,

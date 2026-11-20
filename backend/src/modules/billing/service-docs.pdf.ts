@@ -129,16 +129,22 @@ export function renderServiceDocPdf(blocks: Block[], header: string, brand: stri
         y += 8; break;
       }
       case "amount": {
-        const rows = b.rows; const h = rows.length * 26 + 34; ensure(h + 40);
+        const labelW = CW - 160;
+        const rows = b.rows.map(([label, val]) => ({ ls: layout(label, labelW, 9.6), val }));
+        const rh = rows.map((r) => Math.max(r.ls.length * 13, 13) + 12);
+        const h = rh.reduce((t, x) => t + x, 0) + 33;
+        ensure(h + 40);
         box(h, INK);
-        rows.forEach(([label, val], i) => {
-          doc.font("r").fontSize(9.6).fillColor(INK).text(label, ML + 10, y + 8 + i * 26, { width: CW - 150, lineBreak: false });
-          drawLine(layout(val, 200, 9.6)[0], W - MR - 10 - width(val.replace(/[⟦⟧]/g, ""), false, 9.6), y + 8 + i * 26, 9.6, INK);
+        let yy = y;
+        rows.forEach((r, i) => {
+          r.ls.forEach((ln, j) => drawLine(ln, ML + 10, yy + 7 + j * 13, 9.6, INK));
+          drawLine(layout(r.val, 200, 9.6)[0], W - MR - 10 - width(r.val.replace(/[⟦⟧]/g, ""), false, 9.6), yy + 7, 9.6, INK);
+          yy += rh[i];
+          doc.moveTo(ML, yy).lineTo(W - MR, yy).lineWidth(0.4).stroke(LINE);
         });
-        const ty = y + rows.length * 26;
-        doc.save().rect(ML + 0.4, ty, CW - 0.8, 33).fill("#f1efe9").restore();
-        doc.font("b").fontSize(11.5).fillColor(INK).text("Montant total demandé", ML + 10, ty + 10, { lineBreak: false });
-        const tv = b.total.replace(/[⟦⟧]/g, ""); drawLine(layout(b.total, 220, 11.5, true)[0], W - MR - 10 - width(tv, true, 11.5), ty + 10, 11.5, INK);
+        doc.save().rect(ML + 0.4, yy, CW - 0.8, 32.6).fill("#f1efe9").restore();
+        doc.font("b").fontSize(11.5).fillColor(INK).text("Montant total demandé", ML + 10, yy + 10, { lineBreak: false });
+        const tv = b.total.replace(/[⟦⟧]/g, ""); drawLine(layout(b.total, 220, 11.5, true)[0], W - MR - 10 - width(tv, true, 11.5), yy + 10, 11.5, INK);
         y += h + 8; para(b.note, { size: 8.6, color: MUTED }); break;
       }
       case "art": {
