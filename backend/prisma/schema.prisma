@@ -372,7 +372,6 @@ model BillingSigner {
   status      String             @default("pending")
   viewedAt    DateTime?
   signedAt    DateTime?
-  ip          String?
   typedName   String?
   signature   Bytes?
   @@index([requestId])

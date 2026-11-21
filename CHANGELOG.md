@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.48.1 — 2026-11-22
+
+- **Signature électronique : l'adresse IP du signataire n'est plus collectée** ni affichée (certificat, texte de consentement, administration). La preuve repose sur la date et l'heure, le nom saisi, le tracé de la signature, le lien personnel, le code et l'empreinte du document. La colonne `ip` est supprimée (migration `20261122100000_signature_sans_ip`).
+
 ## v0.48.0 — 2026-11-21
 
 Demandé le 2026-11-21 : envoyer les documents de prestation à signer électroniquement, sans service d'e-mail.
@@ -7,7 +11,7 @@ Demandé le 2026-11-21 : envoyer les documents de prestation à signer électron
 - **Signature électronique des documents de prestation** (onglet Prestations › « Signature électronique »). La convention est signée par le prestataire et le client, la demande de règlement par le prestataire seul. Le document est **figé** (PDF et empreinte SHA-256) à la création de la demande.
 - **Sans e-mail** : l'application produit, pour chaque signataire, un **lien personnel** et un **code à 6 chiffres** à transmettre soi-même par deux messages distincts (WhatsApp, SMS…). Lien perdu ou code bloqué : « Nouveau lien et code ».
 - **Page de signature publique** (`/signer/…`, sans connexion) : saisie du code, lecture du PDF, nom complet, tracé de la signature au doigt ou à la souris, case de consentement.
-- **Preuve** : date, adresse IP, nom saisi et tracé sont conservés. Quand tout le monde a signé, le **PDF signé** reçoit une **page de certificat** (signataires, horodatage, empreinte). Téléchargement du PDF signé ou d'origine depuis l'administration.
+- **Preuve** : date, nom saisi et tracé sont conservés. Quand tout le monde a signé, le **PDF signé** reçoit une **page de certificat** (signataires, horodatage, empreinte). Téléchargement du PDF signé ou d'origine depuis l'administration.
 - **Garde-fous** : code bloqué après 5 essais, lien valable 30 jours, demande annulable, jetons et codes jamais stockés en clair, dossier avec preuves non supprimable, limitation des appels sur la page publique.
 - Signature électronique « simple » : sa force probante est moindre que celle d'une signature qualifiée d'un prestataire agréé. Nouvelles tables `BillingSignRequest` et `BillingSigner` (migration `20261121230000_signature_electronique`), bibliothèque `pdf-lib`.
 

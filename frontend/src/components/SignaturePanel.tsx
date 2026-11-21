@@ -73,7 +73,7 @@ export function SignaturePanel({ docId, onError, onNotice }: { docId: string; on
           {r.status === "pending" && <button type="button" className="danger" onClick={() => void cancel(r.id)}>Annuler</button>}
         </div>
       </div>)}
-      <p className="muted small">Signature électronique « simple » : elle identifie le signataire par un lien et un code, et conserve la date et l’adresse IP comme preuves. Sa force probante est moindre que celle d’une signature qualifiée ; en cas de litige, c’est le juge qui apprécie.</p>
+      <p className="muted small">Signature électronique « simple » : elle identifie le signataire par un lien et un code, et conserve la date, le nom saisi et le tracé comme preuves. Sa force probante est moindre que celle d’une signature qualifiée ; en cas de litige, c’est le juge qui apprécie.</p>
     </>}
   </div>;
 }
