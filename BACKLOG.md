@@ -237,3 +237,4 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [x] Prestataire en personne physique, sans identifiant administratif inventé.
 - [x] Relecture juridique (France et Côte d'Ivoire) avant signature ou paiement : points « ⚠ Validation » de la convention.
 - [x] Import des coûts et intitulés des composants des applis, comme la facture prévisionnelle (v0.46.0).
+- [x] Documents finaux sans zones surlignées ni blancs : champs absents supprimés, clauses de la convention dans le formulaire (v0.47.0).

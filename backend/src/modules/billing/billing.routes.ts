@@ -8,7 +8,7 @@ import { getHostingCosts } from "../hosting/hosting.service";
 import { forecastLines } from "./forecast";
 import { isAbsurdRate, usdRate, type FxMode } from "./fx";
 import { generateDraftInvoicePdf } from "./invoice-pdf";
-import { buildServiceDocs, DOC_FILENAMES, type DocKind, type ServiceDocData } from "./service-docs.content";
+import { buildServiceDocs, DOC_FILENAMES, missingForDoc, type DocKind, type ServiceDocData } from "./service-docs.content";
 import { renderServiceDocDocx } from "./service-docs.docx";
 import { renderServiceDocPdf } from "./service-docs.pdf";
 
@@ -298,6 +298,7 @@ const serviceDocSchema = z.object({
   paymentTerms: text(300), paymentDue: text(300), paymentCoordinates: text(1000),
   clientLegalForm: text(120), clientRepresentative: text(180), clientRole: text(120), place: text(120),
   emissionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish().or(z.literal("")),
+  terms: z.object({ law: z.enum(["", "française", "ivoirienne"]).default(""), jurisdiction: text(300), rights: z.enum(["licence", "cession"]).default("licence"), exclusivity: z.enum(["non exclusive", "exclusive"]).default("non exclusive"), territory: text(200), duration: text(200), cessionFee: text(300), penaltyRate: text(100), bankFees: text(100), sourceCode: z.enum(["", "oui", "non"]).default("") }).default({}),
   lines: z.array(z.object({ description: z.string().trim().min(1).max(500), quantity: z.coerce.number().positive().max(1e6), unitPrice: z.coerce.number().min(0).max(1e12) })).max(100).default([]),
 });
 
@@ -314,6 +315,7 @@ function serviceDocData(row: Awaited<ReturnType<typeof prisma.billingServiceDoc.
     paymentTerms: row.paymentTerms, paymentDue: row.paymentDue, paymentCoordinates: row.paymentCoordinates || profile.paymentDetails || "",
     clientLegalForm: row.clientLegalForm, clientRepresentative: row.clientRepresentative, clientRole: row.clientRole, place: row.place,
     reference: row.reference, emissionDate: row.emissionDate,
+    terms: row.terms && typeof row.terms === "object" && !Array.isArray(row.terms) ? (row.terms as Record<string, string>) : {},
     lines: Array.isArray(row.lines) ? (row.lines as { description: string; quantity: number; unitPrice: number }[]) : [],
     provider: { name: profile.legalName ?? "", address: profile.businessAddress ?? "", email: profile.contactEmail ?? "", phone: profile.phone ?? "", brand: profile.brandName || "NJMDev" },
     client: { name: c.name, address: [c.billingAddress, [c.postalCode, c.city].filter(Boolean).join(" "), c.country].filter(Boolean).join(", "), rccm: c.rccm ?? "", ncc: c.ncc ?? "", email: c.email ?? "", phone: c.phone ?? "" },
@@ -352,7 +354,10 @@ billingRouter.get("/service-docs/:id/:kind.:format", async (req, res) => {
   if (!row) throw new HttpError(404, "Dossier introuvable");
   const setting = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
   const profile = setting ? (JSON.parse(setting.value) as Record<string, string | undefined>) : {};
-  const docs = buildServiceDocs(serviceDocData(row, profile));
+  const data = serviceDocData(row, profile);
+  const missing = missingForDoc(data, kind);
+  if (missing.length) throw new HttpError(409, `Document final impossible : il manque ${missing.join(", ")}.`);
+  const docs = buildServiceDocs(data);
   const { blocks, header } = docs[kind];
   const body = format === "pdf" ? await renderServiceDocPdf(blocks, header, docs.brand) : await renderServiceDocDocx(blocks, header, docs.brand);
   res.status(200)

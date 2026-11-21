@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.47.0 — 2026-11-21
+
+Demandé le 2026-11-21 : des documents finaux, sans champs surlignés ni zones à compléter.
+
+- **Documents finaux** : une information non renseignée (RCCM, NCC, forme juridique, paiement, lieu, description…) fait disparaître sa ligne ou sa phrase. Plus de surlignage jaune, plus de mentions « à faire valider » ni de bandeau de projet dans les documents.
+- **Convention : clauses dans le formulaire** (loi applicable, juridiction, licence ou cession, exclusivité, territoire, durée, rémunération de la cession, pénalités, frais bancaires, code source). Valeurs par défaut quand elles existent (licence non exclusive, Côte d'Ivoire, durée d'exploitation, réserves sous 15 jours, confidentialité 5 ans, litige amiable 30 jours, deux exemplaires) ; la clause de pénalités n'apparaît que si un taux est donné.
+- **Montant en lettres** généré automatiquement dans la convention.
+- **Informations indispensables** : le téléchargement est refusé, avec un message clair, s'il manque l'identité du prestataire, le montant, et pour la convention la loi applicable, la juridiction ou la rémunération d'une cession. Colonne `terms` (migration `20261121200000_service_docs_terms`).
+
 ## v0.46.3 — 2026-11-21
 
 - **Profil prestataire** : la variable `BILLING_PROFILE_SEED` (JSON : `legalName`, `legalForm`, `businessAddress`, `contactEmail`, `phone`) complète le profil de facturation au démarrage, sans jamais écraser une valeur déjà saisie. Sert à renseigner l'identité sans la mettre dans le dépôt ; la variable peut être retirée ensuite.

@@ -7,7 +7,10 @@ type Doc = {
   period: string; deliveryState: string; location: string; amount: string | null; currency: string; paymentTerms: string; paymentDue: string; paymentCoordinates: string;
   clientLegalForm: string; clientRepresentative: string; clientRole: string; place: string; emissionDate: string | null; updatedAt: string;
   lines?: DocLine[];
+  terms?: Partial<Terms>;
 };
+type Terms = { law: string; jurisdiction: string; rights: string; exclusivity: string; territory: string; duration: string; cessionFee: string; penaltyRate: string; bankFees: string; sourceCode: string };
+const blankTerms = (): Terms => ({ law: "", jurisdiction: "", rights: "licence", exclusivity: "non exclusive", territory: "", duration: "", cessionFee: "", penaltyRate: "", bankFees: "", sourceCode: "" });
 type DocLine = { description: string; quantity: number; unitPrice: number };
 type ForecastResponse = { lines: Array<DocLine & { source?: string }>; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string; rate?: number; rateInfo?: string };
 const blank = () => ({ clientId: "", reference: "", appName: "", description: "", features: "", technologies: "", workNature: "", period: "", deliveryState: "", location: "", amount: "", currency: "EUR", paymentTerms: "", paymentDue: "", paymentCoordinates: "", clientLegalForm: "", clientRepresentative: "", clientRole: "", place: "", emissionDate: "" });
@@ -19,6 +22,8 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
   const [form, setForm] = useState(blank());
   const [editing, setEditing] = useState<string | null>(null);
   const [lines, setLines] = useState<DocLine[]>([]);
+  const [terms, setTerms] = useState<Terms>(blankTerms());
+  const setTerm = (k: keyof Terms, v: string) => setTerms((t) => ({ ...t, [k]: v }));
   const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const prec = form.currency === "XOF" ? 0 : 2;
   const total = Math.round(lines.reduce((t, l) => t + Math.round(l.quantity * l.unitPrice * 10 ** prec) / 10 ** prec, 0) * 10 ** prec) / 10 ** prec;
@@ -33,14 +38,14 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
   async function save(e: FormEvent) {
     e.preventDefault(); onError(""); onNotice("");
     try {
-      const body = { ...form, features: form.features.split("\n").map((x) => x.trim()).filter(Boolean), amount: form.amount === "" ? null : Number(form.amount), emissionDate: form.emissionDate || null, lines: lines.filter((l) => l.description.trim()) };
+      const body = { ...form, features: form.features.split("\n").map((x) => x.trim()).filter(Boolean), amount: form.amount === "" ? null : Number(form.amount), emissionDate: form.emissionDate || null, lines: lines.filter((l) => l.description.trim()), terms };
       await api(editing ? `/billing/service-docs/${editing}` : "/billing/service-docs", { method: editing ? "PUT" : "POST", body });
-      setForm({ ...blank(), clientId: form.clientId }); setLines([]); setImportMsg(null); setEditing(null); await load();
+      setForm({ ...blank(), clientId: form.clientId }); setLines([]); setTerms(blankTerms()); setImportMsg(null); setEditing(null); await load();
       onNotice("Dossier enregistré. Télécharge la demande de règlement et la convention depuis la liste.");
     } catch (err) { onError((err as Error).message); }
   }
   function edit(d: Doc) {
-    setEditing(d.id); setLines((d.lines ?? []).map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice) }))); setImportMsg(null);
+    setEditing(d.id); setTerms({ ...blankTerms(), ...(d.terms ?? {}) }); setLines((d.lines ?? []).map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice) }))); setImportMsg(null);
     setForm({ clientId: d.clientId, reference: d.reference, appName: d.appName, description: d.description, features: d.features.join("\n"), technologies: d.technologies, workNature: d.workNature, period: d.period, deliveryState: d.deliveryState, location: d.location, amount: d.amount == null ? "" : String(Number(d.amount)), currency: d.currency, paymentTerms: d.paymentTerms, paymentDue: d.paymentDue, paymentCoordinates: d.paymentCoordinates, clientLegalForm: d.clientLegalForm, clientRepresentative: d.clientRepresentative, clientRole: d.clientRole, place: d.place, emissionDate: d.emissionDate ?? "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -73,7 +78,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
   return <div className="grid">
     <section className="card">
       <h3>{editing ? "Modifier le dossier" : "Nouveau dossier de prestation"}</h3>
-      <p className="muted small">Une seule saisie produit la <strong>demande de règlement</strong> (ce n’est pas une facture) et la <strong>convention de constatation des travaux</strong>. Ce qui reste vide apparaît en jaune « à compléter » dans les documents : rien n’est inventé.</p>
+      <p className="muted small">Une seule saisie produit la <strong>demande de règlement</strong> (ce n’est pas une facture) et la <strong>convention de constatation des travaux</strong>. Les documents sont finaux : ce qui n’est pas renseigné n’y apparaît tout simplement pas, et rien n’est inventé.</p>
       {!profileReady && <p className="small" style={{ color: "var(--warn)" }}>Ton identité de prestataire (nom, adresse) n’est pas renseignée : complète-la dans l’onglet Paramètres, rubrique « Prestataire ».</p>}
       <form className="stack-small" onSubmit={save}>
         <label>Client<select required value={form.clientId} onChange={(e) => set("clientId", e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
@@ -101,6 +106,15 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
         <div className="row wrap"><label>Mode de paiement<input value={form.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} placeholder="virement…"/></label><label>Échéance<input value={form.paymentDue} onChange={(e) => set("paymentDue", e.target.value)}/></label></div>
         <label>Coordonnées de paiement (vide = informations de paiement du profil)<textarea rows={2} value={form.paymentCoordinates} onChange={(e) => set("paymentCoordinates", e.target.value)}/></label>
         <div className="row wrap"><label>Référence<input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="DR-2026-001"/></label><label>Lieu<input value={form.place} onChange={(e) => set("place", e.target.value)}/></label><label>Date d’émission (vide = jour du téléchargement)<input type="date" value={form.emissionDate} onChange={(e) => set("emissionDate", e.target.value)}/></label></div>
+        <fieldset className="stack-small"><legend className="small">Convention : clauses</legend>
+          <p className="muted small">Rien n’est laissé en blanc dans les documents. La loi applicable et la juridiction sont nécessaires pour produire la convention ; le reste a une valeur par défaut ou disparaît s’il est vide.</p>
+          <div className="row wrap"><label>Loi applicable<select value={terms.law} onChange={(e) => setTerm("law", e.target.value)}><option value="">— à choisir —</option><option value="française">Droit français</option><option value="ivoirienne">Droit ivoirien</option></select></label><label>Juridiction compétente<input value={terms.jurisdiction} onChange={(e) => setTerm("jurisdiction", e.target.value)} placeholder="ex. tribunaux d’Abidjan"/></label></div>
+          <div className="row wrap"><label>Droits sur l’application<select value={terms.rights} onChange={(e) => setTerm("rights", e.target.value)}><option value="licence">Licence d’exploitation (le prestataire garde les droits)</option><option value="cession">Cession de droits</option></select></label><label>Exclusivité<select value={terms.exclusivity} onChange={(e) => setTerm("exclusivity", e.target.value)}><option value="non exclusive">Non exclusive</option><option value="exclusive">Exclusive</option></select></label></div>
+          <div className="row wrap"><label>Territoire (vide = Côte d’Ivoire)<input value={terms.territory} onChange={(e) => setTerm("territory", e.target.value)}/></label><label>Durée (vide = durée d’exploitation)<input value={terms.duration} onChange={(e) => setTerm("duration", e.target.value)}/></label></div>
+          {terms.rights === "cession" && <label>Rémunération de la cession (obligatoire)<input value={terms.cessionFee} onChange={(e) => setTerm("cessionFee", e.target.value)} placeholder="ex. 500 € forfaitaire"/></label>}
+          <div className="row wrap"><label>Pénalités de retard (vide = aucune)<input value={terms.penaltyRate} onChange={(e) => setTerm("penaltyRate", e.target.value)} placeholder="ex. 3 % par mois"/></label><label>Frais bancaires à la charge de (vide = non précisé)<input value={terms.bankFees} onChange={(e) => setTerm("bankFees", e.target.value)} placeholder="le client"/></label></div>
+          <label>Code source<select value={terms.sourceCode} onChange={(e) => setTerm("sourceCode", e.target.value)}><option value="">Non mentionné</option><option value="oui">Remise du code source comprise</option></select></label>
+        </fieldset>
         <div className="row"><button className="primary" type="submit" disabled={!form.clientId || !form.appName.trim()}>Enregistrer</button>{editing && <button type="button" onClick={() => { setEditing(null); setForm({ ...blank(), clientId: form.clientId }); }}>Annuler</button>}</div>
       </form>
     </section>
@@ -114,7 +128,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
         <div className="row wrap"><span className="small">Convention</span><button onClick={() => void download(d, "convention", "pdf")}>PDF</button><button onClick={() => void download(d, "convention", "docx")}>Word</button></div>
         <div className="row"><button onClick={() => edit(d)}>Modifier</button><button className="danger" onClick={() => void remove(d.id)}>Supprimer</button></div>
       </div>)}
-      <p className="small" style={{ color: "var(--warn)" }}><strong>À valider avant signature ou paiement.</strong> La convention comporte des points « ⚠ Validation » (fiscalité France et Côte d’Ivoire, droits d’auteur, loi applicable) : un regard professionnel est recommandé sur ces points.</p>
+      <p className="small muted"><strong>Avant signature ou paiement</strong> : fiscalité (France et Côte d’Ivoire), droits d’auteur, loi applicable et juridiction méritent un regard professionnel.</p>
     </section>
   </div>;
 }

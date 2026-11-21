@@ -155,15 +155,15 @@ export function renderServiceDocPdf(blocks: Block[], header: string, brand: stri
         break;
       }
       case "sig1": {
-        ensure(180); y += 8; para(b.place, { after: 8 });
-        box(110); doc.font("b").fontSize(9.4).fillColor(INK).text(b.label, ML + 10, y + 9, { lineBreak: false });
+        ensure(135); y += 6; para(b.place, { after: 6 });
+        box(92); doc.font("b").fontSize(9.4).fillColor(INK).text(b.label, ML + 10, y + 9, { lineBreak: false });
         drawLine(layout(b.name, CW - 20, 9.4)[0], ML + 10, y + 23, 9.4, INK);
         doc.font("r").fontSize(7.8).fillColor(MUTED).text("Signature précédée de « Lu et approuvé »", ML + 10, y + 38, { lineBreak: false });
-        y += 122; break;
+        y += 104; break;
       }
       case "sig2": {
         ensure(190); y += 8;
-        para("Fait en ⟦nombre⟧ exemplaires, à la date indiquée sous chaque signature (date de la dernière signature ; la convention n’est pas antidatée).", { after: 8 });
+        para("Fait en deux exemplaires, à la date indiquée sous chaque signature. La convention prend effet à la date de la dernière signature.", { after: 8 });
         const cw = (CW - 12) / 2;
         [["Le prestataire", b.left], ["Le client", b.right]].forEach(([label, who], i) => {
           const x = ML + i * (cw + 12);

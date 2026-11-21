@@ -327,6 +327,8 @@ model BillingServiceDoc {
   emissionDate       String?
   /// Composants et coûts détaillés [{description, quantity, unitPrice}] (importés des coûts des applis ou saisis), v0.45.0.
   lines              Json          @default("[]")
+  /// Clauses de la convention (loi, juridiction, licence ou cession, pénalités…), v0.47.0.
+  terms              Json          @default("{}")
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   @@index([clientId])
