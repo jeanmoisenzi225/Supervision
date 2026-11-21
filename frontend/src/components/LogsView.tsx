@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { onRefreshRequested } from "../lib/refresh";
 import { api, type LogEntry } from "../lib/api";
 import { dateTime } from "../lib/format";
 
@@ -42,7 +43,9 @@ export function LogsView({ app, apps }: { app?: string; apps?: { key: string; na
 
   useEffect(() => {
     const t = setTimeout(() => void loadFirst(), q ? 300 : 0);
-    return () => clearTimeout(t);
+    // « Glisser pour actualiser » : recharge la liste avec les filtres en cours.
+    const stop = onRefreshRequested(() => void loadFirst());
+    return () => { clearTimeout(t); stop(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appFilter, minLevel, q]);
 

@@ -150,3 +150,7 @@ Catalogue dans `backend/src/config/apps.ts` (adresses de production par défaut)
 ## Contrôles de disponibilité EDEN
 
 EDEN est évalué à partir de deux contrôles actifs : l'API (`/api/v1/health`) et l'application web (`eden-sup-app`). L'ancien service `eden-sup-gateway` est suspendu et ne doit plus être une sonde de disponibilité. Les services Render `eden-sup-*` restent reconnus dans l'onglet Administration pour l'inventaire et les opérations d'hébergement. Lorsqu'un contrôle est retiré du catalogue, son alerte de panne ouverte est automatiquement résolue au démarrage du moniteur ; les résultats historiques restent conservés.
+
+## Actualisation par glissement (règle)
+
+Le geste « glisser vers le bas » (`components/PullToRefresh.tsx`) émet l'événement `supervision:refresh` (`lib/refresh.ts`) et force le serveur à ignorer ses mémoires tampons pendant 10 s (`X-Refresh`). Tout écran qui charge des données **doit** l'écouter : soit par `usePolling` (qui s'abonne tout seul), soit par `onRefreshRequested` pour un chargement fait à la main. Le test `backend/tests/refreshCoverage.test.ts` le vérifie sur tous les fichiers de l'interface qui appellent l'API ; les exceptions (connexion, page de signature publique, panneaux d'actions, palette de commandes) y sont listées avec leur raison.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
+import { onRefreshRequested } from "../lib/refresh";
 
 interface Setup {
   secret: string;
@@ -19,7 +20,9 @@ export function TwoFactorSettings() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    void api<{ totpEnabled: boolean }>("/auth/me").then((r) => setEnabled(r.totpEnabled), () => undefined);
+    const load = () => void api<{ totpEnabled: boolean }>("/auth/me").then((r) => setEnabled(r.totpEnabled), () => undefined);
+    load();
+    return onRefreshRequested(load);
   }, []);
 
   async function run(action: () => Promise<void>) {

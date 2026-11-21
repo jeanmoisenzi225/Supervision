@@ -2,6 +2,8 @@
 
 ## v0.49.3 — 2026-11-22
 
+- **Audit de tous les écrans** : chaque écran qui charge des données a été passé en revue. Seule la liste des **journaux** (page Journaux et journaux d'une appli) ignorait aussi le geste ; elle recharge maintenant avec les filtres en cours. L'état de la double authentification (Réglages) l'écoute aussi. Les autres écrans (accueil, tableau de bord, fiches d'applis et leurs onglets, alertes, coûts, Claude, backlog, objectifs) passaient déjà par le mécanisme commun ; la palette de commandes recharge à chaque ouverture, et les panneaux d'actions ne chargent rien.
+- **Garde-fou automatique** : un test (`refreshCoverage`) échoue si un fichier de l'interface appelle l'API sans écouter le geste, sauf exception justifiée dans le test. Un futur écran ne pourra donc plus oublier l'actualisation.
 - **Facturation : « glisser pour actualiser » fonctionne enfin partout.** L'onglet Signatures, le compteur « ⏳ » du titre, les dossiers de Prestations, les clients, les factures et le profil ignoraient le geste d'actualisation (ils ne se rafraîchissaient que par minuterie). Ils l'écoutent maintenant, comme le reste de la Supervision.
 - L'onglet Signatures et son compteur se rafraîchissent aussi **au retour sur l'application** (par exemple après avoir signé dans un autre onglet ou une autre fenêtre), sans attendre la minuterie de 15 secondes.
 
