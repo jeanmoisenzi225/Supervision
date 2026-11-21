@@ -11,11 +11,13 @@ import { startRealSizeSampler } from "./modules/resources/realsize";
 import { startRenderLogWatcher } from "./modules/renderLogs/renderLogs.service";
 import { startJobWatcher } from "./modules/jobs/jobs.service";
 import { startBacklogSync } from "./modules/backlog/backlog.service";
+import { seedBillingProfile } from "./modules/billing/profile-seed";
 import { initPush } from "./modules/push/push.service";
 
 async function main() {
   await ensureAdmin();
   await initPush();
+  await seedBillingProfile();
   createApp().listen(env.port, () => console.log(`Supervision API sur le port ${env.port}`));
   startMonitor();
   startPurge();

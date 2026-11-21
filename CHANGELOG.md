@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.46.3 — 2026-11-21
+
+- **Profil prestataire** : la variable `BILLING_PROFILE_SEED` (JSON : `legalName`, `legalForm`, `businessAddress`, `contactEmail`, `phone`) complète le profil de facturation au démarrage, sans jamais écraser une valeur déjà saisie. Sert à renseigner l'identité sans la mettre dans le dépôt ; la variable peut être retirée ensuite.
+
 ## v0.46.2 — 2026-11-20
 
 - **Prestations : total automatique.** Les coûts des applis du client sont repris dès l'ouverture d'un nouveau dossier (et au changement de client), puis reconvertis quand on change la devise (euro ou FCFA). Tant qu'aucun montant n'est saisi à la main, le **total des documents est la somme des lignes** : plus de « montant à compléter » quand le détail est connu. Un montant saisi à la main reste prioritaire, avec une zone « expliquer l'écart » s'il diffère.
