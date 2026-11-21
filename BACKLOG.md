@@ -240,3 +240,13 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - [x] Documents finaux sans zones surlignées ni blancs : champs absents supprimés, clauses de la convention dans le formulaire (v0.47.0).
 - [x] Signature électronique « maison » à deux signataires, sans e-mail : lien et code à transmettre soi-même, page de certificat, PDF signé (v0.48.0).
 - [ ] Éventuel passage à un prestataire de signature agréé si une valeur probante renforcée est nécessaire ; envoi du lien par e-mail avec la messagerie du chantier 18.
+
+## 22. Nouveau projet : outil de signature électronique et de GED (2026-11-22) ⏸ (étude livrée, décision en attente)
+
+Idée du propriétaire, née de la signature des documents de prestation (v0.48.0) : un produit à part, signature électronique + GED. Étude complète dans [`docs/etude-signature-electronique-ged.md`](docs/etude-signature-electronique-ged.md).
+
+- [x] Étude : périmètre, cadre juridique (eIDAS, France, Côte d'Ivoire, OHADA, données personnelles, archivage probant), niveaux de signature, marché, options, architecture, risques, feuille de route (2026-11-22).
+- [ ] Décider : usage interne NJMDev ou produit vendu à des tiers ; zone visée ; niveau d'enjeu ; budget (questions de la section 11 de l'étude).
+- [ ] Phase 0 : consultation juridique (France, Côte d'Ivoire, OHADA), devis de deux partenaires de signature, entretiens d'utilisateurs, structure juridique.
+- [ ] Lever les points non vérifiés : régime ivoirien après la réforme de 2025, déclaration ou autorisation des données (ARTCI), durées légales de conservation, actes exclus de la forme électronique.
+
