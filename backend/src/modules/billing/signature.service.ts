@@ -6,7 +6,7 @@ import { env } from "../../config/env";
 
 /**
  * Signature électronique « simple » (v0.48.0) : le signataire est identifié par un lien personnel et un code
- * transmis séparément par l'émetteur ; chaque signature est journalisée (date, adresse IP, navigateur, nom saisi,
+ * transmis séparément par l'émetteur ; chaque signature est journalisée (date, adresse IP, nom saisi,
  * tracé) et rattachée à l'empreinte SHA-256 du document figé. Une page de certificat est ajoutée au PDF signé.
  */
 export const sha256 = (data: Buffer | string) => crypto.createHash("sha256").update(data).digest("hex");
@@ -30,7 +30,7 @@ export function parseSignaturePng(dataUrl: string): Buffer | null {
   return buf.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" ? buf : null;
 }
 
-export type CertSigner = { role: string; name: string; typedName: string | null; signedAt: Date | null; ip: string | null; userAgent: string | null; signature: Buffer | null };
+export type CertSigner = { role: string; name: string; typedName: string | null; signedAt: Date | null; ip: string | null; signature: Buffer | null };
 const ROLE: Record<string, string> = { prestataire: "Prestataire", client: "Client" };
 const parisTime = (d: Date) => new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Paris" }).format(d);
 
@@ -54,17 +54,17 @@ export function renderCertificate(input: { title: string; requestId: string; pdf
   kv("Empreinte SHA-256", input.pdfSha256);
   y += 6;
   for (const s of input.signers) {
-    const h = s.signature ? 150 : 100;
+    const h = s.signature ? 138 : 88;
     doc.save().roundedRect(ML, y, CW, h, 5).lineWidth(0.8).stroke(LINE).restore();
     doc.font("b").fontSize(10).fillColor(INK).text(`${ROLE[s.role] ?? s.role} : ${s.name}`, ML + 12, y + 10, { width: CW - 24 });
-    const lines: [string, string][] = [["Signé le", s.signedAt ? `${parisTime(s.signedAt)} (heure de Paris)` : "—"], ["Nom saisi", s.typedName ?? "—"], ["Adresse IP", s.ip ?? "—"], ["Navigateur", (s.userAgent ?? "—").slice(0, 110)]];
+    const lines: [string, string][] = [["Signé le", s.signedAt ? `${parisTime(s.signedAt)} (heure de Paris)` : "—"], ["Nom saisi", s.typedName ?? "—"], ["Adresse IP", s.ip ?? "—"]] ;
     let yy = y + 28;
     for (const [k, v] of lines) { doc.font("r").fontSize(8).fillColor(MUTED).text(k, ML + 12, yy, { width: 80, lineBreak: false }); doc.font("r").fontSize(8.5).fillColor(INK).text(v, ML + 95, yy, { width: CW - 110, lineBreak: false }); yy += 13; }
     if (s.signature) { try { doc.image(s.signature, ML + 12, yy + 4, { fit: [200, 52] }); } catch { /* tracé illisible : le certificat reste valable sans l'image */ } }
     y += h + 10;
   }
   y += 6;
-  const note = "Signature électronique simple. Chaque signataire a accédé au document par un lien personnel protégé par un code, transmis séparément par l'émetteur, puis a déclaré avoir pris connaissance du document et accepter de le signer. Les données ci-dessus (date, adresse IP, navigateur, nom saisi, tracé) sont conservées comme éléments de preuve. L'empreinte SHA-256 permet de vérifier que le document signé n'a pas été modifié depuis la signature : toute modification, même d'une virgule, change l'empreinte.";
+  const note = "Signature électronique simple. Chaque signataire a accédé au document par un lien personnel protégé par un code, transmis séparément par l'émetteur, puis a déclaré avoir pris connaissance du document et accepter de le signer. Les données ci-dessus (date, adresse IP, nom saisi, tracé) sont conservées comme éléments de preuve. L'empreinte SHA-256 permet de vérifier que le document signé n'a pas été modifié depuis la signature : toute modification, même d'une virgule, change l'empreinte.";
   doc.font("r").fontSize(8.2).fillColor(MUTED).text(note, ML, y, { width: CW, lineGap: 2 });
   doc.moveTo(ML, 842 - 46).lineTo(W - ML, 842 - 46).lineWidth(0.6).stroke(LINE);
   doc.font("r").fontSize(7.6).fillColor(MUTED).text(`${input.brand} : identité visuelle, ne constitue pas une société immatriculée`, ML, 842 - 36, { lineBreak: false });

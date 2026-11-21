@@ -373,7 +373,6 @@ model BillingSigner {
   viewedAt    DateTime?
   signedAt    DateTime?
   ip          String?
-  userAgent   String?
   typedName   String?
   signature   Bytes?
   @@index([requestId])

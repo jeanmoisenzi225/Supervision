@@ -56,12 +56,12 @@ signRouter.post("/:token/sign", async (req, res) => {
   const now = new Date();
   await prisma.billingSigner.update({
     where: { id: signer.id },
-    data: { status: "signed", signedAt: now, ip: req.ip ?? null, userAgent: (req.get("user-agent") ?? "").slice(0, 300), typedName: input.typedName, signature: png },
+    data: { status: "signed", signedAt: now, ip: req.ip ?? null, typedName: input.typedName, signature: png },
   });
   // Dernier signataire : on assemble le PDF signé avec sa page de certificat.
   const fresh = await prisma.billingSignRequest.findUniqueOrThrow({ where: { id: signer.requestId }, include: { signers: { orderBy: { role: "desc" } } } });
   if (fresh.signers.every((s) => s.status === "signed") && fresh.status === "pending") {
-    const cert = await renderCertificate({ title: fresh.title, requestId: fresh.id, pdfSha256: fresh.pdfSha256, brand: "NJMDev", signers: fresh.signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, ip: s.ip, userAgent: s.userAgent, signature: s.signature ? Buffer.from(s.signature) : null })) });
+    const cert = await renderCertificate({ title: fresh.title, requestId: fresh.id, pdfSha256: fresh.pdfSha256, brand: "NJMDev", signers: fresh.signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, ip: s.ip, signature: s.signature ? Buffer.from(s.signature) : null })) });
     const signedPdf = await appendCertificate(Buffer.from(fresh.pdf), cert);
     await prisma.billingSignRequest.update({ where: { id: fresh.id }, data: { status: "completed", completedAt: now, signedPdf, signedSha256: sha256(signedPdf) } });
   }

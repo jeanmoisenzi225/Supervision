@@ -26,7 +26,6 @@ CREATE TABLE "BillingSigner" (
     "viewedAt" TIMESTAMP(3),
     "signedAt" TIMESTAMP(3),
     "ip" TEXT,
-    "userAgent" TEXT,
     "typedName" TEXT,
     "signature" BYTEA,
     CONSTRAINT "BillingSigner_pkey" PRIMARY KEY ("id")

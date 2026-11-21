@@ -89,7 +89,7 @@ export function SignPage({ token }: { token: string }) {
             style={{ width: "100%", maxWidth: 520, height: "auto", aspectRatio: "16 / 5", touchAction: "none", background: dark ? "#f4f2ec" : "#fff", border: "1px solid var(--border)", borderRadius: 8, display: "block" }} />
           <button type="button" onClick={clear} style={{ marginTop: 6 }}>Effacer</button>
         </div>
-        <label className="row" style={{ alignItems: "flex-start" }}><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span className="small">Je déclare avoir lu le document ci-dessus et je le signe électroniquement. J’accepte que la date, mon adresse IP et mon navigateur soient conservés comme preuve de ma signature.</span></label>
+        <label className="row" style={{ alignItems: "flex-start" }}><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span className="small">Je déclare avoir lu le document ci-dessus et je le signe électroniquement. J’accepte que la date et mon adresse IP soient conservées comme preuve de ma signature.</span></label>
         {error && <p className="small" style={{ color: "var(--bad)" }}>{error}</p>}
         <button className="primary" type="submit" disabled={busy || !inked || !consent || name.trim().length < 3}>Signer le document</button>
       </form>
