@@ -47,8 +47,8 @@ export type Block =
   | { t: "kv"; rows: [string, string][] }
   | { t: "amount"; rows: [string, string][]; total: string; note: string }
   | { t: "art"; n: number; title: string; items: (string | Block)[] }
-  | { t: "sig1"; place: string; label: string; name: string }
-  | { t: "sig2"; left: string; right: string }
+  /** Deux cadres de signature : prestataire (gauche) et client (droite). */
+  | { t: "sig2"; intro: string; left: string; right: string; rightLabel?: string }
   | { t: "foot"; text: string };
 
 const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
@@ -96,7 +96,8 @@ export function amountInWords(amount: number, currency: "EUR" | "XOF"): string {
   return currency === "EUR" && cents ? `${base} et ${numberToFrench(cents)} centime${cents > 1 ? "s" : ""}` : base;
 }
 
-const has = (x: string | null | undefined): x is string => Boolean(x && x.trim());
+// Une valeur sans lettre ni chiffre (« . », « - ») est traitée comme absente.
+const has = (x: string | null | undefined): x is string => Boolean(x && /[\p{L}\p{N}]/u.test(x));
 const t = (x: string | null | undefined) => (x ?? "").trim();
 const art = (n: number, title: string, ...items: (string | Block | null | false | undefined)[]): Block => {
   const kept = items.filter((i): i is string | Block => Boolean(i));
@@ -183,7 +184,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     payRows.length > 0 && { t: "h2", text: `${hasWork ? 5 : 4}. Modalités et coordonnées de paiement` },
     payRows.length > 0 && { t: "kv", rows: payRows },
     has(tm.bankFees) && { t: "p", text: `Les frais bancaires, notamment de virement international et de conversion de devise, sont à la charge de ${t(tm.bankFees)}.` },
-    { t: "sig1", place, label: "Le prestataire", name: nomP },
+    { t: "sig2", intro: `${place}.`, left: nomP, right: `${cli}${has(d.clientRepresentative) ? `, représenté par ${t(d.clientRepresentative)}` : ""}`, rightLabel: "Le client : bon pour accord" },
   ].filter(Boolean) as Block[];
 
   // ---------- Convention ----------
@@ -253,7 +254,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
       "Les parties recherchent d’abord une solution amiable pendant trente (30) jours après notification écrite du différend.",
       `À défaut, compétence est attribuée à : ${t(tm.jurisdiction)}.`),
     art(13, "Dispositions générales", "La convention exprime l’accord complet des parties sur son objet. Toute modification est faite par écrit signé des deux parties. Si une clause est nulle, les autres restent valables. Elle est établie en deux (2) exemplaires originaux, ou signée électroniquement."),
-    { t: "sig2", left: nomP, right: `${cli}${has(d.clientRepresentative) ? `, représenté par ${t(d.clientRepresentative)}` : ""}` },
+    { t: "sig2", intro: "Fait en deux exemplaires, à la date indiquée sous chaque signature. La convention prend effet à la date de la dernière signature.", left: nomP, right: `${cli}${has(d.clientRepresentative) ? `, représenté par ${t(d.clientRepresentative)}` : ""}` },
   ];
 
   return {

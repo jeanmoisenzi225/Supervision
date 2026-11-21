@@ -109,7 +109,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
   it("la signature d'un document annulé est refusée, et un dossier avec preuves ne se supprime pas", async () => {
     const created = await request(app).post(`/api/billing/service-docs/${docId}/signature-requests`).set(auth).send({ kind: "demande" });
     expect(created.status).toBe(201);
-    expect(created.body.links).toHaveLength(1);
+    expect(created.body.links).toHaveLength(2);
     const l = created.body.links[0];
     expect((await request(app).post(`/api/billing/signature-requests/${created.body.id}/cancel`).set(auth)).status).toBe(200);
     expect((await request(app).post(`/api/sign/${l.token}/open`).send({ code: l.code })).status).toBe(410);

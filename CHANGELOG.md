@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.49.1 — 2026-11-22
+
+Retour du propriétaire : le document signé n'avait que la signature du prestataire, sans lien pour le client, et le cadre de signature du document restait vide alors que le certificat était rempli.
+
+- **La demande de règlement est maintenant signée par les deux parties**, comme la convention : le prestataire et le client (« bon pour accord »). Deux liens et deux codes sont créés, dans les deux cas. Le bouton devient « Demande : vous + client ».
+- **Les signatures sont posées dans les cadres du document** : à la finalisation, chaque cadre reçoit « Signé électroniquement le … », le nom et le tracé de la signature, en plus de la page de certificat. Le document soumis aux signataires, et son empreinte SHA-256, ne changent pas (le certificat indique « empreinte du document soumis »). Emplacements mémorisés à la création de la demande (colonne `boxes`, migration `20261122200000_signature_cadres`).
+- Une valeur sans lettre ni chiffre (par exemple une échéance réduite à « . ») est traitée comme absente dans les documents.
+- Une demande déjà signée avant cette version reste telle quelle : pour obtenir le document à deux signatures, créer une nouvelle demande.
+
 ## v0.49.0 — 2026-11-22
 
 Retour du propriétaire : après avoir signé, aucune confirmation visible ; et dans la Supervision, aucune trace des signatures, avec trop d'informations en cascade.

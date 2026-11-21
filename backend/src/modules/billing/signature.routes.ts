@@ -4,7 +4,8 @@ import { prisma } from "../../db/prisma";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { sendPushToAll } from "../push/push.service";
-import { appendCertificate, codeMatches, hashToken, MAX_ATTEMPTS, parseSignaturePng, renderCertificate, sha256 } from "./signature.service";
+import type { SignBox } from "./service-docs.pdf";
+import { appendCertificate, codeMatches, hashToken, MAX_ATTEMPTS, parseSignaturePng, renderCertificate, sha256, stampSignatures } from "./signature.service";
 
 /** Page de signature : ouverte sans connexion, protégée par le lien personnel ET le code transmis à part. */
 export const signRouter = asyncRouter();
@@ -63,7 +64,9 @@ signRouter.post("/:token/sign", async (req, res) => {
   const fresh = await prisma.billingSignRequest.findUniqueOrThrow({ where: { id: signer.requestId }, include: { signers: { orderBy: { role: "desc" } } } });
   if (fresh.signers.every((s) => s.status === "signed") && fresh.status === "pending") {
     const cert = await renderCertificate({ title: fresh.title, requestId: fresh.id, pdfSha256: fresh.pdfSha256, brand: "NJMDev", signers: fresh.signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, signature: s.signature ? Buffer.from(s.signature) : null })) });
-    const signedPdf = await appendCertificate(Buffer.from(fresh.pdf), cert);
+    const boxes = Array.isArray(fresh.boxes) ? (fresh.boxes as unknown as SignBox[]) : [];
+    const stamped = await stampSignatures(Buffer.from(fresh.pdf), boxes, fresh.signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, signature: s.signature ? Buffer.from(s.signature) : null })));
+    const signedPdf = await appendCertificate(stamped, cert);
     await prisma.billingSignRequest.update({ where: { id: fresh.id }, data: { status: "completed", completedAt: now, signedPdf, signedSha256: sha256(signedPdf) } });
   }
   const all = fresh.signers.every((s) => s.status === "signed");

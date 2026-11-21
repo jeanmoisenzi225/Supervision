@@ -10,7 +10,7 @@ import { isAbsurdRate, usdRate, type FxMode } from "./fx";
 import { generateDraftInvoicePdf } from "./invoice-pdf";
 import { buildServiceDocs, DOC_FILENAMES, missingForDoc, type DocKind, type ServiceDocData } from "./service-docs.content";
 import { renderServiceDocDocx } from "./service-docs.docx";
-import { renderServiceDocPdf } from "./service-docs.pdf";
+import { renderServiceDocPdf, renderServiceDocPdfWithBoxes } from "./service-docs.pdf";
 import { hashCode, hashToken, newCode, newToken, sha256, VALIDITY_DAYS } from "./signature.service";
 
 export const billingRouter = asyncRouter();
@@ -401,13 +401,14 @@ billingRouter.post("/service-docs/:id/signature-requests", async (req, res) => {
   const missing = missingForDoc(data, kind);
   if (missing.length) throw new HttpError(409, `Document final impossible : il manque ${missing.join(", ")}.`);
   const docs = buildServiceDocs(data);
-  const pdf = await renderServiceDocPdf(docs[kind].blocks, docs[kind].header, docs.brand);
+  const { pdf, boxes } = await renderServiceDocPdfWithBoxes(docs[kind].blocks, docs[kind].header, docs.brand);
   const title = kind === "demande" ? `Demande de règlement — ${data.appName}` : `Convention de constatation des travaux — ${data.appName}`;
-  const people = [{ role: "prestataire", name: data.provider.name }, ...(kind === "convention" ? [{ role: "client", name: data.clientRepresentative.trim() || data.client.name }] : [])];
+  // Les deux documents sont signés par le prestataire et le client (la demande : « bon pour accord » du client).
+  const people = [{ role: "prestataire", name: data.provider.name }, { role: "client", name: data.clientRepresentative.trim() || data.client.name }];
   const secrets = people.map((p) => ({ ...p, token: newToken(), code: newCode() }));
   const created = await prisma.billingSignRequest.create({
     data: {
-      serviceDocId: row.id, kind, title, pdf, pdfSha256: sha256(pdf), expiresAt: new Date(Date.now() + VALIDITY_DAYS * 86_400_000),
+      serviceDocId: row.id, kind, title, pdf, boxes, pdfSha256: sha256(pdf), expiresAt: new Date(Date.now() + VALIDITY_DAYS * 86_400_000),
       signers: { create: secrets.map((x) => ({ role: x.role, name: x.name, tokenHash: hashToken(x.token), codeHash: hashCode(x.code) })) },
     },
     include: { signers: SIGNER_SELECT },

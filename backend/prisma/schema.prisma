@@ -348,6 +348,8 @@ model BillingSignRequest {
   status       String            @default("pending")
   pdf          Bytes
   pdfSha256    String
+  /// Emplacements des cadres de signature dans le PDF [{role, page, x, y, w, h}] : la signature y est posée à la finalisation.
+  boxes        Json              @default("[]")
   signedPdf    Bytes?
   signedSha256 String?
   createdAt    DateTime          @default(now())

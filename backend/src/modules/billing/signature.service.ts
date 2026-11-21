@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import { PDFDocument as PdfLib } from "pdf-lib";
+import { PDFDocument as PdfLib, StandardFonts, rgb } from "pdf-lib";
+import type { SignBox } from "./service-docs.pdf";
 import { env } from "../../config/env";
 
 /**
@@ -51,7 +52,7 @@ export function renderCertificate(input: { title: string; requestId: string; pdf
   const kv = (k: string, v: string) => { doc.font("r").fontSize(8.5).fillColor(MUTED).text(k, ML, y, { width: 120, lineBreak: false }); doc.font("r").fontSize(9.5).fillColor(INK).text(v, ML + 125, y, { width: CW - 125 }); y = doc.y + 6; };
   kv("Document", input.title);
   kv("Référence", input.requestId);
-  kv("Empreinte SHA-256", input.pdfSha256);
+  kv("Empreinte SHA-256 du document soumis", input.pdfSha256);
   y += 6;
   for (const s of input.signers) {
     const h = s.signature ? 126 : 76;
@@ -77,4 +78,40 @@ export async function appendCertificate(original: Buffer, certificate: Buffer): 
   const cert = await PdfLib.load(certificate);
   for (const page of await out.copyPages(cert, cert.getPageIndices())) out.addPage(page);
   return Buffer.from(await out.save());
+}
+
+// Caractères acceptés par la police standard du PDF (WinAnsi) ; tout le reste devient « ? ».
+const winSafe = (t: string) => t.normalize("NFC").replace(/[^\u0020-\u007E\u00A0-\u00FF\u2018\u2019\u201C\u201D\u2013\u2014\u20AC\u2026]/g, "?");
+
+export type StampSigner = { role: string; typedName: string | null; name: string; signedAt: Date | null; signature: Buffer | null };
+
+/**
+ * Pose chaque signature dans son cadre du document : mention « Signé électroniquement le … », nom, tracé.
+ * Le document soumis aux signataires (et son empreinte) reste l'original ; ce tampon n'en modifie pas le texte.
+ */
+export async function stampSignatures(original: Buffer, boxes: SignBox[], signers: StampSigner[]): Promise<Buffer> {
+  if (!boxes.length) return original;
+  const pdf = await PdfLib.load(original);
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  for (const s of signers) {
+    const box = boxes.find((b) => b.role === s.role);
+    if (!box || !s.signedAt) continue;
+    const page = pdf.getPage(box.page);
+    const H = page.getHeight();
+    const bottom = H - (box.y + box.h);
+    // Recouvre les lignes « Fait à … le … » du cadre, devenues inutiles.
+    page.drawRectangle({ x: box.x + 2, y: bottom + 2, width: box.w - 4, height: box.h - 58 - 2, color: rgb(1, 1, 1) });
+    const when = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" }).format(s.signedAt);
+    page.drawText(winSafe(`Signé électroniquement le ${when}`), { x: box.x + 10, y: H - (box.y + 68), size: 8.2, font: bold, color: rgb(0.05, 0.06, 0.07) });
+    page.drawText(winSafe(`par ${s.typedName || s.name}`), { x: box.x + 10, y: H - (box.y + 80), size: 8.2, font, color: rgb(0.25, 0.26, 0.28) });
+    if (s.signature) {
+      try {
+        const img = await pdf.embedPng(s.signature);
+        const dims = img.scaleToFit(box.w - 24, 52);
+        page.drawImage(img, { x: box.x + 12, y: bottom + 8, width: dims.width, height: dims.height });
+      } catch { /* tracé illisible : la mention reste, le certificat garde le tracé */ }
+    }
+  }
+  return Buffer.from(await pdf.save());
 }

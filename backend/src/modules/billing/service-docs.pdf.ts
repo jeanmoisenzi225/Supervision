@@ -22,14 +22,24 @@ function runs(t: string, bold = false): Run[] {
 }
 type Seg = { text: string; x: number; bold: boolean; mark: boolean; w: number };
 
-export function renderServiceDocPdf(blocks: Block[], header: string, brand: string): Promise<Buffer> {
+/** Emplacement d'un cadre de signature (origine en haut à gauche, en points) : sert à y poser la signature électronique. */
+export type SignBox = { role: "prestataire" | "client"; page: number; x: number; y: number; w: number; h: number };
+export const SIGN_BOX_HEIGHT = 150;
+
+export async function renderServiceDocPdf(blocks: Block[], header: string, brand: string): Promise<Buffer> {
+  return (await renderServiceDocPdfWithBoxes(blocks, header, brand)).pdf;
+}
+
+export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, brand: string): Promise<{ pdf: Buffer; boxes: SignBox[] }> {
   const doc = new PDFDocument({ size: "A4", margin: 0, bufferPages: true, info: { Title: header, Author: brand } });
   const chunks: Buffer[] = [];
   doc.on("data", (c: Buffer) => chunks.push(c));
   doc.registerFont("r", FONT.r); doc.registerFont("b", FONT.b);
   let y = TOP;
+  let pageNo = 0;
+  const boxes: SignBox[] = [];
   const width = (s: string, bold: boolean, size: number) => doc.font(bold ? "b" : "r").fontSize(size).widthOfString(s);
-  const ensure = (h: number) => { if (y + h > H - BOT) { doc.addPage(); y = TOP; } };
+  const ensure = (h: number) => { if (y + h > H - BOT) { doc.addPage(); pageNo++; y = TOP; } };
 
   function layout(text: string, w: number, size: number, bold = false): Seg[][] {
     const lines: Seg[][] = [[]];
@@ -154,26 +164,20 @@ export function renderServiceDocPdf(blocks: Block[], header: string, brand: stri
         for (const it of b.items) typeof it === "string" ? para(it, { after: 4 }) : render(it);
         break;
       }
-      case "sig1": {
-        ensure(135); y += 6; para(b.place, { after: 6 });
-        box(92); doc.font("b").fontSize(9.4).fillColor(INK).text(b.label, ML + 10, y + 9, { lineBreak: false });
-        drawLine(layout(b.name, CW - 20, 9.4)[0], ML + 10, y + 23, 9.4, INK);
-        doc.font("r").fontSize(7.8).fillColor(MUTED).text("Signature précédée de « Lu et approuvé »", ML + 10, y + 38, { lineBreak: false });
-        y += 104; break;
-      }
       case "sig2": {
-        ensure(190); y += 8;
-        para("Fait en deux exemplaires, à la date indiquée sous chaque signature. La convention prend effet à la date de la dernière signature.", { after: 8 });
+        ensure(SIGN_BOX_HEIGHT + 34); y += 4;
+        para(b.intro, { after: 8 });
         const cw = (CW - 12) / 2;
-        [["Le prestataire", b.left], ["Le client", b.right]].forEach(([label, who], i) => {
+        ([["prestataire", "Le prestataire", b.left], ["client", b.rightLabel ?? "Le client", b.right]] as const).forEach(([role, label, who], i) => {
           const x = ML + i * (cw + 12);
-          doc.save().roundedRect(x, y, cw, 125, 5).lineWidth(0.8).stroke(LINE).restore();
+          doc.save().roundedRect(x, y, cw, SIGN_BOX_HEIGHT, 5).lineWidth(0.8).stroke(LINE).restore();
           doc.font("b").fontSize(9.4).fillColor(INK).text(label, x + 10, y + 9, { lineBreak: false });
           layout(who, cw - 20, 9).forEach((ln, j) => drawLine(ln, x + 10, y + 23 + j * 12.5, 9, INK));
           doc.font("r").fontSize(7.8).fillColor(MUTED).text("Fait à ________________, le ____ / ____ / ________", x + 10, y + 62, { lineBreak: false });
           doc.text("Signature précédée de « Lu et approuvé »", x + 10, y + 76, { lineBreak: false });
+          boxes.push({ role, page: pageNo, x, y, w: cw, h: SIGN_BOX_HEIGHT });
         });
-        y += 137; break;
+        y += SIGN_BOX_HEIGHT + 12; break;
       }
       case "foot": ensure(40); y += 6; doc.moveTo(ML, y).lineTo(W - MR, y).lineWidth(0.5).stroke(LINE); y += 6; para(b.text, { size: 7.8, color: MUTED }); break;
     }
@@ -193,5 +197,5 @@ export function renderServiceDocPdf(blocks: Block[], header: string, brand: stri
     const pg = `Page ${i + 1} / ${range.count}`;
     doc.text(pg, W - MR - doc.widthOfString(pg), H - 36, { lineBreak: false });
   }
-  return new Promise((resolve, reject) => { doc.on("end", () => resolve(Buffer.concat(chunks))); doc.on("error", reject); doc.end(); });
+  return new Promise((resolve, reject) => { doc.on("end", () => resolve({ pdf: Buffer.concat(chunks), boxes })); doc.on("error", reject); doc.end(); });
 }
