@@ -29,6 +29,7 @@ describe("outils de signature", () => {
   });
 });
 
+// Nécessite une vraie base : TEST_DATABASE_URL=postgresql://... npx vitest run --no-file-parallelism (les fichiers de test partagent la base)
 describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
   let app: ReturnType<typeof import("../src/app").createApp>;
   let prisma: typeof import("../src/db/prisma").prisma;

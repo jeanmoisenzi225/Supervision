@@ -112,7 +112,7 @@ describe("détail des composants", () => {
   });
 });
 
-// Nécessite une vraie base : TEST_DATABASE_URL=postgresql://... npx vitest run tests/serviceDocs.test.ts
+// Nécessite une vraie base : TEST_DATABASE_URL=postgresql://... npx vitest run --no-file-parallelism (les fichiers de test partagent la base)
 describe.skipIf(!process.env.TEST_DATABASE_URL)("API dossiers de prestation", () => {
   let app: ReturnType<typeof import("../src/app").createApp>;
   let prisma: typeof import("../src/db/prisma").prisma;
