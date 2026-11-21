@@ -231,7 +231,7 @@ Objectif : intégrer à Supervision un espace privé de gestion commerciale et d
 - Ordre proposé pour le lot 2 : rejeu avec les vraies données, palette de recherche, diagnostic replié ; rivière et assistant plus tard.
 - [x] Accueil épuré (v0.41.0, 2026-11-16) : constellation, brief, rejeu et objectifs seulement ; infos d'une appli dans une fenêtre à fond transparent ouverte depuis son logo (celles de Procedia y comprises) ; constellation plus grande et lumineuse ; thème rangé dans « Paramètres ».
 
-## 21. Documents de prestation : demande de règlement et convention (2026-11-20) ✅ (v0.46.0)
+## 21. Documents de prestation : demande de règlement et convention (2026-11-20) ✅ (v0.47.0)
 
 - [x] Demande de règlement (pas une facture) et convention de constatation des travaux, PDF et Word, intégrés à NJM Facturation (onglet Prestations).
 - [x] Prestataire en personne physique, sans identifiant administratif inventé.
