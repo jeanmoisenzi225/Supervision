@@ -19,7 +19,7 @@ export function SignPage({ token }: { token: string }) {
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [consent, setConsent] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<{ at: Date; completed: boolean } | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [inked, setInked] = useState(false);
@@ -41,7 +41,8 @@ export function SignPage({ token }: { token: string }) {
     try {
       const signature = canvas.current!.toDataURL("image/png");
       const r = await call<{ completed: boolean }>(token, "sign", { code, typedName: name, signature, consent });
-      setDone(true);
+      setDone({ at: new Date(), completed: r.completed });
+      window.scrollTo({ top: 0 });
       if (r.completed) await open();
       else setDoc((d) => (d ? { ...d, signerStatus: "signed", signers: d.signers.map((s) => (s.role === d.role ? { ...s, status: "signed" } : s)) } : d));
     } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
@@ -60,6 +61,19 @@ export function SignPage({ token }: { token: string }) {
     </form>
   </section>);
 
+  // Écran de confirmation : plein écran, en haut de page, impossible à manquer.
+  if (done) {
+    const waiting = doc.signers.filter((s) => s.status !== "signed");
+    return wrap(<section className="card" style={{ textAlign: "center", padding: "28px 18px" }}>
+      <div style={{ fontSize: 54, color: "var(--ok)", lineHeight: 1 }}>✓</div>
+      <h2 style={{ margin: "10px 0 4px" }}>Votre signature est enregistrée</h2>
+      <p className="muted">{doc.title}</p>
+      <p className="small">Signé le {done.at.toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" })} par {name || doc.name}</p>
+      {doc.requestStatus === "completed"
+        ? <><p style={{ color: "var(--ok)" }}><strong>Toutes les parties ont signé.</strong> Le document est finalisé.</p><a className="button primary" href={url} download="document_signe.pdf">Télécharger le PDF signé</a></>
+        : <p className="muted">{waiting.length ? `En attente de : ${waiting.map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}.` : "Finalisation en cours…"} Vous pouvez fermer cette page.</p>}
+    </section>);
+  }
   const completed = doc.requestStatus === "completed";
   const mustSign = doc.requestStatus === "pending" && doc.signerStatus === "pending";
   return wrap(<>
@@ -78,8 +92,7 @@ export function SignPage({ token }: { token: string }) {
     </section>
     {completed && <p style={{ color: "var(--ok)" }}><strong>Le document est signé par toutes les parties.</strong> Le PDF ci-dessus comprend la page de certificat.</p>}
     {doc.requestStatus === "cancelled" && <p style={{ color: "var(--warn)" }}>Cette demande a été annulée.</p>}
-    {done && !completed && <p style={{ color: "var(--ok)" }}><strong>Votre signature est enregistrée.</strong> Le document sera finalisé quand les autres parties auront signé.</p>}
-    {mustSign && !done && <section className="card">
+    {mustSign && <section className="card">
       <h3>Signer</h3>
       <form className="stack-small" onSubmit={sign}>
         <label>Votre nom complet<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder={doc.name} /></label>

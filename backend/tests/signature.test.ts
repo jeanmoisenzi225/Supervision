@@ -80,6 +80,11 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
     expect((await request(app).get(`/api/billing/signature-requests/${created.body.id}/signed.pdf`).set(auth)).status).toBe(409);
     const s2 = await request(app).post(`/api/sign/${b.token}/sign`).set("User-Agent", "TestAgent/1.0").send({ code: b.code, typedName: "Rep Test", signature: fakePng(), consent: true });
     expect(s2.body).toEqual({ ok: true, completed: true });
+    // liste globale pour l'onglet « Signatures »
+    const list = await request(app).get("/api/billing/signature-requests").set(auth);
+    expect(list.status).toBe(200);
+    expect(list.body[0]).toMatchObject({ appName: "App", clientName: "Client test" });
+    expect((await request(app).get("/api/billing/signature-requests")).status).toBe(401);
     // traces conservées en base, exposées seulement par le journal de preuve (administration)
     const rows = await prisma.billingSigner.findMany({ where: { requestId: created.body.id, status: "signed" } });
     expect(rows.every((x) => x.ip)).toBe(true);

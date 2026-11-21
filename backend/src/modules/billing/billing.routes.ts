@@ -378,6 +378,12 @@ const requestSummary = (r: { id: string; kind: string; title: string; status: st
 // Prestataire d'abord, puis client.
 const SIGNER_SELECT = { orderBy: { role: "desc" as const } };
 
+/** Toutes les demandes de signature, les plus récentes d'abord : alimente l'onglet « Signatures ». */
+billingRouter.get("/signature-requests", async (_req, res) => {
+  const rows = await prisma.billingSignRequest.findMany({ include: { signers: SIGNER_SELECT, serviceDoc: { include: { client: true } } }, orderBy: { createdAt: "desc" }, take: 50 });
+  res.json(rows.map((r) => ({ ...requestSummary(r), appName: r.serviceDoc.appName, clientName: r.serviceDoc.client.name })));
+});
+
 billingRouter.get("/service-docs/:id/signature-requests", async (req, res) => {
   const rows = await prisma.billingSignRequest.findMany({ where: { serviceDocId: req.params.id }, include: { signers: SIGNER_SELECT }, orderBy: { createdAt: "desc" }, take: 20 });
   res.json(rows.map(requestSummary));

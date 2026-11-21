@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
-import { SignaturePanel } from "./SignaturePanel";
 
 type ClientRef = { id: string; name: string };
 type Doc = {
@@ -18,7 +17,7 @@ const blank = () => ({ clientId: "", reference: "", appName: "", description: ""
 const money = (v: string | null, c: string) => (v == null ? "montant à compléter" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: c === "XOF" ? "XOF" : "EUR", maximumFractionDigits: c === "XOF" ? 0 : 2 }).format(Number(v)));
 
 /** Dossiers de prestation : une saisie → demande de règlement + convention de constatation des travaux (PDF et Word). */
-export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { clients: ClientRef[]; profileReady: boolean; onNotice: (m: string) => void; onError: (m: string) => void }) {
+export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSignCreated }: { clients: ClientRef[]; profileReady: boolean; onNotice: (m: string) => void; onError: (m: string) => void; onSignCreated: (fresh: { requestId: string; links: { signerId: string; role: string; name: string; token: string; code: string }[] }) => void }) {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [form, setForm] = useState(blank());
   const [editing, setEditing] = useState<string | null>(null);
@@ -61,6 +60,14 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
         ? { ok: false, text: `Aucune ligne à importer pour ${r.apps.join(", ") || "ce client"} : ${r.skippedFree ? `${r.skippedFree} poste(s) gratuit(s) non repris. ` : "aucun coût trouvé. "}Rattache les applis au client (onglet Clients › Modifier).` }
         : { ok: true, text: `${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ")} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.rateInfo ? `, taux : ${r.rateInfo}` : ""}). Modifiables ligne par ligne.${r.warnings.length ? " " + r.warnings.join(" ") : ""}` });
     } catch (err) { setImportMsg({ ok: false, text: (err as Error).message }); }
+  }
+  /** Crée la demande puis passe à l'onglet Signatures, où les liens sont à transmettre. */
+  async function requestSignature(d: Doc, kind: "demande" | "convention") {
+    onError(""); onNotice("");
+    try {
+      const r = await api<{ id: string; links: { signerId: string; role: string; name: string; token: string; code: string }[] }>(`/billing/service-docs/${d.id}/signature-requests`, { method: "POST", body: { kind } });
+      onSignCreated({ requestId: r.id, links: r.links });
+    } catch (err) { onError((err as Error).message); }
   }
   async function remove(id: string) {
     if (!window.confirm("Supprimer ce dossier de prestation ?")) return;
@@ -127,7 +134,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
         <span className="muted small">{d.client.name} · {money(d.amount, d.currency)}{d.reference ? ` · ${d.reference}` : ""}</span>
         <div className="row wrap"><span className="small">Demande de règlement</span><button onClick={() => void download(d, "demande", "pdf")}>PDF</button><button onClick={() => void download(d, "demande", "docx")}>Word</button></div>
         <div className="row wrap"><span className="small">Convention</span><button onClick={() => void download(d, "convention", "pdf")}>PDF</button><button onClick={() => void download(d, "convention", "docx")}>Word</button></div>
-        <SignaturePanel docId={d.id} onError={onError} onNotice={onNotice} />
+        <div className="row wrap"><span className="small">Signature</span><button onClick={() => void requestSignature(d, "convention")}>Convention : vous + client</button><button onClick={() => void requestSignature(d, "demande")}>Demande : vous</button></div>
         <div className="row"><button onClick={() => edit(d)}>Modifier</button><button className="danger" onClick={() => void remove(d.id)}>Supprimer</button></div>
       </div>)}
       <p className="small muted"><strong>Avant signature ou paiement</strong> : fiscalité (France et Côte d’Ivoire), droits d’auteur, loi applicable et juridiction méritent un regard professionnel.</p>

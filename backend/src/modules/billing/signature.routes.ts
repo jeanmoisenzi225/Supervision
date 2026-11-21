@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../db/prisma";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
+import { sendPushToAll } from "../push/push.service";
 import { appendCertificate, codeMatches, hashToken, MAX_ATTEMPTS, parseSignaturePng, renderCertificate, sha256 } from "./signature.service";
 
 /** Page de signature : ouverte sans connexion, protégée par le lien personnel ET le code transmis à part. */
@@ -65,5 +66,14 @@ signRouter.post("/:token/sign", async (req, res) => {
     const signedPdf = await appendCertificate(Buffer.from(fresh.pdf), cert);
     await prisma.billingSignRequest.update({ where: { id: fresh.id }, data: { status: "completed", completedAt: now, signedPdf, signedSha256: sha256(signedPdf) } });
   }
-  res.json({ ok: true, completed: fresh.signers.every((s) => s.status === "signed") });
+  const all = fresh.signers.every((s) => s.status === "signed");
+  // L'émetteur est prévenu tout de suite (notification de l'appli installée), sans attendre d'ouvrir la Supervision.
+  const done = fresh.signers.filter((s) => s.status === "signed").length;
+  void sendPushToAll({
+    title: all ? "✅ Document signé par tous" : `✍️ ${signer.name} a signé`,
+    body: all ? `${fresh.title} : toutes les signatures sont là, le PDF signé est prêt.` : `${fresh.title} : ${done} signature(s) sur ${fresh.signers.length}.`,
+    url: "/facturation",
+    tag: `signature:${fresh.id}`,
+  }).catch(() => undefined);
+  res.json({ ok: true, completed: all });
 });

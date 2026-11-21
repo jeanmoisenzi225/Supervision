@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v0.49.0 — 2026-11-22
+
+Retour du propriétaire : après avoir signé, aucune confirmation visible ; et dans la Supervision, aucune trace des signatures, avec trop d'informations en cascade.
+
+- **Page de signature : écran de confirmation plein écran**, en haut de page : « ✓ Votre signature est enregistrée », titre du document, date et heure, qui reste à signer, et, quand tous ont signé, bouton « Télécharger le PDF signé ». Auparavant le message se perdait sous l'aperçu du PDF.
+- **Nouvel onglet « Signatures »** dans NJM Facturation : une liste claire de toutes les demandes, avec l'état d'un coup d'œil (« ⏳ 1/2 signé · attend : Client », « ✅ Signé par tous », « Annulé »). Le détail (signataires, téléchargements, journal de preuve, annulation) n'apparaît que si l'on ouvre une ligne. Le nombre de signatures en attente s'affiche dans le titre de l'onglet.
+- **Moins de cascade** : dans Prestations, deux boutons simples (« Convention : vous + client », « Demande : vous ») créent la demande et amènent directement à l'onglet Signatures, où un seul bloc « À transmettre maintenant » donne le lien et le code de chaque signataire. Le panneau déroulant par dossier est supprimé.
+- **Notification** : à chaque signature, l'émetteur reçoit une notification de l'application installée (« ✍️ Nom a signé », puis « ✅ Document signé par tous »).
+
 ## v0.48.2 — 2026-11-22
 
 - **Signature électronique : les traces techniques sont de nouveau conservées, sans jamais figurer sur les documents.** L'adresse IP et le navigateur du signataire sont enregistrés en base au moment de la signature (colonnes `ip` et `userAgent`, migration `20261122180000_signature_traces`) ; ils n'apparaissent ni dans le certificat ni dans le PDF signé. Le texte de consentement de la page de signature en informe le signataire. Nouveau bouton **« Journal de preuve »** dans l'administration : fichier JSON avec, pour chaque signataire, les dates d'ouverture et de signature, le nom saisi, l'IP, le navigateur et les essais de code ratés.
