@@ -23,38 +23,17 @@ export function SignPage({ token }: { token: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [inked, setInked] = useState(false);
-  // « Signer maintenant » depuis la Supervision : le code arrive dans le fragment de l'adresse (#123456), jamais envoyé au serveur.
-  useEffect(() => {
-    const m = /^#(\d{6})$/.exec(window.location.hash);
-    if (!m) return;
-    window.history.replaceState(null, "", window.location.pathname);
-    setCode(m[1]);
-    void open(undefined, m[1]);
-  }, []);
   const url = useMemo(() => (doc ? pdfUrl(doc.pdfBase64) : ""), [doc?.pdfBase64]);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
 
-  async function open(e?: React.FormEvent, withCode = code) {
+  async function open(e?: React.FormEvent) {
     e?.preventDefault(); setError(""); setBusy(true);
-    try { setDoc(await call<Opened>(token, "open", { code: withCode })); } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
+    try { setDoc(await call<Opened>(token, "open", { code })); } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   }
   const pos = (e: ReactPointerEvent<HTMLCanvasElement>) => { const r = e.currentTarget.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * e.currentTarget.width, y: ((e.clientY - r.top) / r.height) * e.currentTarget.height }; };
   function down(e: ReactPointerEvent<HTMLCanvasElement>) { e.currentTarget.setPointerCapture(e.pointerId); drawing.current = true; const c = e.currentTarget.getContext("2d")!; const p = pos(e); c.beginPath(); c.moveTo(p.x, p.y); }
   function move(e: ReactPointerEvent<HTMLCanvasElement>) { if (!drawing.current) return; const c = e.currentTarget.getContext("2d")!; const p = pos(e); c.lineWidth = 3; c.lineCap = "round"; c.strokeStyle = "#0d0e10"; c.lineTo(p.x, p.y); c.stroke(); setInked(true); }
   const up = () => { drawing.current = false; };
-  /** Réutilise le dernier tracé et le dernier nom saisis sur cet appareil. */
-  function reuseLast() {
-    try {
-      const last = JSON.parse(localStorage.getItem("sign.last") ?? "null") as { name: string; signature: string } | null;
-      const c = canvas.current;
-      if (!last || !c) return;
-      const img = new Image();
-      img.onload = () => { const g = c.getContext("2d")!; g.clearRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); setInked(true); };
-      img.src = last.signature;
-      if (!name.trim()) setName(last.name);
-    } catch { /* rien de mémorisé */ }
-  }
-  const hasLast = (() => { try { return Boolean(localStorage.getItem("sign.last")); } catch { return false; } })();
   function clear() { const c = canvas.current; if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height); setInked(false); }
 
   async function sign(e: React.FormEvent) {
@@ -62,8 +41,6 @@ export function SignPage({ token }: { token: string }) {
     try {
       const signature = canvas.current!.toDataURL("image/png");
       const r = await call<{ completed: boolean }>(token, "sign", { code, typedName: name, signature, consent });
-      // Mémorisée sur cet appareil seulement, pour la prochaine fois (jamais envoyée ailleurs qu'avec la signature).
-      try { localStorage.setItem("sign.last", JSON.stringify({ name, signature })); } catch { /* stockage indisponible */ }
       setDone({ at: new Date(), completed: r.completed });
       window.scrollTo({ top: 0 });
       if (r.completed) await open();
@@ -123,7 +100,7 @@ export function SignPage({ token }: { token: string }) {
           <div className="small muted">Dessinez votre signature (doigt ou souris)</div>
           <canvas ref={canvas} width={640} height={200} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
             style={{ width: "100%", maxWidth: 520, height: "auto", aspectRatio: "16 / 5", touchAction: "none", background: dark ? "#f4f2ec" : "#fff", border: "1px solid var(--border)", borderRadius: 8, display: "block" }} />
-          <div className="row wrap" style={{ marginTop: 6 }}><button type="button" onClick={clear}>Effacer</button>{hasLast && <button type="button" onClick={reuseLast}>Utiliser ma dernière signature</button>}</div>
+          <button type="button" onClick={clear} style={{ marginTop: 6 }}>Effacer</button>
         </div>
         <label className="row" style={{ alignItems: "flex-start" }}><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span className="small">Je déclare avoir lu le document ci-dessus et je le signe électroniquement. J’accepte que la date de ma signature, mon nom, mon tracé, mon adresse IP et mon navigateur soient conservés comme preuve.</span></label>
         {error && <p className="small" style={{ color: "var(--bad)" }}>{error}</p>}

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.49.2 — 2026-11-22
+
+- **Retrait des raccourcis de signature** ajoutés en v0.49.1 (demande du propriétaire : on garde la procédure normale, lien et code pour chaque signataire, y compris pour l'émetteur) : plus de bouton « Signer maintenant », plus de code dans l'adresse, plus de « Utiliser ma dernière signature » ni de tracé mémorisé sur l'appareil.
+- Conservé : le bouton **« Supprimer »** de l'onglet Signatures (avec confirmation), qui supprime définitivement une demande et ses preuves.
+
 ## v0.49.1 — 2026-11-22
 
 Retour du propriétaire : le document signé n'avait que la signature du prestataire, sans lien pour le client, et le cadre de signature du document restait vide alors que le certificat était rempli.
