@@ -11,6 +11,7 @@ import { generateDraftInvoicePdf } from "./invoice-pdf";
 import { buildServiceDocs, DOC_FILENAMES, missingForDoc, type DocKind, type ServiceDocData } from "./service-docs.content";
 import { renderServiceDocDocx } from "./service-docs.docx";
 import { renderServiceDocPdf } from "./service-docs.pdf";
+import { hashCode, hashToken, newCode, newToken, sha256, VALIDITY_DAYS } from "./signature.service";
 
 export const billingRouter = asyncRouter();
 billingRouter.use(requireAdmin);
@@ -342,6 +343,7 @@ billingRouter.put("/service-docs/:id", async (req, res) => {
 
 billingRouter.delete("/service-docs/:id", async (req, res) => {
   if (!(await prisma.billingServiceDoc.findUnique({ where: { id: req.params.id } }))) throw new HttpError(404, "Dossier introuvable");
+  if (await prisma.billingSignRequest.count({ where: { serviceDocId: req.params.id } })) throw new HttpError(409, "Ce dossier a des demandes de signature (preuves conservées) : il ne peut pas être supprimé.");
   await prisma.billingServiceDoc.delete({ where: { id: req.params.id } });
   res.json({ ok: true });
 });
@@ -365,4 +367,73 @@ billingRouter.get("/service-docs/:id/:kind.:format", async (req, res) => {
     .set("Content-Disposition", `attachment; filename="${DOC_FILENAMES[kind]}.${format}"`)
     .set("Cache-Control", "private, no-store")
     .send(body);
+});
+
+// ---------- Signature électronique des documents de prestation (v0.48.0) ----------
+
+const requestSummary = (r: { id: string; kind: string; title: string; status: string; createdAt: Date; expiresAt: Date; completedAt: Date | null; pdfSha256: string; signedSha256: string | null; signers: { id: string; role: string; name: string; status: string; signedAt: Date | null; viewedAt: Date | null; attempts: number }[] }) => ({
+  id: r.id, kind: r.kind, title: r.title, status: r.status, createdAt: r.createdAt, expiresAt: r.expiresAt, completedAt: r.completedAt, pdfSha256: r.pdfSha256, signedSha256: r.signedSha256,
+  signers: r.signers.map((x) => ({ id: x.id, role: x.role, name: x.name, status: x.status, signedAt: x.signedAt, viewedAt: x.viewedAt, locked: x.attempts >= 5 })),
+});
+// Prestataire d'abord, puis client.
+const SIGNER_SELECT = { orderBy: { role: "desc" as const } };
+
+billingRouter.get("/service-docs/:id/signature-requests", async (req, res) => {
+  const rows = await prisma.billingSignRequest.findMany({ where: { serviceDocId: req.params.id }, include: { signers: SIGNER_SELECT }, orderBy: { createdAt: "desc" }, take: 20 });
+  res.json(rows.map(requestSummary));
+});
+
+/** Fige le document (PDF + empreinte) et crée un lien et un code par signataire ; affichés une seule fois. */
+billingRouter.post("/service-docs/:id/signature-requests", async (req, res) => {
+  const kind = z.object({ kind: z.enum(["demande", "convention"]) }).parse(req.body).kind as DocKind;
+  const row = await prisma.billingServiceDoc.findUnique({ where: { id: req.params.id }, include: { client: true } });
+  if (!row) throw new HttpError(404, "Dossier introuvable");
+  if (await prisma.billingSignRequest.findFirst({ where: { serviceDocId: row.id, kind, status: "pending" } })) throw new HttpError(409, "Une demande de signature est déjà en cours pour ce document : annule-la ou attends les signatures.");
+  const setting = await prisma.setting.findUnique({ where: { key: "billing.profile" } });
+  const profile = setting ? (JSON.parse(setting.value) as Record<string, string | undefined>) : {};
+  const data = serviceDocData(row, profile);
+  const missing = missingForDoc(data, kind);
+  if (missing.length) throw new HttpError(409, `Document final impossible : il manque ${missing.join(", ")}.`);
+  const docs = buildServiceDocs(data);
+  const pdf = await renderServiceDocPdf(docs[kind].blocks, docs[kind].header, docs.brand);
+  const title = kind === "demande" ? `Demande de règlement — ${data.appName}` : `Convention de constatation des travaux — ${data.appName}`;
+  const people = [{ role: "prestataire", name: data.provider.name }, ...(kind === "convention" ? [{ role: "client", name: data.clientRepresentative.trim() || data.client.name }] : [])];
+  const secrets = people.map((p) => ({ ...p, token: newToken(), code: newCode() }));
+  const created = await prisma.billingSignRequest.create({
+    data: {
+      serviceDocId: row.id, kind, title, pdf, pdfSha256: sha256(pdf), expiresAt: new Date(Date.now() + VALIDITY_DAYS * 86_400_000),
+      signers: { create: secrets.map((x) => ({ role: x.role, name: x.name, tokenHash: hashToken(x.token), codeHash: hashCode(x.code) })) },
+    },
+    include: { signers: SIGNER_SELECT },
+  });
+  res.status(201).json({ ...requestSummary(created), links: created.signers.map((sg) => { const x = secrets.find((y) => y.role === sg.role)!; return { signerId: sg.id, role: sg.role, name: sg.name, token: x.token, code: x.code }; }) });
+});
+
+billingRouter.post("/signature-requests/:id/cancel", async (req, res) => {
+  const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id } });
+  if (!r) throw new HttpError(404, "Demande introuvable");
+  if (r.status !== "pending") throw new HttpError(409, "Seule une demande en cours peut être annulée.");
+  await prisma.billingSignRequest.update({ where: { id: r.id }, data: { status: "cancelled" } });
+  res.json({ ok: true });
+});
+
+/** Nouveau lien et nouveau code pour un signataire (lien perdu ou code bloqué). */
+billingRouter.post("/signature-requests/:id/signers/:signerId/reset", async (req, res) => {
+  const signer = await prisma.billingSigner.findFirst({ where: { id: req.params.signerId, requestId: req.params.id }, include: { request: true } });
+  if (!signer) throw new HttpError(404, "Signataire introuvable");
+  if (signer.request.status !== "pending" || signer.status === "signed") throw new HttpError(409, "Ce signataire ne peut plus recevoir de nouveau lien.");
+  const token = newToken(), code = newCode();
+  await prisma.billingSigner.update({ where: { id: signer.id }, data: { tokenHash: hashToken(token), codeHash: hashCode(code), attempts: 0 } });
+  res.json({ signerId: signer.id, role: signer.role, name: signer.name, token, code });
+});
+
+billingRouter.get("/signature-requests/:id/:which(signed|original).pdf", async (req, res) => {
+  const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id } });
+  if (!r) throw new HttpError(404, "Demande introuvable");
+  const signed = req.params.which === "signed";
+  if (signed && !(r.status === "completed" && r.signedPdf)) throw new HttpError(409, "Le document n'est pas encore signé par tous.");
+  const body = Buffer.from(signed ? r.signedPdf! : r.pdf);
+  res.status(200).set("Content-Type", "application/pdf")
+    .set("Content-Disposition", `attachment; filename="${DOC_FILENAMES[r.kind as DocKind]}${signed ? "_signe" : ""}.pdf"`)
+    .set("Cache-Control", "private, no-store").send(body);
 });

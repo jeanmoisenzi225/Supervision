@@ -1,6 +1,6 @@
 {
   "name": "supervision-backend",
-  "version": "0.47.0",
+  "version": "0.48.0",
   "private": true,
   "description": "API de supervision : disponibilité des applis, alertes, journaux et actions super administrateur",
   "main": "dist/index.js",
@@ -24,6 +24,7 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "otplib": "^12.0.1",
+    "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",
     "web-push": "^3.6.7",

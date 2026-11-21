@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
+import { SignaturePanel } from "./SignaturePanel";
 
 type ClientRef = { id: string; name: string };
 type Doc = {
@@ -126,6 +127,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError }: { c
         <span className="muted small">{d.client.name} · {money(d.amount, d.currency)}{d.reference ? ` · ${d.reference}` : ""}</span>
         <div className="row wrap"><span className="small">Demande de règlement</span><button onClick={() => void download(d, "demande", "pdf")}>PDF</button><button onClick={() => void download(d, "demande", "docx")}>Word</button></div>
         <div className="row wrap"><span className="small">Convention</span><button onClick={() => void download(d, "convention", "pdf")}>PDF</button><button onClick={() => void download(d, "convention", "docx")}>Word</button></div>
+        <SignaturePanel docId={d.id} onError={onError} onNotice={onNotice} />
         <div className="row"><button onClick={() => edit(d)}>Modifier</button><button className="danger" onClick={() => void remove(d.id)}>Supprimer</button></div>
       </div>)}
       <p className="small muted"><strong>Avant signature ou paiement</strong> : fiscalité (France et Côte d’Ivoire), droits d’auteur, loi applicable et juridiction méritent un regard professionnel.</p>

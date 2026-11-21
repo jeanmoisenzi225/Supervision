@@ -16,6 +16,7 @@ import { monitorRouter } from "./modules/monitor/monitor.routes";
 import { objectivesRouter } from "./modules/objectives/objectives.routes";
 import { replayRouter } from "./modules/replay/replay.routes";
 import { pushRouter } from "./modules/push/push.routes";
+import { signRouter } from "./modules/billing/signature.routes";
 
 export function createApp() {
   const app = express();
@@ -33,6 +34,7 @@ export function createApp() {
       },
     })
   );
+  app.use("/api/sign", express.json({ limit: "400kb" }));
   app.use(express.json({ limit: "200kb" }));
   app.use("/api", (_req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
@@ -40,6 +42,8 @@ export function createApp() {
   });
 
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+  // Page de signature : publique (lien personnel + code), donc montée avant les routeurs qui exigent la connexion sur tout /api.
+  app.use("/api/sign", signRouter);
   app.use("/api/auth", authRouter);
   app.use("/api", monitorRouter);
   app.use("/api/alerts", alertsRouter);

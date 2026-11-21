@@ -17,12 +17,16 @@ import { Login } from "./pages/Login";
 import { LogsPage } from "./pages/LogsPage";
 import { Settings } from "./pages/Settings";
 import { ScreenDiag } from "./pages/ScreenDiag";
+import { SignPage } from "./pages/SignPage";
 import { Splash } from "./components/Splash";
 
 export function App() {
   const [loggedIn, setLoggedIn] = useState(Boolean(getToken()));
   // Mesure de l'écran (v0.35.4) : page ouverte sans connexion, qui ne montre aucune donnée.
   if (window.location.pathname === "/ecran") return <ScreenDiag />;
+  // Page de signature (v0.48.0) : ouverte sans connexion, protégée par le lien personnel et un code.
+  const signMatch = /^\/signer\/([A-Za-z0-9_-]{20,80})\/?$/.exec(window.location.pathname);
+  if (signMatch) return <SignPage token={signMatch[1]} />;
 
   useEffect(() => {
     const onLogout = () => setLoggedIn(false);

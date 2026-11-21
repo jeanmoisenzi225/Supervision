@@ -329,7 +329,52 @@ model BillingServiceDoc {
   lines              Json          @default("[]")
   /// Clauses de la convention (loi, juridiction, licence ou cession, pénalités…), v0.47.0.
   terms              Json          @default("{}")
+  signRequests       BillingSignRequest[]
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   @@index([clientId])
+}
+
+/// Demande de signature électronique (v0.48.0) : le document est figé (PDF + empreinte SHA-256) à la création.
+/// Signature « simple » : lien personnel + code transmis à part, journal de preuve, page de certificat.
+model BillingSignRequest {
+  id           String            @id @default(cuid())
+  serviceDocId String
+  serviceDoc   BillingServiceDoc @relation(fields: [serviceDocId], references: [id], onDelete: Restrict)
+  /// demande | convention
+  kind         String
+  title        String
+  /// pending | completed | cancelled
+  status       String            @default("pending")
+  pdf          Bytes
+  pdfSha256    String
+  signedPdf    Bytes?
+  signedSha256 String?
+  createdAt    DateTime          @default(now())
+  expiresAt    DateTime
+  completedAt  DateTime?
+  signers      BillingSigner[]
+  @@index([serviceDocId])
+}
+
+model BillingSigner {
+  id          String             @id @default(cuid())
+  requestId   String
+  request     BillingSignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// prestataire | client
+  role        String
+  name        String
+  /// Empreintes SHA-256 du jeton du lien et du code : jamais stockés en clair.
+  tokenHash   String             @unique
+  codeHash    String
+  attempts    Int                @default(0)
+  /// pending | signed
+  status      String             @default("pending")
+  viewedAt    DateTime?
+  signedAt    DateTime?
+  ip          String?
+  userAgent   String?
+  typedName   String?
+  signature   Bytes?
+  @@index([requestId])
 }
