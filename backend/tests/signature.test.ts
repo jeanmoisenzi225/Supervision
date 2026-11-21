@@ -78,8 +78,17 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
     expect(s1.body).toEqual({ ok: true, completed: false });
     expect((await request(app).post(`/api/sign/${reset.body.token}/sign`).send({ code: reset.body.code, typedName: "Nom Test", signature: fakePng(), consent: true })).status).toBe(409);
     expect((await request(app).get(`/api/billing/signature-requests/${created.body.id}/signed.pdf`).set(auth)).status).toBe(409);
-    const s2 = await request(app).post(`/api/sign/${b.token}/sign`).send({ code: b.code, typedName: "Rep Test", signature: fakePng(), consent: true });
+    const s2 = await request(app).post(`/api/sign/${b.token}/sign`).set("User-Agent", "TestAgent/1.0").send({ code: b.code, typedName: "Rep Test", signature: fakePng(), consent: true });
     expect(s2.body).toEqual({ ok: true, completed: true });
+    // traces conservées en base, exposées seulement par le journal de preuve (administration)
+    const rows = await prisma.billingSigner.findMany({ where: { requestId: created.body.id, status: "signed" } });
+    expect(rows.every((x) => x.ip)).toBe(true);
+    expect(rows.some((x) => x.userAgent === "TestAgent/1.0")).toBe(true);
+    expect((await request(app).get(`/api/billing/signature-requests/${created.body.id}/proof`)).status).toBe(401);
+    const proof = await request(app).get(`/api/billing/signature-requests/${created.body.id}/proof`).set(auth);
+    expect(proof.status).toBe(200);
+    expect(proof.text).toContain("TestAgent/1.0");
+    expect(JSON.parse(proof.text).signers).toHaveLength(2);
     const original = await request(app).get(`/api/billing/signature-requests/${created.body.id}/original.pdf`).set(auth).buffer().parse(bin);
     const signed = await request(app).get(`/api/billing/signature-requests/${created.body.id}/signed.pdf`).set(auth).buffer().parse(bin);
     expect(signed.status).toBe(200);

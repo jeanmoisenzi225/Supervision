@@ -372,6 +372,9 @@ model BillingSigner {
   status      String             @default("pending")
   viewedAt    DateTime?
   signedAt    DateTime?
+  /// Traces techniques conservées comme preuve ; jamais affichées sur les documents (v0.48.2).
+  ip          String?
+  userAgent   String?
   typedName   String?
   signature   Bytes?
   @@index([requestId])

@@ -427,6 +427,17 @@ billingRouter.post("/signature-requests/:id/signers/:signerId/reset", async (req
   res.json({ signerId: signer.id, role: signer.role, name: signer.name, token, code });
 });
 
+/** Journal de preuve (administration seulement) : tout ce qui est conservé sur chaque signature, y compris les traces techniques non affichées sur les documents. */
+billingRouter.get("/signature-requests/:id/proof", async (req, res) => {
+  const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id }, include: { signers: SIGNER_SELECT } });
+  if (!r) throw new HttpError(404, "Demande introuvable");
+  const body = {
+    request: { id: r.id, kind: r.kind, title: r.title, status: r.status, createdAt: r.createdAt, expiresAt: r.expiresAt, completedAt: r.completedAt, documentSha256: r.pdfSha256, signedDocumentSha256: r.signedSha256 },
+    signers: r.signers.map((s) => ({ role: s.role, name: s.name, status: s.status, viewedAt: s.viewedAt, signedAt: s.signedAt, typedName: s.typedName, ip: s.ip, userAgent: s.userAgent, failedCodeAttempts: s.attempts })),
+  };
+  res.status(200).set("Content-Type", "application/json; charset=utf-8").set("Content-Disposition", `attachment; filename="journal_de_preuve.json"`).set("Cache-Control", "private, no-store").send(JSON.stringify(body, null, 2));
+});
+
 billingRouter.get("/signature-requests/:id/:which(signed|original).pdf", async (req, res) => {
   const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id } });
   if (!r) throw new HttpError(404, "Demande introuvable");

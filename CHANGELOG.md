@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.48.2 — 2026-11-22
+
+- **Signature électronique : les traces techniques sont de nouveau conservées, sans jamais figurer sur les documents.** L'adresse IP et le navigateur du signataire sont enregistrés en base au moment de la signature (colonnes `ip` et `userAgent`, migration `20261122180000_signature_traces`) ; ils n'apparaissent ni dans le certificat ni dans le PDF signé. Le texte de consentement de la page de signature en informe le signataire. Nouveau bouton **« Journal de preuve »** dans l'administration : fichier JSON avec, pour chaque signataire, les dates d'ouverture et de signature, le nom saisi, l'IP, le navigateur et les essais de code ratés.
+- Rectifie la v0.48.1, qui avait supprimé la collecte au lieu de seulement masquer l'affichage.
+
 ## v0.48.1 — 2026-11-22
 
 - **Signature électronique : l'adresse IP du signataire n'est plus collectée** ni affichée (certificat, texte de consentement, administration). La preuve repose sur la date et l'heure, le nom saisi, le tracé de la signature, le lien personnel, le code et l'empreinte du document. La colonne `ip` est supprimée (migration `20261122100000_signature_sans_ip`).

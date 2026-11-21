@@ -45,6 +45,14 @@ export function SignaturePanel({ docId, onError, onNotice }: { docId: string; on
       document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
     } catch (err) { onError((err as Error).message); }
   }
+  async function proof(r: Req) {
+    try {
+      const blob = await apiBlob(`/billing/signature-requests/${r.id}/proof`);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = "journal_de_preuve.json";
+      document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
+    } catch (err) { onError((err as Error).message); }
+  }
   const copy = (text: string, label: string) => navigator.clipboard?.writeText(text).then(() => onNotice(`${label} copié.`), () => onError("Copie impossible : sélectionne le texte à la main."));
 
   return <div className="stack-small" style={{ borderTop: "1px solid var(--border)", paddingTop: 8 }}>
@@ -70,10 +78,11 @@ export function SignaturePanel({ docId, onError, onNotice }: { docId: string; on
         <div className="row wrap">
           {r.status === "completed" && <button type="button" className="primary" onClick={() => void download(r, "signed")}>Télécharger le PDF signé</button>}
           <button type="button" onClick={() => void download(r, "original")}>PDF d’origine</button>
+          <button type="button" onClick={() => void proof(r)}>Journal de preuve</button>
           {r.status === "pending" && <button type="button" className="danger" onClick={() => void cancel(r.id)}>Annuler</button>}
         </div>
       </div>)}
-      <p className="muted small">Signature électronique « simple » : elle identifie le signataire par un lien et un code, et conserve la date, le nom saisi et le tracé comme preuves. Sa force probante est moindre que celle d’une signature qualifiée ; en cas de litige, c’est le juge qui apprécie.</p>
+      <p className="muted small">Signature électronique « simple » : elle identifie le signataire par un lien et un code, et conserve la date, le nom saisi, le tracé, l’adresse IP et le navigateur comme preuves (non affichés sur les documents ; journal de preuve téléchargeable). Sa force probante est moindre que celle d’une signature qualifiée ; en cas de litige, c’est le juge qui apprécie.</p>
     </>}
   </div>;
 }

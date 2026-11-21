@@ -56,7 +56,7 @@ signRouter.post("/:token/sign", async (req, res) => {
   const now = new Date();
   await prisma.billingSigner.update({
     where: { id: signer.id },
-    data: { status: "signed", signedAt: now, typedName: input.typedName, signature: png },
+    data: { status: "signed", signedAt: now, ip: req.ip ?? null, userAgent: (req.get("user-agent") ?? "").slice(0, 300), typedName: input.typedName, signature: png },
   });
   // Dernier signataire : on assemble le PDF signé avec sa page de certificat.
   const fresh = await prisma.billingSignRequest.findUniqueOrThrow({ where: { id: signer.requestId }, include: { signers: { orderBy: { role: "desc" } } } });

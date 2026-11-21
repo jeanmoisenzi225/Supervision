@@ -57,7 +57,7 @@
 | Intégrité | PDF figé + SHA-256, page de certificat | Pas de signature cryptographique dans le PDF (type PAdES) : l'empreinte vit en base et dans le certificat |
 | Identification | Lien personnel + code à 6 chiffres transmis à part | Pas de vérification d'identité ; la sécurité dépend du canal choisi par l'émetteur |
 | Horodatage | Date serveur | Pas d'horodatage par un tiers de confiance |
-| Preuve | Date, nom saisi, tracé (ni IP ni navigateur, par choix du 2026-11-22) | Moins d'éléments en cas de contestation |
+| Preuve | Date, nom saisi, tracé ; adresse IP et navigateur conservés **en base** et jamais affichés sur les documents (choix du 2026-11-22) ; journal de preuve JSON | Durée de conservation des traces à fixer ; pas d'horodatage par un tiers |
 | Conservation | PDF en base PostgreSQL | Pas d'archivage probant ; taille de la base ; sauvegardes liées à celles de la Supervision |
 | Multi-client | Un seul propriétaire | Pas de comptes ni de cloisonnement |
 | Envoi | Lien copié à la main | Pas d'e-mail ni de WhatsApp intégré |
@@ -87,7 +87,7 @@
 - Un commentaire estime que l'AUDCG n'organise les procédures électroniques que pour le RCCM, pas pour les contrats en général : **le droit national (ivoirien) reste donc la base pour les contrats**. 🟡 ❓
 
 ### 4.5 Données personnelles
-- **RGPD (UE)** : principes de **minimisation** et de **limitation de la conservation** ; la durée est fixée par le responsable de traitement selon la finalité (la CNIL cite par exemple 6 ans de conservation d'un justificatif à titre de preuve en matière de recouvrement). L'adresse IP est une donnée personnelle. ✅ ([CNIL](https://www.cnil.fr/limiter-la-conservation-des-donnees)) *C'est la raison d'être de la suppression de l'IP et du navigateur dans la v0.48.1.*
+- **RGPD (UE)** : principes de **minimisation** et de **limitation de la conservation** ; la durée est fixée par le responsable de traitement selon la finalité (la CNIL cite par exemple 6 ans de conservation d'un justificatif à titre de preuve en matière de recouvrement). L'adresse IP est une donnée personnelle. ✅ ([CNIL](https://www.cnil.fr/limiter-la-conservation-des-donnees)) *Choix retenu le 2026-11-22 : l'IP et le navigateur du signataire sont conservés en base comme éléments de preuve, mais jamais affichés sur les documents ; le signataire en est informé avant de signer, et leur durée de conservation reste à fixer (finalité : preuve en cas de litige).*
 - **Côte d'Ivoire : loi n° 2013-450 du 19 juin 2013**, contrôle par l'ARTCI. Le régime de base serait la **déclaration préalable**, mais un article de presse parle d'**autorisation préalable** ; les **transferts vers des pays tiers** sont soumis à condition d'une protection adéquate. 🟡 ([texte](https://cms21.anac.ci/uploads/748534/LOI_2013-450.pdf), [DLA Piper](https://www.dlapiperdataprotection.com/?c=CI&t=law)) ❓ régime exact et formalités à confirmer.
 - **Rôles** : pour les documents de ses clients, l'outil serait **sous-traitant** (contrat de sous-traitance, mesures de sécurité, localisation, sous-traitants ultérieurs) ; pour ses propres comptes, **responsable de traitement** (politique de confidentialité, registre, droits d'accès et d'effacement).
 - **Hébergement** : un hébergeur européen simplifie le RGPD mais pose la question des transferts depuis la Côte d'Ivoire ; un hébergement local n'est pas évident à ce stade (❓ offres à étudier).
