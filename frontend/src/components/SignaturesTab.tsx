@@ -35,6 +35,14 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
   async function reset(r: SignReq, s: Signer) {
     try { const l = await api<FreshLinks["links"][number]>(`/billing/signature-requests/${r.id}/signers/${s.id}/reset`, { method: "POST" }); setExtra((e) => [...e.filter((x) => x.signerId !== s.id), l]); await load(); } catch (err) { onError((err as Error).message); }
   }
+  /** L'émetteur signe tout de suite : nouveau lien et code, ouverts directement (code dans le fragment d'adresse). */
+  async function signNow(r: SignReq, s: Signer) {
+    try { const l = await api<FreshLinks["links"][number]>(`/billing/signature-requests/${r.id}/signers/${s.id}/reset`, { method: "POST" }); window.location.href = `${linkOf(l.token)}#${l.code}`; } catch (err) { onError((err as Error).message); }
+  }
+  async function remove(r: SignReq) {
+    if (!window.confirm(`Supprimer définitivement cette demande et ses preuves (signatures, journal) ?\n\n${r.kind === "convention" ? "Convention" : "Demande de règlement"} · ${r.appName}\n\nCette action est irréversible.`)) return;
+    try { await api(`/billing/signature-requests/${r.id}`, { method: "DELETE" }); setOpenId(null); await load(); onNotice("Demande supprimée."); } catch (err) { onError((err as Error).message); }
+  }
   const linksFor = (r: SignReq) => [...(fresh && fresh.requestId === r.id ? fresh.links : []), ...extra].filter((l, i, all) => all.findIndex((x) => x.signerId === l.signerId) === i);
 
   return <div className="stack">
@@ -69,6 +77,7 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
                   {lk && s.status !== "signed" && !(fresh && fresh.requestId === r.id) && <span className="small">Lien : <span className="mono" style={{ overflowWrap: "anywhere" }}>{linkOf(lk.token)}</span> · Code : <strong className="mono">{lk.code}</strong></span>}
                   {r.status === "pending" && s.status !== "signed" && <div className="row wrap">
                     {lk && !(fresh && fresh.requestId === r.id) && <><button type="button" onClick={() => void copy(linkOf(lk.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(lk.code, "Code")}>Copier le code</button></>}
+                    {s.role === "prestataire" && <button type="button" className="primary" onClick={() => void signNow(r, s)}>Signer maintenant</button>}
                     <button type="button" onClick={() => void reset(r, s)}>Nouveau lien et code</button>
                   </div>}
                 </div>;
@@ -77,7 +86,8 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
                 {r.status === "completed" && <button type="button" className="primary" onClick={() => void save(`/billing/signature-requests/${r.id}/signed.pdf`, `${r.kind === "demande" ? "demande_reglement" : "convention_prestation"}_signe.pdf`)}>Télécharger le PDF signé</button>}
                 <button type="button" onClick={() => void save(`/billing/signature-requests/${r.id}/original.pdf`, `${r.kind === "demande" ? "demande_reglement" : "convention_prestation"}.pdf`)}>PDF d’origine</button>
                 <button type="button" onClick={() => void save(`/billing/signature-requests/${r.id}/proof`, "journal_de_preuve.json")}>Journal de preuve</button>
-                {r.status === "pending" && <button type="button" className="danger" onClick={() => void cancel(r.id)}>Annuler</button>}
+                {r.status === "pending" && <button type="button" onClick={() => void cancel(r.id)}>Annuler</button>}
+                <button type="button" className="danger" onClick={() => void remove(r)}>Supprimer</button>
               </div>
             </div>}
           </div>;

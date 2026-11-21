@@ -7,7 +7,10 @@ Retour du propriétaire : le document signé n'avait que la signature du prestat
 - **La demande de règlement est maintenant signée par les deux parties**, comme la convention : le prestataire et le client (« bon pour accord »). Deux liens et deux codes sont créés, dans les deux cas. Le bouton devient « Demande : vous + client ».
 - **Les signatures sont posées dans les cadres du document** : à la finalisation, chaque cadre reçoit « Signé électroniquement le … », le nom et le tracé de la signature, en plus de la page de certificat. Le document soumis aux signataires, et son empreinte SHA-256, ne changent pas (le certificat indique « empreinte du document soumis »). Emplacements mémorisés à la création de la demande (colonne `boxes`, migration `20261122200000_signature_cadres`).
 - Une valeur sans lettre ni chiffre (par exemple une échéance réduite à « . ») est traitée comme absente dans les documents.
-- Une demande déjà signée avant cette version reste telle quelle : pour obtenir le document à deux signatures, créer une nouvelle demande.
+- Une demande déjà signée avant cette version reste telle quelle : elle atteste du document tel qu'il était (empreinte comprise), donc sa signature ne peut pas être reportée sur la nouvelle version. Pour obtenir le document à deux signatures : **supprimer** l'ancienne demande, puis en créer une nouvelle.
+- **Bouton « Supprimer »** (onglet Signatures, avec confirmation) : supprime définitivement une demande et ses preuves (`DELETE /api/billing/signature-requests/:id`).
+- **« Signer maintenant »** : l'émetteur signe depuis la Supervision en un geste, sans lien ni code à saisir (le code passe dans le fragment de l'adresse, jamais envoyé au serveur).
+- **« Utiliser ma dernière signature »** : le dernier tracé et le dernier nom saisis sont mémorisés sur l'appareil du signataire seulement (stockage du navigateur) pour être réutilisés en un geste.
 
 ## v0.49.0 — 2026-11-22
 

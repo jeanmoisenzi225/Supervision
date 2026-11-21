@@ -416,6 +416,14 @@ billingRouter.post("/service-docs/:id/signature-requests", async (req, res) => {
   res.status(201).json({ ...requestSummary(created), links: created.signers.map((sg) => { const x = secrets.find((y) => y.role === sg.role)!; return { signerId: sg.id, role: sg.role, name: sg.name, token: x.token, code: x.code }; }) });
 });
 
+/** Supprime définitivement une demande de signature et ses preuves (signataires en cascade). Irréversible : l'interface demande confirmation. */
+billingRouter.delete("/signature-requests/:id", async (req, res) => {
+  const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id } });
+  if (!r) throw new HttpError(404, "Demande introuvable");
+  await prisma.billingSignRequest.delete({ where: { id: r.id } });
+  res.json({ ok: true });
+});
+
 billingRouter.post("/signature-requests/:id/cancel", async (req, res) => {
   const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id } });
   if (!r) throw new HttpError(404, "Demande introuvable");

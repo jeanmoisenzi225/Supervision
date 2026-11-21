@@ -114,6 +114,11 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
     expect((await request(app).post(`/api/billing/signature-requests/${created.body.id}/cancel`).set(auth)).status).toBe(200);
     expect((await request(app).post(`/api/sign/${l.token}/open`).send({ code: l.code })).status).toBe(410);
     expect((await request(app).delete(`/api/billing/service-docs/${docId}`).set(auth)).status).toBe(409);
+    // suppression définitive d'une demande (administration seulement), preuves comprises
+    expect((await request(app).delete(`/api/billing/signature-requests/${created.body.id}`)).status).toBe(401);
+    expect((await request(app).delete(`/api/billing/signature-requests/${created.body.id}`).set(auth)).status).toBe(200);
+    expect((await request(app).delete(`/api/billing/signature-requests/${created.body.id}`).set(auth)).status).toBe(404);
+    expect(await prisma.billingSigner.count({ where: { requestId: created.body.id } })).toBe(0);
   });
   it("les routes d'administration exigent la connexion", async () => {
     expect((await request(app).post(`/api/billing/service-docs/${docId}/signature-requests`).send({ kind: "demande" })).status).toBe(401);
