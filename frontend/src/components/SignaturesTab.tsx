@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, apiBlob } from "../lib/api";
+import { onRefreshRequested } from "../lib/refresh";
 
 type Signer = { id: string; role: string; name: string; status: string; signedAt: string | null; viewedAt: string | null; locked: boolean };
 export type SignReq = { id: string; kind: string; title: string; status: string; createdAt: string; expiresAt: string; completedAt: string | null; appName: string; clientName: string; signers: Signer[] };
@@ -22,7 +23,15 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
   const [openId, setOpenId] = useState<string | null>(null);
   const [extra, setExtra] = useState<FreshLinks["links"]>([]);
   const load = () => api<SignReq[]>("/billing/signature-requests").then((r) => { setReqs(r); onCount(r.filter((x) => x.status === "pending").length); }).catch((e) => onError(e.message));
-  useEffect(() => { void load(); const t = setInterval(() => { if (document.visibilityState === "visible") void load(); }, 15_000); return () => clearInterval(t); }, []);
+  // Rafraîchi toutes les 15 s, au retour sur l'appli (après avoir signé dans un autre onglet) et au geste « glisser pour actualiser ».
+  useEffect(() => {
+    void load();
+    const t = setInterval(() => { if (document.visibilityState === "visible") void load(); }, 15_000);
+    const onVisible = () => { if (document.visibilityState === "visible") void load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const stop = onRefreshRequested(() => void load());
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVisible); stop(); };
+  }, []);
 
   const copy = (text: string, label: string) => navigator.clipboard?.writeText(text).then(() => onNotice(`${label} copié.`), () => onError("Copie impossible : sélectionne le texte à la main."));
   const save = async (path: string, filename: string) => {

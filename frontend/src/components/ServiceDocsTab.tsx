@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
+import { onRefreshRequested } from "../lib/refresh";
 
 type ClientRef = { id: string; name: string };
 type Doc = {
@@ -29,7 +30,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
   const total = Math.round(lines.reduce((t, l) => t + Math.round(l.quantity * l.unitPrice * 10 ** prec) / 10 ** prec, 0) * 10 ** prec) / 10 ** prec;
   const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: form.currency === "XOF" ? "XOF" : "EUR", maximumFractionDigits: form.currency === "XOF" ? 0 : 2 }).format(n);
   const load = () => api<Doc[]>("/billing/service-docs").then(setDocs).catch((e) => onError(e.message));
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); return onRefreshRequested(() => void load()); }, []);
   useEffect(() => { if (!form.clientId && clients.length) setForm((f) => ({ ...f, clientId: clients[0].id })); }, [clients]);
   /** Nouveau dossier : les coûts du client sont repris tout de suite, et suivent la devise choisie. */
   useEffect(() => { if (!editing && form.clientId) void importCosts(form.currency, form.clientId); }, [form.clientId, form.currency, editing]);

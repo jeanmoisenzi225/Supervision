@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.49.3 — 2026-11-22
+
+- **Facturation : « glisser pour actualiser » fonctionne enfin partout.** L'onglet Signatures, le compteur « ⏳ » du titre, les dossiers de Prestations, les clients, les factures et le profil ignoraient le geste d'actualisation (ils ne se rafraîchissaient que par minuterie). Ils l'écoutent maintenant, comme le reste de la Supervision.
+- L'onglet Signatures et son compteur se rafraîchissent aussi **au retour sur l'application** (par exemple après avoir signé dans un autre onglet ou une autre fenêtre), sans attendre la minuterie de 15 secondes.
+
 ## v0.49.2 — 2026-11-22
 
 - **Retrait des raccourcis de signature** ajoutés en v0.49.1 (demande du propriétaire : on garde la procédure normale, lien et code pour chaque signataire, y compris pour l'émetteur) : plus de bouton « Signer maintenant », plus de code dans l'adresse, plus de « Utiliser ma dernière signature » ni de tracé mémorisé sur l'appareil.

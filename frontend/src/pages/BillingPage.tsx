@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
+import { onRefreshRequested } from "../lib/refresh";
 import { ServiceDocsTab } from "../components/ServiceDocsTab";
 import { SignaturesTab, type FreshLinks } from "../components/SignaturesTab";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
@@ -59,13 +60,20 @@ export function BillingPage() {
     api<{ apps: AppRef[] }>("/overview").then((o) => setCatalog(o.apps.map((a) => ({ key: a.key, name: a.name })))).catch(() => undefined);
     if (!clientId && c.length) setClientId(c[0].id);
   }
-  useEffect(() => { void refresh().catch((e) => setError(e.message)); }, []);
+  useEffect(() => {
+    void refresh().catch((e) => setError(e.message));
+    // « Glisser pour actualiser » : clients, factures et profil se rechargent aussi.
+    return onRefreshRequested(() => void refresh().catch((e) => setError(e.message)));
+  }, []);
   // Nombre de signatures en attente, visible dans l'onglet même quand on est ailleurs.
   useEffect(() => {
     const count = () => api<{ status: string }[]>("/billing/signature-requests").then((r) => setPendingSigns(r.filter((x) => x.status === "pending").length)).catch(() => undefined);
     void count();
     const t = setInterval(() => { if (document.visibilityState === "visible") void count(); }, 30_000);
-    return () => clearInterval(t);
+    const onVisible = () => { if (document.visibilityState === "visible") void count(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const stop = onRefreshRequested(() => void count());
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVisible); stop(); };
   }, []);
   useEffect(() => {
     setFx(null); setFxError("");
