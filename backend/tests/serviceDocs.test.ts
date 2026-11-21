@@ -125,11 +125,11 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("API dossiers de prestation", ()
     const { signToken } = await import("../src/middleware/auth");
     app = (await import("../src/app")).createApp();
     auth = { Authorization: `Bearer ${signToken({ sub: "t", email: "t@example.test" })}` };
-    await prisma.billingServiceDoc.deleteMany();
+    await prisma.billingSigner.deleteMany(); await prisma.billingSignRequest.deleteMany(); await prisma.billingServiceDoc.deleteMany();
     await prisma.setting.upsert({ where: { key: "billing.profile" }, create: { key: "billing.profile", value: JSON.stringify({ legalName: "Nom Test", businessAddress: "1 rue X, Lyon" }) }, update: { value: JSON.stringify({ legalName: "Nom Test", businessAddress: "1 rue X, Lyon" }) } });
     clientId = (await prisma.billingClient.create({ data: { name: "Client test" } })).id;
   });
-  afterAll(async () => { await prisma.billingServiceDoc.deleteMany(); await prisma.billingClient.delete({ where: { id: clientId } }); await prisma.$disconnect(); });
+  afterAll(async () => { await prisma.billingSigner.deleteMany(); await prisma.billingSignRequest.deleteMany(); await prisma.billingServiceDoc.deleteMany(); await prisma.billingClient.delete({ where: { id: clientId } }); await prisma.$disconnect(); });
 
   it("télécharge la demande en PDF et en Word, et refuse la convention sans loi ni juridiction", async () => {
     const created = await request(app).post("/api/billing/service-docs").set(auth).send({ clientId, appName: "App test", amount: 1500, currency: "EUR", features: ["A", "B"], lines: [{ description: "Hébergement test", quantity: 1, unitPrice: 25 }] });
