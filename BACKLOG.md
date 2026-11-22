@@ -248,5 +248,16 @@ Idée du propriétaire, née de la signature des documents de prestation (v0.48.
 - [x] Étude : périmètre, cadre juridique (eIDAS, France, Côte d'Ivoire, OHADA, données personnelles, archivage probant), niveaux de signature, marché, options, architecture, risques, feuille de route (2026-11-22).
 - [ ] Décider : usage interne NJMDev ou produit vendu à des tiers ; zone visée ; niveau d'enjeu ; budget (questions de la section 11 de l'étude).
 - [ ] Phase 0 : consultation juridique (France, Côte d'Ivoire, OHADA), devis de deux partenaires de signature, entretiens d'utilisateurs, structure juridique.
+- [x] Annexe A de l'étude : état des connaissances sur l'agrément d'un prestataire en Côte d'Ivoire et questions à poser à l'ARTCI et à l'ANSSI (2026-11-22).
 - [ ] Lever les points non vérifiés : régime ivoirien après la réforme de 2025, déclaration ou autorisation des données (ARTCI), durées légales de conservation, actes exclus de la forme électronique.
+
+## 23. Conformité des applications NJMDev (données personnelles, FNE, clients bancaires) (2026-11-22) ⏸ (constat fait, actions à décider)
+
+Constat dans l'annexe B de [`docs/etude-signature-electronique-ged.md`](docs/etude-signature-electronique-ged.md) : pas de certification légale générale pour My Autonova ni Procedia, mais des obligations selon la fonction.
+
+- [x] Constat des obligations : données personnelles (ARTCI), facture normalisée électronique (DGI), exigences contractuelles des clients bancaires (2026-11-22).
+- [ ] My Autonova : vérifier avec la DGI si l'appli doit s'interfacer avec la FNE (si elle émet des factures).
+- [ ] Données personnelles : déclaration ou autorisation ARTCI avec le client, autorisation de transfert hors Côte d'Ivoire (Certinum), contrat de sous-traitance.
+- [ ] Procedia : dossier de sécurité (chiffrement, sauvegardes, journal d'audit, accès) pour répondre aux questionnaires des banques ; ISO 27001 seulement si un client l'exige.
+- [ ] Faire valider ces points par un juriste ivoirien.
 
