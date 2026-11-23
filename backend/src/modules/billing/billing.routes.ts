@@ -300,7 +300,7 @@ const serviceDocSchema = z.object({
   paymentTerms: text(300), paymentDue: text(300), paymentCoordinates: text(1000),
   clientLegalForm: text(120), clientRepresentative: text(180), clientRole: text(120), place: text(120),
   emissionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish().or(z.literal("")),
-  terms: z.object({ law: z.enum(["", "française", "ivoirienne"]).default(""), jurisdiction: text(300), rights: z.enum(["licence", "cession"]).default("licence"), exclusivity: z.enum(["non exclusive", "exclusive"]).default("non exclusive"), territory: text(200), duration: text(200), cessionFee: text(300), penaltyRate: text(100), bankFees: text(100), sourceCode: z.enum(["", "oui", "non"]).default("") }).default({}),
+  terms: z.object({ law: z.enum(["", "française", "ivoirienne"]).default(""), jurisdiction: text(300), rights: z.enum(["licence", "cession"]).default("licence"), exclusivity: z.enum(["non exclusive", "exclusive"]).default("non exclusive"), territory: text(200), duration: text(200), cessionFee: text(300), penaltyRate: text(100), bankFees: text(100), sourceCode: z.enum(["", "oui", "non"]).default(""), equivalent: z.enum(["", "oui"]).default("") }).default({}),
   lines: z.array(z.object({ description: z.string().trim().min(1).max(500), quantity: z.coerce.number().positive().max(1e6), unitPrice: z.coerce.number().min(0).max(1e12), source: z.enum(["hosting", "claude", "free"]).nullish(), tech: z.string().trim().max(300).nullish() })).max(100).default([]),
 });
 
