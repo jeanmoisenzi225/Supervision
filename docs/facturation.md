@@ -100,3 +100,7 @@ Le bouton « Signer le document » n'est jamais grisé. Au clic, si le nom compl
 ### Prestations : coordonnées de paiement préremplies (v0.52.3)
 
 Le champ « Coordonnées de paiement » du formulaire d'un document de prestation est prérempli avec les « Informations de paiement » du profil (Paramètres) pour tout nouveau document. Il reste modifiable par document. Un document déjà enregistré conserve ses propres coordonnées. Côté serveur, un champ vide à la génération reprend toujours le profil.
+
+### Demande de règlement : structure juridique en cours de création (v0.52.4)
+
+L'encadré « Modalités et coordonnées de paiement » de la demande de règlement comporte une ligne fixe « Structure juridique : en cours de création », précisant que le règlement se fait, dans l'attente, au nom du prestataire désigné à l'article 1. Quand la structure sera créée, cette ligne devra être retirée ou rendue conditionnelle (identité du prestataire à mettre à jour dans Paramètres).

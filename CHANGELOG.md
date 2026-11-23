@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.52.4 — 2026-11-23
+
+- **Demande de règlement : mention « structure juridique en cours de création ».** Dans l'encadré « Modalités et coordonnées de paiement », une ligne « Structure juridique » indique qu'elle est en cours de création et que, dans l'attente, le règlement est à effectuer au nom du prestataire désigné à l'article 1. Elle s'affiche toujours (PDF et Word) ; la convention n'est pas modifiée.
+
 ## v0.52.3 — 2026-11-23
 
 - **Prestations : les coordonnées de paiement se remplissent toutes seules.** Dans le formulaire d'une demande de règlement ou d'une convention, le champ « Coordonnées de paiement » est prérempli avec les « Informations de paiement » saisies une fois dans Paramètres. On peut les modifier pour un document précis ; le préremplissage ne s'applique qu'aux nouveaux documents (un document existant garde ses coordonnées). Le serveur continue de reprendre le profil si le champ est laissé vide.
