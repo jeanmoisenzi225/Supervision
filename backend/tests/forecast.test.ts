@@ -28,10 +28,10 @@ describe("facture prévisionnelle : lignes importées des coûts", () => {
   it("reprend chaque poste tel quel, une ligne par poste, avec l'origine de la ligne", () => {
     const r = forecastLines([procedia], "USD", 1, true);
     expect(r.lines.map((l) => [l.description, l.unitPrice, l.source])).toEqual([
-      ["Procedia — hébergement : service procedia-backend (offre 0.5c-512mb)", 7, "hosting"],
-      ["Procedia — hébergement : base de données procedia-db (offre 0.1c-256mb)", 6, "hosting"],
-      ["Procedia — hébergement : Stockage de procedia-db (5 Go)", 1.5, "hosting"],
-      ["Procedia — intelligence artificielle (Claude) : espace « Procedia », dépenses du mois en cours", 12.5, "claude"],
+      ["Procedia — hébergement : Serveur de l'application (fonctionnement et traitements)", 7, "hosting"],
+      ["Procedia — hébergement : Base de données (conservation des données de l'application)", 6, "hosting"],
+      ["Procedia — hébergement : Espace de stockage de la base de données (5 Go)", 1.5, "hosting"],
+      ["Procedia — intelligence artificielle : traitements automatisés (consommation du mois en cours)", 12.5, "claude"],
     ]);
     expect(r.lines.every((l) => l.quantity === 1 && l.discountPercent === 0 && l.vatRate === 0)).toBe(true);
     expect(r.skippedFree).toBe(1);
@@ -52,6 +52,6 @@ describe("facture prévisionnelle : lignes importées des coûts", () => {
     expect(claude).toHaveLength(1);
     expect(claude[0].unitPrice).toBe(83.45);
     expect(claude[0].usd).toBe(83.45);
-    expect(claude[0].description).toContain("« Procedia » et « Espace par défaut »");
+    expect(claude[0].tech).toContain("« Procedia » et « Espace par défaut »");
   });
 });

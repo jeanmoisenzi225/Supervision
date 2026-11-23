@@ -18,6 +18,8 @@ export interface ForecastLine {
   source: "hosting" | "claude";
   /** Montant d'origine en dollars : sert à recalculer la ligne si le taux change. */
   usd: number;
+  /** Détail technique (nom du service, offre…), réservé à l'application : jamais imprimé sur les documents du client. */
+  tech?: string;
 }
 
 export interface ForecastResult {
@@ -50,8 +52,14 @@ export function forecastLines(apps: Pick<BillingApp, "name" | "render" | "claude
         skippedFree++;
         continue;
       }
-      const what = l.kind === "disk" ? `${l.name} (${l.plan})` : `${KIND_LABEL[l.kind]} ${l.name} (offre ${l.plan})`;
-      lines.push({ description: `${app.name} — hébergement : ${what}`, quantity: 1, unitPrice: convertUsd(l.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "hosting", usd: l.usd });
+      // Intitulés compréhensibles par le client ; le nom technique reste dans `tech`, visible seulement dans l'application.
+      const tech = l.kind === "disk" ? `${l.name} (${l.plan})` : `${KIND_LABEL[l.kind]} ${l.name} (offre ${l.plan})`;
+      const what =
+        l.kind === "service" ? "Serveur de l'application (fonctionnement et traitements)"
+        : l.kind === "database" ? "Base de données (conservation des données de l'application)"
+        : /^Stockage de/.test(l.name) ? `Espace de stockage de la base de données (${l.plan})`
+        : `Espace de stockage de l'application (${l.plan})`;
+      lines.push({ description: `${app.name} — hébergement : ${what}`, quantity: 1, unitPrice: convertUsd(l.usd, currency, usdRate), discountPercent: 0, vatRate: 0, source: "hosting", usd: l.usd, tech });
     }
     if (includeClaude) {
       // Une seule ligne par appli : les espaces de travail Claude de l'appli sont cumulés (v0.25.0).
@@ -59,7 +67,7 @@ export function forecastLines(apps: Pick<BillingApp, "name" | "render" | "claude
       const total = Math.round(spaces.reduce((t, w) => t + w.usd, 0) * 100) / 100;
       if (total > 0) {
         const detail = spaces.length > 1 ? `espaces ${spaces.map((w) => `« ${w.workspace} »`).join(" et ")}` : `espace « ${spaces[0].workspace} »`;
-        lines.push({ description: `${app.name} — intelligence artificielle (Claude) : ${detail}, dépenses du mois en cours`, quantity: 1, unitPrice: convertUsd(total, currency, usdRate), discountPercent: 0, vatRate: 0, source: "claude", usd: total });
+        lines.push({ description: `${app.name} — intelligence artificielle : traitements automatisés (consommation du mois en cours)`, quantity: 1, unitPrice: convertUsd(total, currency, usdRate), discountPercent: 0, vatRate: 0, source: "claude", usd: total, tech: `Claude, ${detail}` });
       }
     }
   }

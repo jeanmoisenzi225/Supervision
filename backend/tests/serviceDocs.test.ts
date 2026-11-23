@@ -119,7 +119,7 @@ describe("détail des composants", () => {
     expect(bySource).toHaveLength(1);
     expect(bySource[0]).toMatchObject({ label: "Hébergement App", value: "5,00 €" });
     // la convention reprend le détail dans une seule entrée d'hébergement
-    expect(text(buildServiceDocs(base({ amount: null, lines: hosting })).convention.blocks)).toContain("Hébergement Procedia (service procedia-backend (offre 0.5c-512mb) : 6,37 €");
+    expect(text(buildServiceDocs(base({ amount: null, lines: hosting })).convention.blocks)).toContain("Hébergement Procedia : 13,19 €, dont service procedia-backend (offre 0.5c-512mb) 6,37 €");
   });
   it("regroupe aussi des intitulés réécrits à la main, sans origine enregistrée", () => {
     const renamed = [

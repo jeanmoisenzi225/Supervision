@@ -165,10 +165,14 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
       g.row.value = formatAmount(g.sum, d.currency);
       g.row.details!.push([`${posteOf(l.description)}${labelQty}`, formatAmount(amt, d.currency)]);
     } else {
-      rowsModel.push({ label: `${t(l.description)}${labelQty}`, value: formatAmount(amt, d.currency) });
+      // Le préfixe « Procedia — » est inutile quand il s'agit de l'appli du dossier.
+      const own = appName && appOf(l.description).toLowerCase() === appName.toLowerCase();
+      const label0 = own ? t(l.description).replace(/^.+? — /, "").replace(/^./, (c) => c.toUpperCase()) : t(l.description);
+      rowsModel.push({ label: `${label0}${labelQty}`, value: formatAmount(amt, d.currency) });
     }
   });
-  const lineRows: [string, string][] = rowsModel.map((r) => [r.details?.length ? `${r.label} (${r.details.map(([a, b]) => `${a} : ${b}`).join(" ; ")})` : r.label, r.value]);
+  const lowerFirst = (x: string) => x.charAt(0).toLowerCase() + x.slice(1);
+  const lineItems: string[] = rowsModel.map((r) => `${r.label} : ${r.value}${r.details?.length ? `, dont ${r.details.map(([a, b]) => `${lowerFirst(a)} ${b}`).join(" ; ")}` : ""}`);
   const gap = lines.length > 0 && d.amount != null && Math.abs(lineSum - d.amount) > 0.005;
 
   const identPre = [`**${nomP}**, personne physique, agissant à titre personnel`, has(p.address) && `Adresse : ${t(p.address)}`, [p.email, p.phone].filter(has).length > 0 && `Contact : ${[p.email, p.phone].filter(has).join(" · ")}`, "Prestataire sans structure juridique à ce jour."].filter(Boolean) as string[];
@@ -250,7 +254,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
       `Les parties conviennent d’une rémunération forfaitaire de **${mont}** (${amountInWords(total, d.currency)}), nette de TVA, pour les travaux constatés à l’article 2.`,
       "Ce montant rémunère les travaux de développement. **Il ne rémunère pas la cession de droits d’auteur**, qui, si elle est retenue à l’article 8, fait l’objet d’une rémunération distincte précisée à cet article.",
       lines.length > 0 && "Détail des composants et coûts constatés pour l’application :",
-      lines.length > 0 && { t: "list", items: lineRows.map(([a, b]) => `${a} : ${b}`) },
+      lines.length > 0 && { t: "list", items: lineItems },
       gap && `Le montant convenu diffère du total de ce détail (${formatAmount(lineSum, d.currency)}).`),
     art(5, "Modalités de paiement",
       (has(d.paymentTerms) || has(d.paymentDue)) && `Paiement ${[has(d.paymentTerms) && `par ${t(d.paymentTerms)}`, has(d.paymentDue) && `à l’échéance suivante : ${t(d.paymentDue)}`].filter(Boolean).join(", ")}.`,

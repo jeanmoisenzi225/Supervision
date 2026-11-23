@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v0.49.6 — 2026-11-23
+
+- **L'import des coûts génère maintenant des intitulés compréhensibles par le client**, sans rien retaper. Hébergement : « Serveur de l'application (fonctionnement et traitements) », « Base de données (conservation des données de l'application) », « Espace de stockage de la base de données (5 Go) », « Espace de stockage de l'application (… Go) ». Intelligence artificielle : « traitements automatisés (consommation du mois en cours) », sans nommer le fournisseur. S'applique à tous les dossiers de prestation et aux factures prévisionnelles.
+- **Le détail technique n'est plus imprimé** : le nom du service, de la base et de l'offre (par exemple « procedia-backend, offre 0.5c-512mb ») reste visible dans l'application sous chaque ligne (« Détail technique (non imprimé) »), mais ne figure plus sur les documents du client.
+- **Documents** : le préfixe de l'appli est retiré des lignes hors hébergement quand il s'agit de l'appli du dossier (« Intelligence artificielle : … » au lieu de « Procedia — Intelligence artificielle : … »). Dans la convention, l'hébergement se lit « Hébergement Procedia : 13,19 €, dont serveur de l'application … 6,37 € ; … » au lieu de parenthèses imbriquées.
+- Les dossiers déjà enregistrés gardent leurs intitulés (dont ceux modifiés à la main) ; seul un nouvel import utilise les nouveaux.
+
 ## v0.49.5 — 2026-11-23
 
 - **Demande de règlement et convention : l'hébergement tient sur une seule ligne.** Les postes d'hébergement d'une appli (service, base de données, stockage…) ne sont plus listés ligne par ligne : ils forment **une ligne « Hébergement <appli> » avec le total**, et le détail des postes et de leurs montants figure **dans cette ligne**, en plus petit. L'intelligence artificielle et les lignes libres restent chacune sur leur ligne. Dans la convention (article 4), l'hébergement est aussi une seule entrée avec son détail entre parenthèses. Le total est la somme des montants arrondis, comme avant.
