@@ -4,6 +4,8 @@
  * Le contenu est décrit en blocs, rendus ensuite en PDF et en DOCX. Marqueur : **gras**.
  * Règles : jamais de faux identifiant administratif, jamais de « facture », jamais d'antidatage.
  */
+import { XOF_PER_EUR } from "./fx";
+
 export type Terms = {
   /** Loi applicable : « française » ou « ivoirienne ». */
   law: string;
@@ -23,8 +25,10 @@ export type Terms = {
   bankFees: string;
   /** « oui » si la remise du code source est comprise. */
   sourceCode: string;
+  /** « oui » : afficher aussi le total dans l'autre devise (euro ↔ franc CFA, parité fixe). */
+  equivalent: string;
 };
-export const EMPTY_TERMS: Terms = { law: "", jurisdiction: "", rights: "licence", exclusivity: "non exclusive", territory: "", duration: "", cessionFee: "", penaltyRate: "", bankFees: "", sourceCode: "" };
+export const EMPTY_TERMS: Terms = { law: "", jurisdiction: "", rights: "licence", exclusivity: "non exclusive", territory: "", duration: "", cessionFee: "", penaltyRate: "", bankFees: "", sourceCode: "", equivalent: "" };
 
 export type ServiceDocData = {
   appName: string; description: string; features: string[]; technologies: string; workNature: string; period: string; deliveryState: string; location: string;
@@ -53,7 +57,7 @@ export type Block =
   | { t: "cols"; left: [string, string[]]; right: [string, string[]] }
   | { t: "kv"; rows: [string, string][] }
   /** Ligne du tableau des montants ; `details` : postes détaillés dans la ligne (ex. hébergement). */
-  | { t: "amount"; rows: AmountRow[]; total: string; note: string }
+  | { t: "amount"; rows: AmountRow[]; total: string; note: string; /** Total dans l'autre devise (ligne « Équivalent »), si demandé. */ totalAlt?: string }
   | { t: "art"; n: number; title: string; items: (string | Block)[] }
   /** Deux cadres de signature : prestataire (gauche) et client (droite). */
   | { t: "sig2"; intro: string; left: string; right: string; rightLabel?: string }
@@ -65,6 +69,10 @@ export function frDate(iso: string | null | undefined): string {
   if (!m) return "";
   const day = Number(m[3]);
   return `${day}${day === 1 ? "er" : ""} ${MONTHS[Number(m[2]) - 1]} ${m[1]}`;
+}
+/** Conversion à la parité fixe du franc CFA (1 euro = 655,957 FCFA), arrondie au franc, ou au centime pour l'euro. */
+export function convertAmount(amount: number, from: "EUR" | "XOF"): { value: number; currency: "EUR" | "XOF" } {
+  return from === "EUR" ? { value: Math.round(amount * XOF_PER_EUR), currency: "XOF" } : { value: Math.round((amount / XOF_PER_EUR) * 100) / 100, currency: "EUR" };
 }
 export function formatAmount(amount: number, currency: "EUR" | "XOF"): string {
   const n = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: currency === "EUR" ? 2 : 0, maximumFractionDigits: currency === "EUR" ? 2 : 0 }).format(amount).replace(/[  ]/g, " ");
@@ -147,6 +155,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
   const lineSum = roundTo(lineAmounts.reduce((s, x) => s + x, 0));
   const total = d.amount ?? (lines.length ? lineSum : 0);
   const mont = formatAmount(total, d.currency);
+  const alt = tm.equivalent === "oui" && total > 0 ? (() => { const c2 = convertAmount(total, d.currency); return formatAmount(c2.value, c2.currency); })() : "";
   // Regroupement du détail : tous les postes d'hébergement d'une appli forment UNE ligne (avec leur total), dont le détail
   // est donné dans la ligne ; l'IA et les lignes libres restent chacune sur leur ligne.
   const catOf = (l: { description: string; source?: string | null }): "hosting" | "other" =>
@@ -216,8 +225,8 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     has(d.workNature) && { t: "p", text: t(d.workNature) },
     workLine && { t: "p", text: workLine },
     { t: "h2", text: `${hasWork ? 4 : 3}. Montant demandé` },
-    { t: "amount", rows: lines.length ? rowsModel : [{ label: `Prestation de développement informatique « ${app} »`, value: mont }], total: mont,
-      note: `${lines.length ? "Détail des composants et coûts relevés pour l’application. " : ""}Montant net, sans TVA.${gap ? ` Le montant convenu diffère du total du détail ci-dessus (${formatAmount(lineSum, d.currency)}).` : ""}` },
+    { t: "amount", rows: lines.length ? rowsModel : [{ label: `Prestation de développement informatique « ${app} »`, value: mont }], total: mont, totalAlt: alt,
+      note: `${lines.length ? "Détail des composants et coûts relevés pour l’application. " : ""}Montant net, sans TVA.${alt ? ` Équivalent indicatif calculé à la parité fixe 1 euro = 655,957 francs CFA.` : ""}${gap ? ` Le montant convenu diffère du total du détail ci-dessus (${formatAmount(lineSum, d.currency)}).` : ""}` },
     payRows.length > 0 && { t: "h2", text: `${hasWork ? 5 : 4}. Modalités et coordonnées de paiement` },
     payRows.length > 0 && { t: "kv", rows: payRows },
     has(tm.bankFees) && { t: "p", text: `Les frais bancaires, notamment de virement international et de conversion de devise, sont à la charge de ${t(tm.bankFees)}.` },

@@ -80,7 +80,7 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
     const labelW = CW - 160, detailW = CW - 190;
     const rows = b.rows.map((r) => ({ ls: layout(r.label, labelW, 9.6), val: r.value, det: (r.details ?? []).map(([dl, dv]) => ({ ls: layout(dl, detailW, 8.4), dv })) }));
     const rh = rows.map((r) => Math.max(r.ls.length * 13, 13) + 12 + r.det.reduce((t, x) => t + Math.max(x.ls.length * 11.5, 11.5) + 1.5, 0) + (r.det.length ? 4 : 0));
-    return { rows, rh, h: rh.reduce((t, x) => t + x, 0) + 33 };
+    return { rows, rh, h: rh.reduce((t, x) => t + x, 0) + 33 + (b.totalAlt ? 15 : 0) };
   }
   function box(h: number, stroke = LINE, fill?: string) {
     doc.save().roundedRect(ML, y, CW, h, 5);
@@ -167,9 +167,10 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
           yy += rh[i];
           doc.moveTo(ML, yy).lineTo(W - MR, yy).lineWidth(0.4).stroke(LINE);
         });
-        doc.save().rect(ML + 0.4, yy, CW - 0.8, 32.6).fill("#f1efe9").restore();
+        doc.save().rect(ML + 0.4, yy, CW - 0.8, 32.6 + (b.totalAlt ? 15 : 0)).fill("#f1efe9").restore();
         doc.font("b").fontSize(11.5).fillColor(INK).text("Montant total demandé", ML + 10, yy + 10, { lineBreak: false });
         const tv = b.total.replace(/[⟦⟧]/g, ""); drawLine(layout(b.total, 220, 11.5, true)[0], W - MR - 10 - width(tv, true, 11.5), yy + 10, 11.5, INK);
+        if (b.totalAlt) { const eq = `soit ${b.totalAlt}`; doc.font("r").fontSize(9.6).fillColor("#55565c").text(eq, W - MR - 10 - width(eq, false, 9.6), yy + 29, { lineBreak: false }); }
         y += h + 8; para(b.note, { size: 8.6, color: MUTED }); break;
       }
       case "art": {
