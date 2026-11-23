@@ -143,7 +143,8 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
       }
       case "kv": {
         for (const [k, val] of b.rows) {
-          const ls = layout(val, CW * 0.66 - 16, 9.4); const h = Math.max(ls.length * 13, 13) + 10; ensure(h);
+          // Les retours à la ligne saisis (ex. titulaire, puis IBAN) sont conservés.
+          const ls = val.split(/\r?\n/).flatMap((part) => layout(part, CW * 0.66 - 16, 9.4)); const h = Math.max(ls.length * 13, 13) + 10; ensure(h);
           doc.font("r").fontSize(9.4).fillColor(MUTED).text(k, ML + 8, y + 5, { lineBreak: false });
           ls.forEach((ln, i) => drawLine(ln, ML + CW * 0.34, y + 5 + i * 13, 9.4, INK));
           y += h; doc.moveTo(ML, y).lineTo(W - MR, y).lineWidth(0.5).stroke(LINE);

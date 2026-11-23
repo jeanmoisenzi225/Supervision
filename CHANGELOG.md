@@ -3,6 +3,7 @@
 ## v0.53.0 — 2026-11-23
 
 - **Demande de règlement : équivalent dans l'autre devise.** Nouvelle case dans le formulaire (sous le montant) : « Afficher aussi le total dans l'autre devise ». Le total apparaît alors dans sa devise, avec en dessous « soit … » dans l'autre (euro ↔ franc CFA), à la parité fixe 1 € = 655,957 FCFA (arrondi au franc, ou au centime pour l'euro). La note sous le tableau précise que cet équivalent est indicatif. Seul le total est converti ; la devise de paiement reste celle choisie. PDF et Word. Non coché par défaut.
+- **Coordonnées de paiement : retours à la ligne conservés** (titulaire, IBAN… chacun sur sa ligne), en PDF et en Word.
 - Avec la v0.52.4 : mention « Structure juridique en cours de création » et précision sur la facture définitive dans les modalités de paiement de la demande.
 
 ## v0.52.4 — 2026-11-23
