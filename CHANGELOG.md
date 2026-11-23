@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.52.2 — 2026-11-23
+
+- **Page de signature : le bouton « Signer le document » n'est plus grisé.** Si le nom, le tracé ou la case « Lu et approuvé » manque, un message rouge dit précisément quoi faire, la page défile jusqu'au champ concerné (qui est entouré en rouge) et le curseur se place dans le nom si c'est lui qui manque. Le message disparaît dès que le champ est complété. Aucun changement sur le serveur : les contrôles restent exigés avant l'enregistrement.
+
 ## v0.52.1 — 2026-11-23
 
 - **Bouton « Ouvrir le lien » aligné.** Le texte du bouton était plus haut que celui des boutons voisins (« Copier le lien », « Copier le code ») ; il est maintenant centré et à la même hauteur.
