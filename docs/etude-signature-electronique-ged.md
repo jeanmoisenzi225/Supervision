@@ -245,3 +245,33 @@ Aucune certification légale générale n'est exigée d'une application métier.
 
 **Priorités proposées** : (1) formaliser la conformité ARTCI (déclaration ou autorisation, transfert, contrat de sous-traitance) ; (2) vérifier auprès de la DGI si My Autonova doit s'interfacer avec la FNE ; (3) pour Procedia, constituer un dossier de sécurité (chiffrement, sauvegardes, journal d'audit, gestion des accès) avant qu'un client ne le demande ; une certification ISO 27001 n'a de sens que si un client l'exige. ([Edicom, FNE](https://edicomgroup.com/fr/blog/obligation-facturation-electronique-cote-d-ivoire), [Sage, FNE](https://www.sage.com/fr-ma/blog/la-fne-en-cote-divoire-guide-complet-sage-cote-divoire/), [CIO Mag, ARTCI](https://cio-mag.com/cote-divoire-artci-le-traitement-des-donnees-personnelles-desormais-soumis-a-une-autorisation-prealable), [DLA Piper](https://www.dlapiperdataprotection.com/?c=CI&t=law))
 
+## Annexe C : offre en API et parcours « le client place lui-même les zones de signature » (2026-11-23)
+
+**Idée du propriétaire** : vendre la signature sous forme d'API à greffer aux outils des clients, ou en page indépendante. Le client arrive sur une URL, charge le document à faire signer, définit la zone exacte de signature de chaque signataire ; un certificat est ajouté en fin de document.
+
+**Parcours cible**
+1. Le client ouvre l'URL (indépendante, ou intégrée à son application par lien ou cadre intégré).
+2. Il charge son PDF.
+3. Il voit le document page par page et place la zone de signature de chaque signataire.
+4. Il saisit les signataires (nom, contact) et valide : le document est figé.
+5. Les signataires reçoivent leur lien, signent ; le document final contient les signatures dans leurs zones et le certificat en dernière page.
+
+**Déjà disponible dans la Supervision** : tampon des signatures dans des cadres (`stampSignatures`), certificat en fin de document (`appendCertificate`), page de signature, liens à jeton et codes, conservation des traces, modèle de zones (`SignBox`, aujourd'hui calculé par le générateur de documents).
+
+**À construire**
+- Éditeur de zones dans le navigateur (affichage du PDF avec pdf.js, rectangle par signataire, conversion des coordonnées de l'écran vers celles du PDF, pages pivotées ou de tailles différentes, usage sur téléphone) : partie la plus délicate.
+- Gestion des PDF quelconques : protégés par mot de passe, déjà signés, très lourds, mal formés ; taille maximale ; refus propre.
+- Espace par client : comptes, clés d'accès, séparation des données (l'outil actuel est mono-propriétaire).
+- Version intégrable : lien avec paramètres (document, signataires, adresse de retour) et rappel automatique à l'application du client quand tout est signé.
+- Envoi des liens : transmis à la main au début, e-mail ou SMS ensuite.
+
+**Points de vigilance**
+- Intégrité : figer le document (empreinte) à l'envoi ; toute modification ultérieure invalide les zones.
+- Confidentialité : documents clients sensibles ; durée de conservation, suppression et chiffrement à définir dès le départ.
+- Valeur légale : celle d'une signature simple tant qu'aucun prestataire agréé n'est utilisé ; le juge apprécie. Un client à fort enjeu demandera mieux (signature avancée ou qualifiée, horodatage et archivage probants via un tiers).
+- Responsabilité contractuelle envers les clients : cadre à faire valider par un juriste.
+- Exploitation : disponibilité, support, facturation à l'usage.
+
+**Ordre de réalisation proposé** : (1) page autonome sans comptes pour valider l'usage ; (2) comptes et clés d'accès ; (3) API et rappel automatique ; (4) envoi des liens par e-mail ou SMS. Commencer par un ou deux clients, pour des usages à faible enjeu, en annonçant clairement une signature simple.
+
+Les affirmations juridiques et de marché de cette annexe restent à vérifier (voir les sections 5, 6 et 10 et l'annexe A).
