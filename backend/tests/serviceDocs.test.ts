@@ -117,9 +117,26 @@ describe("détail des composants", () => {
     // la source explicite prime sur l'intitulé
     const bySource = (buildServiceDocs(base({ amount: null, lines: [{ description: "Poste A", quantity: 1, unitPrice: 2, source: "hosting" }, { description: "Poste B", quantity: 1, unitPrice: 3, source: "hosting" }] })).demande.blocks.find((b) => b.t === "amount") as { rows: { label: string; value: string }[] }).rows;
     expect(bySource).toHaveLength(1);
-    expect(bySource[0]).toMatchObject({ label: "Hébergement", value: "5,00 €" });
+    expect(bySource[0]).toMatchObject({ label: "Hébergement App", value: "5,00 €" });
     // la convention reprend le détail dans une seule entrée d'hébergement
     expect(text(buildServiceDocs(base({ amount: null, lines: hosting })).convention.blocks)).toContain("Hébergement Procedia (service procedia-backend (offre 0.5c-512mb) : 6,37 €");
+  });
+  it("regroupe aussi des intitulés réécrits à la main, sans origine enregistrée", () => {
+    const renamed = [
+      { description: "Serveur de l'application (fonctionnement et traitements)", quantity: 1, unitPrice: 6.37 },
+      { description: "Base de données (conservation des procédures et des données)", quantity: 1, unitPrice: 5.46 },
+      { description: "Espace de stockage de la base de données (5 Go)", quantity: 1, unitPrice: 1.36 },
+      { description: "Analyse automatique des procédures par intelligence artificielle (consommation de novembre)", quantity: 1, unitPrice: 84.26 },
+      { description: "Conception et développement de l'application", quantity: 1, unitPrice: 500 },
+    ];
+    const rows = (buildServiceDocs(base({ amount: null, appName: "Procedia", lines: renamed })).demande.blocks.find((b) => b.t === "amount") as { rows: { label: string; value: string; details?: [string, string][] }[] }).rows;
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toMatchObject({ label: "Hébergement Procedia", value: "13,19 €" });
+    expect(rows[0].details).toHaveLength(3);
+    expect(rows[1].label).toContain("intelligence artificielle");
+    // « Autre ligne » choisi dans le formulaire : jamais regroupé, même si l'intitulé évoque l'hébergement
+    const forced = (buildServiceDocs(base({ amount: null, lines: [{ description: "Hébergement du site vitrine", quantity: 1, unitPrice: 4, source: "free" }] })).demande.blocks.find((b) => b.t === "amount") as { rows: { label: string; details?: unknown }[] }).rows;
+    expect(forced[0].details).toBeUndefined();
   });
   it("alimente le total quand aucun montant n'est saisi", () => {
     const all = text(buildServiceDocs(base({ amount: null, lines: [{ description: "A", quantity: 1, unitPrice: 7 }, { description: "B", quantity: 1, unitPrice: 6.5 }] })));

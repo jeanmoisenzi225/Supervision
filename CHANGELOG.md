@@ -3,7 +3,8 @@
 ## v0.49.5 — 2026-11-23
 
 - **Demande de règlement et convention : l'hébergement tient sur une seule ligne.** Les postes d'hébergement d'une appli (service, base de données, stockage…) ne sont plus listés ligne par ligne : ils forment **une ligne « Hébergement <appli> » avec le total**, et le détail des postes et de leurs montants figure **dans cette ligne**, en plus petit. L'intelligence artificielle et les lignes libres restent chacune sur leur ligne. Dans la convention (article 4), l'hébergement est aussi une seule entrée avec son détail entre parenthèses. Le total est la somme des montants arrondis, comme avant.
-- Les lignes importées des coûts gardent leur origine (`source`), mémorisée dans le dossier ; à défaut (dossiers existants), elle est déduite de l'intitulé.
+- Les lignes importées des coûts gardent leur origine (`source`), mémorisée dans le dossier ; à défaut (dossiers existants), elle est déduite de l'intitulé, **y compris d'intitulés réécrits à la main** (serveur, base de données, stockage). Le titre du groupe reprend le nom de l'appli du dossier (« Hébergement Procedia »).
+- **Nouveau sélecteur « Hébergement / Autre ligne »** sur chaque ligne du dossier : il force le regroupement ou l'empêche, quel que soit l'intitulé.
 - **Titre « Montant demandé » jamais seul en bas de page** : il suit désormais son tableau sur la page suivante.
 
 ## v0.49.4 — 2026-11-23

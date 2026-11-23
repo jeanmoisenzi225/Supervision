@@ -105,6 +105,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
           {importMsg && <p className="small" style={{ color: importMsg.ok ? "var(--ok)" : "var(--warn)" }}>{importMsg.text}</p>}
           {lines.map((l, i) => <div className="row wrap" key={i}>
             <input style={{ flex: "2 1 200px" }} aria-label={`Intitulé ${i + 1}`} value={l.description} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))} placeholder="Intitulé du composant"/>
+            <select style={{ width: 130 }} aria-label={`Type ${i + 1}`} value={l.source === "hosting" ? "hosting" : "other"} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, source: e.target.value === "hosting" ? "hosting" : x.source === "claude" ? "claude" : "free" } : x)))}><option value="hosting">Hébergement</option><option value="other">Autre ligne</option></select>
             <input style={{ width: 70 }} aria-label={`Quantité ${i + 1}`} type="number" min="0" step="any" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: Number(e.target.value) } : x)))}/>
             <input style={{ width: 110 }} aria-label={`Prix unitaire ${i + 1}`} type="number" min="0" step="0.01" value={l.unitPrice} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitPrice: Number(e.target.value) } : x)))}/>
             <button type="button" className="danger" onClick={() => setLines(lines.filter((_, j) => j !== i))}>✕</button>

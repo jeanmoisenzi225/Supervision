@@ -147,7 +147,9 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
   // Regroupement du détail : tous les postes d'hébergement d'une appli forment UNE ligne (avec leur total), dont le détail
   // est donné dans la ligne ; l'IA et les lignes libres restent chacune sur leur ligne.
   const catOf = (l: { description: string; source?: string | null }): "hosting" | "other" =>
-    l.source === "hosting" || (!l.source && /hébergement\s*:/i.test(l.description)) ? "hosting" : "other";
+    // Origine explicite d'abord ; sinon déduite de l'intitulé, y compris des intitulés réécrits à la main (serveur, base de données, stockage).
+    l.source === "hosting" || (!l.source && /hébergement|serveur de l[’']application|base de données|espace de stockage|stockage de la base/i.test(l.description)) ? "hosting" : "other";
+  const appName = t(d.appName);
   const appOf = (desc: string) => /^(.+?) — /.exec(desc)?.[1]?.trim() ?? "";
   const posteOf = (desc: string) => desc.replace(/^.+? — /, "").replace(/^hébergement\s*:\s*/i, "").trim();
   const rowsModel: AmountRow[] = [];
@@ -158,7 +160,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     if (catOf(l) === "hosting") {
       const app = appOf(l.description);
       let g = groups.get(app);
-      if (!g) { g = { row: { label: app ? `Hébergement ${app}` : "Hébergement", value: "", details: [] }, sum: 0 }; groups.set(app, g); rowsModel.push(g.row); }
+      if (!g) { g = { row: { label: `Hébergement ${app || appName}`.trim(), value: "", details: [] }, sum: 0 }; groups.set(app, g); rowsModel.push(g.row); }
       g.sum = roundTo(g.sum + amt);
       g.row.value = formatAmount(g.sum, d.currency);
       g.row.details!.push([`${posteOf(l.description)}${labelQty}`, formatAmount(amt, d.currency)]);
