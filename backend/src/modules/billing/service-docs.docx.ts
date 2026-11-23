@@ -27,7 +27,7 @@ function toDocx(b: Block): (Paragraph | Table)[] {
   switch (b.t) {
     case "title": return [p(b.title, { size: 40, bold: true, after: 20 }), p(b.sub, { size: 22, color: MUTED, after: 200 })];
     case "meta": return [new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [new TableRow({ children: b.items.map(([l, v]) => cell([p(l.toUpperCase(), { size: 14, color: MUTED, after: 20 }), p(v, { size: 19, after: 0 })], 100 / b.items.length)) })] }), gap()];
-    case "warn": return [new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [new TableRow({ children: [cell([p(b.text, { size: 18, after: 0 })], 100, "C76A00")] })] }), gap()];
+    case "mention": return [new Paragraph({ children: [new TextRun({ text: b.label.toUpperCase(), size: 14, color: MUTED, font: "Inter", characterSpacing: 20 })], spacing: { before: 120, after: 40 }, keepNext: true, border: { top: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 6 } } }), new Paragraph({ children: runs(b.text, 17, false, "3D3E44"), spacing: { after: 160 }, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 6 } } })];
     case "h2": return [new Paragraph({ children: [new TextRun({ text: b.text, bold: true, size: 23, font: "Inter" })], spacing: { before: 220, after: 100 }, keepNext: true, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 2 } } })];
     case "p": return [p(b.text, b.small ? { size: 17, color: MUTED } : {})];
     case "list": return b.items.map((it) => p("•  " + it, { after: 40, indent: 360 }));

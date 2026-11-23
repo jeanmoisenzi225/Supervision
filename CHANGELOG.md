@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.49.4 — 2026-11-23
+
+- **Demande de règlement : mention de nature du document plus sobre.** L'encadré à fond crème et filet orange, qui faisait « document généré », est remplacé par une mention discrète entre deux filets fins, sous un petit titre « NATURE DU DOCUMENT », en PDF comme en Word. Le texte est reformulé plus simplement : « La présente demande de règlement n'est pas une facture fiscale et n'en tient pas lieu : elle ne comporte ni numéro de facture ni TVA. Elle ne vaut pas, à elle seule, reconnaissance de dette ni titre de créance exigible. Les droits et obligations des parties résultent de leur accord écrit. » Le fond juridique est inchangé.
+
 ## v0.49.3 — 2026-11-22
 
 - **Audit de tous les écrans** : chaque écran qui charge des données a été passé en revue. Seule la liste des **journaux** (page Journaux et journaux d'une appli) ignorait aussi le geste ; elle recharge maintenant avec les filtres en cours. L'état de la double authentification (Réglages) l'écoute aussi. Les autres écrans (accueil, tableau de bord, fiches d'applis et leurs onglets, alertes, coûts, Claude, backlog, objectifs) passaient déjà par le mécanisme commun ; la palette de commandes recharge à chaque ouverture, et les panneaux d'actions ne chargent rien.

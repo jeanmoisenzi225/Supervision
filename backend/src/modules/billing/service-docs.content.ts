@@ -39,7 +39,8 @@ export type ServiceDocData = {
 export type Block =
   | { t: "title"; title: string; sub: string }
   | { t: "meta"; items: [string, string][] }
-  | { t: "warn"; text: string }
+  /** Mention de nature du document : texte sobre entre deux filets, sans encadré coloré. */
+  | { t: "mention"; label: string; text: string }
   | { t: "h2"; text: string }
   | { t: "p"; text: string; small?: boolean }
   | { t: "list"; items: string[] }
@@ -166,7 +167,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
   const demande: Block[] = [
     { t: "title", title: "DEMANDE DE RÈGLEMENT", sub: "Prestation de développement informatique" },
     { t: "meta", items: [ref && ["Référence", ref], ["Date d’émission", dateEm], ["Objet", `Règlement de la prestation « ${app} »`]].filter(Boolean) as [string, string][] },
-    { t: "warn", text: "Ce document est une **demande de règlement**. Il **n’est pas une facture fiscale** : il ne comporte ni numéro de facture, ni TVA, et ne tient pas lieu de facture au sens de la réglementation fiscale. Il ne vaut pas, à lui seul, reconnaissance de dette ni titre de créance exigible ; les droits et obligations des parties sont ceux qui résultent de leur accord écrit." },
+    { t: "mention", label: "Nature du document", text: "La présente demande de règlement n’est pas une facture fiscale et n’en tient pas lieu : elle ne comporte ni numéro de facture ni TVA. Elle ne vaut pas, à elle seule, reconnaissance de dette ni titre de créance exigible. Les droits et obligations des parties résultent de leur accord écrit." },
     { t: "h2", text: "1. Parties" },
     { t: "cols", left: ["Prestataire", identPre], right: ["Client destinataire", identCli] },
     { t: "h2", text: "2. Prestation concernée" },

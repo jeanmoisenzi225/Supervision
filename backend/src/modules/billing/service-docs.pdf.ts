@@ -101,12 +101,14 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
         });
         y += h + 10; break;
       }
-      case "warn": {
-        const lines = layout(b.text, CW - 24, 8.8);
-        const h = lines.length * 13 + 14; ensure(h + 8);
-        doc.save().rect(ML, y, CW, h).fill("#fbf4e8").rect(ML, y, 3, h).fill(WARN).restore();
-        lines.forEach((ln, i) => drawLine(ln, ML + 14, y + 7 + i * 13, 8.8, INK));
-        y += h + 10; break;
+      case "mention": {
+        const lines = layout(b.text, CW, 8.6);
+        const h = 24 + lines.length * 12.5 + 8; ensure(h + 6);
+        doc.moveTo(ML, y).lineTo(W - MR, y).lineWidth(0.6).stroke(LINE);
+        doc.font("b").fontSize(6.8).fillColor(MUTED).text(b.label.toUpperCase(), ML, y + 9, { lineBreak: false, characterSpacing: 0.9 });
+        lines.forEach((ln, i) => drawLine(ln, ML, y + 22 + i * 12.5, 8.6, "#3d3e44"));
+        doc.moveTo(ML, y + h).lineTo(W - MR, y + h).lineWidth(0.6).stroke(LINE);
+        y += h + 12; break;
       }
       case "h2": {
         ensure(120); y += 8;
