@@ -4,6 +4,7 @@ import { prisma } from "../../db/prisma";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { sendPushToAll } from "../push/push.service";
+import { clientLogoFor } from "./client-logos";
 import { buildSignedDocument, codeMatches, hashToken, MAX_ATTEMPTS, parseSignaturePng, sha256 } from "./signature.service";
 
 /** Page de signature : ouverte sans connexion, protégée par le lien personnel ET le code transmis à part. */
@@ -18,7 +19,7 @@ const signSchema = bodySchema.extend({
 });
 
 async function authenticate(token: string, code: string) {
-  const signer = await prisma.billingSigner.findUnique({ where: { tokenHash: hashToken(token) }, include: { request: { include: { signers: { orderBy: { role: "desc" } } } } } });
+  const signer = await prisma.billingSigner.findUnique({ where: { tokenHash: hashToken(token) }, include: { request: { include: { signers: { orderBy: { role: "desc" } }, serviceDoc: { include: { client: { select: { name: true } } } } } } } });
   if (!signer || signer.status === "waiting" || signer.codeHash === "") throw new HttpError(404, "Lien de signature invalide ou expiré");
   if (signer.attempts >= MAX_ATTEMPTS) throw new HttpError(423, "Trop d'essais : demande un nouveau lien et un nouveau code à l'émetteur.");
   if (!codeMatches(code, signer.codeHash)) {
@@ -36,6 +37,8 @@ function view(signer: Awaited<ReturnType<typeof authenticate>>) {
   return {
     title: r.title, role: signer.role, name: signer.name, signerStatus: signer.status, requestStatus: r.status, sha256: r.pdfSha256,
     signers: r.signers.map((s) => ({ role: s.role, name: s.name, status: s.status })),
+    // Logo du client (s'il est connu), repris en haut à droite de la page comme sur le document.
+    clientLogo: (() => { const png = clientLogoFor(r.serviceDoc?.client?.name ?? ""); return png ? `data:image/png;base64,${png.toString("base64")}` : null; })(),
   };
 }
 
