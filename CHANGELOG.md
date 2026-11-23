@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.53.2 — 2026-11-23
+
+- **Page de signature : toutes les pages du document s'affichent.** Sur téléphone, l'aperçu du PDF dans un cadre n'en montrait que la première page. Le document est maintenant dessiné page par page, l'une sous l'autre (bibliothèque pdf.js 4.10.38, chargée seulement sur cette page), avec un compteur de chargement et un rappel de faire défiler. Si l'affichage échoue, la page retombe sur l'ancien cadre PDF ; le bouton « Ouvrir le PDF en grand » reste disponible. Testé avec un PDF de 2 pages en largeur de téléphone.
+
 ## v0.53.1 — 2026-11-23
 
 - **Page de signature : logo du client en haut à droite.** Une fois le code saisi, le logo du client (Catalys, Autonova Group…) s'affiche en haut à droite, face au logo NJMDev, comme sur le document. Sur fond blanc pour rester lisible en thème sombre. Pas de logo si le client n'en a pas dans le registre ; il n'apparaît pas avant la saisie du code.
