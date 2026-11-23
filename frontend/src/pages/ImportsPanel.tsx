@@ -1,3 +1,4 @@
+import { Hourglass } from "../components/Icon";
 import { useState } from "react";
 import { api, type AppOverview } from "../lib/api";
 import { dateTime, timeAgo } from "../lib/format";
@@ -92,7 +93,7 @@ export function ImportsPanel({ app }: { app: AppOverview }) {
         )}
         {data.running && data.running.length > 0 && (
           <p className="small">
-            ⏳ {data.running.length} import(s) en cours : {data.running.map((r) => `${r.author}${r.mission ? ` (« ${r.mission} »)` : ""} depuis ${timeAgo(r.since).replace("il y a ", "")}`).join(" · ")}. Ne pas mettre en ligne tant qu'il y en a.
+            <Hourglass /> {data.running.length} import(s) en cours : {data.running.map((r) => `${r.author}${r.mission ? ` (« ${r.mission} »)` : ""} depuis ${timeAgo(r.since).replace("il y a ", "")}`).join(" · ")}. Ne pas mettre en ligne tant qu'il y en a.
           </p>
         )}
         <div className="tabs">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, apiBlob } from "../lib/api";
 import { onRefreshRequested } from "../lib/refresh";
+import { CheckMark, Hourglass } from "./Icon";
 
 type Signer = { id: string; role: string; name: string; status: string; signedAt: string | null; viewedAt: string | null; locked: boolean; linkIssued: boolean };
 export type SignReq = { id: string; kind: string; title: string; status: string; createdAt: string; expiresAt: string; completedAt: string | null; appName: string; clientName: string; signers: Signer[] };
@@ -9,13 +10,13 @@ const ROLE: Record<string, string> = { prestataire: "Vous (prestataire)", client
 const when = (iso: string) => new Date(iso).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
 const linkOf = (token: string) => `${window.location.origin}/signer/${token}`;
 
-function state(r: SignReq): { label: string; color: string } {
-  if (r.status === "completed") return { label: "✅ Signé par tous", color: "var(--ok)" };
-  if (r.status === "cancelled") return { label: "Annulé", color: "var(--muted)" };
+function state(r: SignReq): { icon: "wait" | "done" | null; label: string; color: string } {
+  if (r.status === "completed") return { icon: "done", label: "Signé par tous", color: "var(--ok)" };
+  if (r.status === "cancelled") return { icon: null, label: "Annulé", color: "var(--muted)" };
   const done = r.signers.filter((s) => s.status === "signed").length;
   const waiting = r.signers.filter((s) => s.status !== "signed").map((s) => ROLE[s.role] ?? s.role).join(", ");
   const toIssue = r.signers.some((s) => s.status === "pending" && !s.linkIssued);
-  return { label: `⏳ ${done}/${r.signers.length} signé · attend : ${waiting}${toIssue ? " (lien à générer)" : ""}`, color: "var(--warn)" };
+  return { icon: "wait", label: `${done}/${r.signers.length} signé · attend : ${waiting}${toIssue ? " (lien à générer)" : ""}`, color: "var(--warn)" };
 }
 
 /** Suivi des signatures : une liste claire, le détail seulement quand on ouvre une ligne. */
@@ -77,7 +78,7 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
           return <div className="service" key={r.id}>
             <button type="button" onClick={() => setOpenId(open ? null : r.id)} style={{ textAlign: "left", width: "100%" }}>
               <strong>{r.kind === "convention" ? "Convention" : "Demande de règlement"} · {r.appName}</strong>
-              <span className="small" style={{ display: "block", color: st.color }}>{st.label}</span>
+              <span className="small" style={{ display: "block", color: st.color }}>{st.icon === "wait" ? <Hourglass /> : st.icon === "done" ? <CheckMark /> : null}{st.label}</span>
               <span className="muted small" style={{ display: "block" }}>{r.clientName} · créée le {when(r.createdAt)}</span>
             </button>
             {open && <div className="stack-small" style={{ paddingTop: 6 }}>

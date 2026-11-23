@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
 import { onRefreshRequested } from "../lib/refresh";
+import { Hourglass } from "../components/Icon";
 import { ServiceDocsTab } from "../components/ServiceDocsTab";
 import { SignaturesTab, type FreshLinks } from "../components/SignaturesTab";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
@@ -221,7 +222,7 @@ export function BillingPage() {
     <div className="banner banner-bad"><div><strong>Émission officielle désactivée</strong><span>La structure juridique et le régime de TVA ne sont pas encore configurés. Aucun numéro de facture ne sera attribué.</span></div></div>
     {notice && <p className="success small">{notice}</p>}{error && <p className="error small">{error}</p>}
     <div className="tabs">
-      {([["invoices", `Factures (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["docs", "Prestations"], ["signatures", pendingSigns ? `Signatures ⏳${pendingSigns}` : "Signatures"], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
+      {([["invoices", `Factures (${invoices.length})`], ["clients", `Clients (${clients.length})`], ["new", "Saisie"], ["docs", "Prestations"], ["signatures", <>Signatures{pendingSigns ? <span style={{ marginLeft: 6, color: "var(--warn)" }}><Hourglass />{pendingSigns}</span> : null}</>], ["settings", "Paramètres"]] as const).map(([key, label]) => <button key={key} className={tab === key ? "active" : ""} onClick={() => setTab(key)}>{label}</button>)}
     </div>
     {tab === "invoices" && <section className="card"><h3>Factures prévisionnelles et brouillons</h3>{invoices.length === 0 ? <p className="muted small">Aucun document enregistré.</p> : <div className="stack-small">{invoices.map((i) => <div className="service" key={i.id}>
         <div className="row wrap"><strong>{i.kind === "draft" ? "BROUILLON" : "PRÉVISIONNELLE"}</strong><span className="muted small">{i.period ? `${i.period} · ` : ""}{i.id.slice(-8).toUpperCase()}</span></div>

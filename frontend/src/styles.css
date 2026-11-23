@@ -646,3 +646,5 @@ button.primary { color: var(--bg); }
 .event-dot { fill: #e5484d; stroke: var(--bg, #111); stroke-width: 1.5; }
 .event-pill { fill: #e5484d; }
 .event-text { fill: #fff; font-size: 9.5px; font-weight: 700; }
+/* Icônes au trait (sablier, coche) : alignées sur le texte */
+.ico { display: inline-block; vertical-align: -2.5px; margin-right: 5px; flex: none; }

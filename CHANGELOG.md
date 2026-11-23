@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.51.1 — 2026-11-23
+
+- **Sablier et coche : vraies icônes au trait à la place des émojis.** L'émoji ⏳ (qui change d'aspect selon l'appareil et détonne avec l'interface) est remplacé par un sablier dessiné au même trait que la loupe et l'engrenage ; la coche verte ✅ « Signé par tous » devient aussi une coche au trait. Concerne l'onglet Signatures (titre et lignes), le compteur d'attente et l'indicateur d'import en cours. Composant `Icon.tsx` réutilisable.
+
 ## v0.51.0 — 2026-11-23
 
 Demandé le 2026-11-23 : le lien du client n'existe qu'après la signature de l'émetteur, et la case « lu et approuvé » inscrit la mention dans le cadre de signature.
