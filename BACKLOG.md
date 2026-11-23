@@ -250,6 +250,8 @@ Idée du propriétaire, née de la signature des documents de prestation (v0.48.
 - [ ] Phase 0 : consultation juridique (France, Côte d'Ivoire, OHADA), devis de deux partenaires de signature, entretiens d'utilisateurs, structure juridique.
 - [x] Annexe A de l'étude : état des connaissances sur l'agrément d'un prestataire en Côte d'Ivoire et questions à poser à l'ARTCI et à l'ANSSI (2026-11-22).
 - [ ] Lever les points non vérifiés : régime ivoirien après la réforme de 2025, déclaration ou autorisation des données (ARTCI), durées légales de conservation, actes exclus de la forme électronique.
+- [x] Annexe C de l'étude : offre en API et parcours « le client charge son PDF et place les zones de signature » (2026-11-23).
+- [ ] Si le projet est lancé, ordre de réalisation proposé : (1) page autonome (charger le PDF, placer les zones, créer la demande, sans comptes) ; (2) comptes et clés d'accès par client, données séparées ; (3) API et rappel automatique à l'application du client ; (4) envoi des liens par e-mail ou SMS.
 
 ## 23. Conformité des applications NJMDev (données personnelles, FNE, clients bancaires) (2026-11-22) ⏸ (constat fait, actions à décider)
 
