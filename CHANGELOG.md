@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.53.1 — 2026-11-23
+
+- **Page de signature : logo du client en haut à droite.** Une fois le code saisi, le logo du client (Catalys, Autonova Group…) s'affiche en haut à droite, face au logo NJMDev, comme sur le document. Sur fond blanc pour rester lisible en thème sombre. Pas de logo si le client n'en a pas dans le registre ; il n'apparaît pas avant la saisie du code.
+
 ## v0.53.0 — 2026-11-23
 
 - **Demande de règlement : équivalent dans l'autre devise.** Nouvelle case dans le formulaire (sous le montant) : « Afficher aussi le total dans l'autre devise ». Le total apparaît alors dans sa devise, avec en dessous « soit … » dans l'autre (euro ↔ franc CFA), à la parité fixe 1 € = 655,957 FCFA (arrondi au franc, ou au centime pour l'euro). La note sous le tableau précise que cet équivalent est indicatif. Seul le total est converti ; la devise de paiement reste celle choisie. PDF et Word. Non coché par défaut.

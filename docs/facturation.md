@@ -108,3 +108,7 @@ L'encadré « Modalités et coordonnées de paiement » de la demande de règlem
 ### Équivalent dans l'autre devise (v0.53.0)
 
 Option `terms.equivalent = "oui"` (case « Afficher aussi le total dans l'autre devise ») : le total de la demande de règlement est suivi de « soit … » dans l'autre devise, converti à la parité fixe 1 € = 655,957 FCFA (`XOF_PER_EUR`, arrondi au franc, ou au centime pour l'euro). Seul le total est converti, à titre indicatif ; aucun taux de marché n'est utilisé. Stocké dans le champ JSON `terms` (pas de migration).
+
+### Page de signature : logo du client (v0.53.1)
+
+La réponse de `POST /api/sign/:token/open` (après saisie du code) contient `clientLogo` (PNG en data URL, ou null) d'après le registre `client-logos.ts`. La page l'affiche en haut à droite. Aucune donnée supplémentaire n'est exposée avant le code.

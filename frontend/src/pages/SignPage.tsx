@@ -1,7 +1,7 @@
 import { CheckMark, Circle } from "../components/Icon";
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
-type Opened = { title: string; role: string; name: string; signerStatus: string; requestStatus: string; sha256: string; signers: { role: string; name: string; status: string }[]; pdfBase64: string };
+type Opened = { title: string; role: string; name: string; signerStatus: string; requestStatus: string; sha256: string; clientLogo?: string | null; signers: { role: string; name: string; status: string }[]; pdfBase64: string };
 const ROLE: Record<string, string> = { prestataire: "Prestataire", client: "Client" };
 
 async function call<T>(token: string, action: "open" | "sign", body: unknown): Promise<T> {
@@ -67,7 +67,7 @@ export function SignPage({ token }: { token: string }) {
     } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   }
 
-  const wrap = (children: React.ReactNode) => <div style={{ maxWidth: 760, margin: "0 auto", padding: "24px 16px 60px" }}><div className="brand" style={{ marginBottom: 18 }}><img src={document.documentElement.dataset.theme === "light" ? "/brand/njmdev-black.png" : "/brand/njmdev-white.png"} alt="NJMDev" style={{ height: 34 }} /></div>{children}</div>;
+  const wrap = (children: React.ReactNode) => <div style={{ maxWidth: 760, margin: "0 auto", padding: "24px 16px 60px" }}><div className="brand" style={{ marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}><img src={document.documentElement.dataset.theme === "light" ? "/brand/njmdev-black.png" : "/brand/njmdev-white.png"} alt="NJMDev" style={{ height: 34 }} />{doc?.clientLogo && <span style={{ background: "#fff", borderRadius: 8, padding: "4px 8px", display: "inline-flex" }}><img src={doc.clientLogo} alt="Logo du client" style={{ height: 34, maxWidth: 150, objectFit: "contain" }} /></span>}</div>{children}</div>;
   const dark = document.documentElement.dataset.theme !== "light";
 
   if (!doc) return wrap(<section className="card">
