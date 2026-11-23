@@ -36,7 +36,7 @@ const ROLE: Record<string, string> = { prestataire: "Prestataire", client: "Clie
 const parisTime = (d: Date) => new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "medium", timeZone: "Europe/Paris" }).format(d);
 
 /** Page de certificat (PDF A4) : qui a signé quoi, quand, d'où, et l'empreinte du document signé. */
-export function renderCertificate(input: { title: string; requestId: string; pdfSha256: string; signers: CertSigner[]; brand: string }): Promise<Buffer> {
+export function renderCertificate(input: { title: string; requestId: string; pdfSha256: string; signers: CertSigner[]; brand: string; complete?: boolean }): Promise<Buffer> {
   const ASSETS = path.resolve(__dirname, "../../../assets");
   const doc = new PDFDocument({ size: "A4", margin: 0, info: { Title: "Certificat de signature électronique", Author: input.brand } });
   const chunks: Buffer[] = [];
@@ -49,15 +49,19 @@ export function renderCertificate(input: { title: string; requestId: string; pdf
   let y = 100;
   doc.font("b").fontSize(19).fillColor(INK).text("CERTIFICAT DE SIGNATURE ÉLECTRONIQUE", ML, y, { width: CW }); y += 30;
   doc.rect(ML, y, 54, 3).fill("#1f8f5f"); y += 18;
+  const signedCount = input.signers.filter((s) => s.signedAt).length;
+  doc.font("b").fontSize(9.5).fillColor(input.complete === false ? "#a85a00" : "#1f8f5f").text(input.complete === false ? `Document en cours de signature : ${signedCount} signature(s) sur ${input.signers.length}` : "Toutes les signatures sont recueillies", ML, y, { width: CW }); y += 22;
   const kv = (k: string, v: string) => { doc.font("r").fontSize(8.5).fillColor(MUTED).text(k, ML, y, { width: 120, lineBreak: false }); doc.font("r").fontSize(9.5).fillColor(INK).text(v, ML + 125, y, { width: CW - 125 }); y = doc.y + 6; };
   kv("Document", input.title);
   kv("Référence", input.requestId);
   kv("Empreinte SHA-256 du document soumis", input.pdfSha256);
   y += 6;
   for (const s of input.signers) {
-    const h = s.signature ? 126 : 76;
+    const pending = !s.signedAt;
+    const h = pending ? 56 : s.signature ? 126 : 76;
     doc.save().roundedRect(ML, y, CW, h, 5).lineWidth(0.8).stroke(LINE).restore();
     doc.font("b").fontSize(10).fillColor(INK).text(`${ROLE[s.role] ?? s.role} : ${s.name}`, ML + 12, y + 10, { width: CW - 24 });
+    if (pending) { doc.font("r").fontSize(8.8).fillColor(MUTED).text("En attente de signature", ML + 12, y + 30, { lineBreak: false }); y += h + 10; continue; }
     const lines: [string, string][] = [["Signé le", s.signedAt ? `${parisTime(s.signedAt)} (heure de Paris)` : "—"], ["Nom saisi", s.typedName ?? "—"]];
     let yy = y + 28;
     for (const [k, v] of lines) { doc.font("r").fontSize(8).fillColor(MUTED).text(k, ML + 12, yy, { width: 80, lineBreak: false }); doc.font("r").fontSize(8.5).fillColor(INK).text(v, ML + 95, yy, { width: CW - 110, lineBreak: false }); yy += 13; }
@@ -114,4 +118,21 @@ export async function stampSignatures(original: Buffer, boxes: SignBox[], signer
     }
   }
   return Buffer.from(await pdf.save());
+}
+
+type BuildReq = { id: string; title: string; pdf: Uint8Array | Buffer; pdfSha256: string; boxes: unknown };
+type BuildSigner = { role: string; name: string; status: string; typedName: string | null; signedAt: Date | null; signature: Uint8Array | Buffer | null };
+
+/**
+ * Assemble la version signée du document à ce jour : chaque signature reçue est posée dans son cadre, puis une page de
+ * certificat liste les signataires (ceux qui ont signé, et ceux qui sont encore attendus). Utilisée après CHAQUE signature :
+ * l'autre partie voit ainsi les signatures déjà apposées, et la version finale est la dernière construite.
+ */
+export async function buildSignedDocument(req: BuildReq, signers: BuildSigner[]): Promise<{ pdf: Buffer; complete: boolean }> {
+  const complete = signers.every((s) => s.status === "signed");
+  const list = signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, signature: s.signature ? Buffer.from(s.signature) : null }));
+  const boxes = Array.isArray(req.boxes) ? (req.boxes as unknown as SignBox[]) : [];
+  const stamped = await stampSignatures(Buffer.from(req.pdf), boxes, list);
+  const cert = await renderCertificate({ title: req.title, requestId: req.id, pdfSha256: req.pdfSha256, brand: "NJMDev", signers: list, complete });
+  return { pdf: await appendCertificate(stamped, cert), complete };
 }

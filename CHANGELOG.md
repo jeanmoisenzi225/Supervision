@@ -1,5 +1,15 @@
 # Journal des versions
 
+## v0.50.1 — 2026-11-23
+
+Retour du propriétaire : après la signature de l'émetteur, le client ne voyait ni sa signature ni le certificat en ouvrant son lien ; et l'émetteur ne les voyait pas non plus dans la Supervision tant que le client n'avait pas signé.
+
+- **Le document signé à ce jour est assemblé après CHAQUE signature**, plus seulement à la dernière : la signature de chacun est posée dans son cadre et une page de certificat est ajoutée (« Document en cours de signature : 1 signature(s) sur 2 », avec « En attente de signature » pour la partie qui n'a pas encore signé).
+- **Le client voit ce document en ouvrant son lien** : sa page indique « Ce document comporte déjà la signature de … avec son certificat (dernière page) ».
+- **À la fin de sa signature**, chaque signataire peut télécharger le document avec les signatures à ce jour ; le dernier voit le message « Toutes les parties ont signé » et télécharge le document final avec les deux signatures et le certificat complet.
+- **Dans la Supervision (onglet Signatures)** : dès qu'une signature est posée, boutons « Voir le document signé à ce jour » et « Télécharger (signatures à ce jour) » ; une fois tout le monde signé : « Voir le PDF signé » et « Télécharger le PDF signé ».
+- Assemblage protégé par un verrou par demande : deux signatures simultanées ne se perdent pas.
+
 ## v0.50.0 — 2026-11-23
 
 - **Logo du client sur les documents de prestation.** La demande de règlement et la convention affichent le logo du client en haut à droite du titre de la première page, en PDF comme en Word (le titre se replie pour lui laisser la place). Logos fournis : **Catalys Consulting** (site officiel du client) et **Autonova Group** (dépôt `site-autonova`, identique à celui de la Supervision), retrouvés d'après le nom du client, y compris l'orthographe « Antonova ». Un client sans logo n'a rien de plus sur son document.

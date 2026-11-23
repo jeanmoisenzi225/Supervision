@@ -458,9 +458,10 @@ billingRouter.get("/signature-requests/:id/:which(signed|original).pdf", async (
   const r = await prisma.billingSignRequest.findUnique({ where: { id: req.params.id } });
   if (!r) throw new HttpError(404, "Demande introuvable");
   const signed = req.params.which === "signed";
-  if (signed && !(r.status === "completed" && r.signedPdf)) throw new HttpError(409, "Le document n'est pas encore signé par tous.");
+  if (signed && !r.signedPdf) throw new HttpError(409, "Aucune signature n'a encore été posée sur ce document.");
   const body = Buffer.from(signed ? r.signedPdf! : r.pdf);
+  const partial = signed && r.status !== "completed";
   res.status(200).set("Content-Type", "application/pdf")
-    .set("Content-Disposition", `attachment; filename="${DOC_FILENAMES[r.kind as DocKind]}${signed ? "_signe" : ""}.pdf"`)
+    .set("Content-Disposition", `attachment; filename="${DOC_FILENAMES[r.kind as DocKind]}${signed ? (partial ? "_en_cours_de_signature" : "_signe") : ""}.pdf"`)
     .set("Cache-Control", "private, no-store").send(body);
 });

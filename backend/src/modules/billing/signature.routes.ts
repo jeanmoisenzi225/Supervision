@@ -4,8 +4,7 @@ import { prisma } from "../../db/prisma";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
 import { sendPushToAll } from "../push/push.service";
-import type { SignBox } from "./service-docs.pdf";
-import { appendCertificate, codeMatches, hashToken, MAX_ATTEMPTS, parseSignaturePng, renderCertificate, sha256, stampSignatures } from "./signature.service";
+import { buildSignedDocument, codeMatches, hashToken, MAX_ATTEMPTS, parseSignaturePng, sha256 } from "./signature.service";
 
 /** Page de signature : ouverte sans connexion, protégée par le lien personnel ET le code transmis à part. */
 export const signRouter = asyncRouter();
@@ -44,7 +43,8 @@ signRouter.post("/:token/open", async (req, res) => {
   const { code } = bodySchema.parse(req.body);
   const signer = await authenticate(req.params.token, code);
   if (!signer.viewedAt) await prisma.billingSigner.update({ where: { id: signer.id }, data: { viewedAt: new Date() } });
-  const pdf = signer.request.status === "completed" && signer.request.signedPdf ? signer.request.signedPdf : signer.request.pdf;
+  // Version signée à ce jour si une signature est déjà posée (complète ou en cours), sinon l'original.
+  const pdf = signer.request.signedPdf ?? signer.request.pdf;
   res.json({ ...view(signer), pdfBase64: Buffer.from(pdf).toString("base64") });
 });
 
@@ -60,16 +60,20 @@ signRouter.post("/:token/sign", async (req, res) => {
     where: { id: signer.id },
     data: { status: "signed", signedAt: now, ip: req.ip ?? null, userAgent: (req.get("user-agent") ?? "").slice(0, 300), typedName: input.typedName, signature: png },
   });
-  // Dernier signataire : on assemble le PDF signé avec sa page de certificat.
-  const fresh = await prisma.billingSignRequest.findUniqueOrThrow({ where: { id: signer.requestId }, include: { signers: { orderBy: { role: "desc" } } } });
-  if (fresh.signers.every((s) => s.status === "signed") && fresh.status === "pending") {
-    const cert = await renderCertificate({ title: fresh.title, requestId: fresh.id, pdfSha256: fresh.pdfSha256, brand: "NJMDev", signers: fresh.signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, signature: s.signature ? Buffer.from(s.signature) : null })) });
-    const boxes = Array.isArray(fresh.boxes) ? (fresh.boxes as unknown as SignBox[]) : [];
-    const stamped = await stampSignatures(Buffer.from(fresh.pdf), boxes, fresh.signers.map((s) => ({ role: s.role, name: s.name, typedName: s.typedName, signedAt: s.signedAt, signature: s.signature ? Buffer.from(s.signature) : null })));
-    const signedPdf = await appendCertificate(stamped, cert);
-    await prisma.billingSignRequest.update({ where: { id: fresh.id }, data: { status: "completed", completedAt: now, signedPdf, signedSha256: sha256(signedPdf) } });
-  }
-  const all = fresh.signers.every((s) => s.status === "signed");
+  // Après CHAQUE signature : version signée à ce jour (signatures posées + certificat), pour que l'autre partie la voie.
+  // Verrou par demande : deux signatures simultanées ne se marchent pas dessus.
+  const fresh = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${signer.requestId}))`;
+    const cur = await tx.billingSignRequest.findUniqueOrThrow({ where: { id: signer.requestId }, include: { signers: { orderBy: { role: "desc" } } } });
+    const built = await buildSignedDocument(cur, cur.signers);
+    const updated = await tx.billingSignRequest.update({
+      where: { id: cur.id },
+      data: built.complete ? { status: "completed", completedAt: now, signedPdf: built.pdf, signedSha256: sha256(built.pdf) } : { signedPdf: built.pdf },
+      include: { signers: { orderBy: { role: "desc" } } },
+    });
+    return updated;
+  }, { timeout: 20_000 });
+  const all = fresh.status === "completed";
   // L'émetteur est prévenu tout de suite (notification de l'appli installée), sans attendre d'ouvrir la Supervision.
   const done = fresh.signers.filter((s) => s.status === "signed").length;
   void sendPushToAll({

@@ -43,8 +43,8 @@ export function SignPage({ token }: { token: string }) {
       const r = await call<{ completed: boolean }>(token, "sign", { code, typedName: name, signature, consent });
       setDone({ at: new Date(), completed: r.completed });
       window.scrollTo({ top: 0 });
-      if (r.completed) await open();
-      else setDoc((d) => (d ? { ...d, signerStatus: "signed", signers: d.signers.map((s) => (s.role === d.role ? { ...s, status: "signed" } : s)) } : d));
+      // Recharge toujours : le document affiché est maintenant la version signée à ce jour (ou finale).
+      await open();
     } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   }
 
@@ -71,7 +71,7 @@ export function SignPage({ token }: { token: string }) {
       <p className="small">Signé le {done.at.toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" })} par {name || doc.name}</p>
       {doc.requestStatus === "completed"
         ? <><p style={{ color: "var(--ok)" }}><strong>Toutes les parties ont signé.</strong> Le document est finalisé.</p><a className="button primary" href={url} download="document_signe.pdf">Télécharger le PDF signé</a></>
-        : <p className="muted">{waiting.length ? `En attente de : ${waiting.map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}.` : "Finalisation en cours…"} Vous pouvez fermer cette page.</p>}
+        : <><p className="muted">{waiting.length ? `En attente de : ${waiting.map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}.` : "Finalisation en cours…"} Vous pouvez fermer cette page.</p><a className="button" href={url} download="document_signe_en_cours.pdf">Télécharger le document avec votre signature et son certificat</a></>}
     </section>);
   }
   const completed = doc.requestStatus === "completed";
@@ -81,6 +81,7 @@ export function SignPage({ token }: { token: string }) {
     <p className="muted small">Vous signez en tant que <strong>{ROLE[doc.role] ?? doc.role}</strong> : {doc.name}</p>
     <section className="card">
       <h3>Document</h3>
+      {doc.signers.some((s) => s.status === "signed") && !completed && <p className="small" style={{ color: "var(--ok)" }}>✓ Ce document comporte déjà la signature de {doc.signers.filter((s) => s.status === "signed").map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}, avec son certificat (dernière page).</p>}
       <iframe title="Document à signer" src={url} style={{ width: "100%", height: "68vh", border: "1px solid var(--border)", borderRadius: 8, background: "#fff" }} />
       <div className="row wrap" style={{ marginTop: 8 }}><a className="button" href={url} target="_blank" rel="noreferrer">Ouvrir le PDF en grand</a>{completed && <a className="button" href={url} download="document_signe.pdf">Télécharger le PDF signé</a>}</div>
       <p className="muted small">Si le document n’apparaît pas ci-dessus (c’est fréquent sur téléphone), utilisez « Ouvrir le PDF en grand » et lisez-le en entier avant de signer.</p>

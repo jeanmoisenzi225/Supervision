@@ -37,6 +37,11 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
   const save = async (path: string, filename: string) => {
     try { const blob = await apiBlob(path); const url = window.URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url); } catch (err) { onError((err as Error).message); }
   };
+  /** Ouvre le PDF dans un nouvel onglet (la fenêtre est ouverte tout de suite pour ne pas être bloquée sur téléphone). */
+  async function view(path: string) {
+    const w = window.open("", "_blank");
+    try { const blob = await apiBlob(path); const url = window.URL.createObjectURL(blob); if (w) w.location.href = url; else window.location.href = url; } catch (err) { w?.close(); onError((err as Error).message); }
+  }
   async function cancel(id: string) {
     if (!window.confirm("Annuler cette demande ? Les liens ne fonctionneront plus.")) return;
     try { await api(`/billing/signature-requests/${id}/cancel`, { method: "POST" }); await load(); } catch (err) { onError((err as Error).message); }
@@ -87,7 +92,10 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
                 </div>;
               })}
               <div className="row wrap">
-                {r.status === "completed" && <button type="button" className="primary" onClick={() => void save(`/billing/signature-requests/${r.id}/signed.pdf`, `${r.kind === "demande" ? "demande_reglement" : "convention_prestation"}_signe.pdf`)}>Télécharger le PDF signé</button>}
+                {r.signers.some((s) => s.status === "signed") && <>
+                  <button type="button" className="primary" onClick={() => void view(`/billing/signature-requests/${r.id}/signed.pdf`)}>{r.status === "completed" ? "Voir le PDF signé" : "Voir le document signé à ce jour"}</button>
+                  <button type="button" onClick={() => void save(`/billing/signature-requests/${r.id}/signed.pdf`, `${r.kind === "demande" ? "demande_reglement" : "convention_prestation"}${r.status === "completed" ? "_signe" : "_en_cours_de_signature"}.pdf`)}>{r.status === "completed" ? "Télécharger le PDF signé" : "Télécharger (signatures à ce jour)"}</button>
+                </>}
                 <button type="button" onClick={() => void save(`/billing/signature-requests/${r.id}/original.pdf`, `${r.kind === "demande" ? "demande_reglement" : "convention_prestation"}.pdf`)}>PDF d’origine</button>
                 <button type="button" onClick={() => void save(`/billing/signature-requests/${r.id}/proof`, "journal_de_preuve.json")}>Journal de preuve</button>
                 {r.status === "pending" && <button type="button" onClick={() => void cancel(r.id)}>Annuler</button>}

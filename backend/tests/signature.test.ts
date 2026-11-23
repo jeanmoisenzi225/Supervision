@@ -77,7 +77,18 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
     const s1 = await request(app).post(`/api/sign/${reset.body.token}/sign`).send({ code: reset.body.code, typedName: "Nom Test", signature: fakePng(), consent: true });
     expect(s1.body).toEqual({ ok: true, completed: false });
     expect((await request(app).post(`/api/sign/${reset.body.token}/sign`).send({ code: reset.body.code, typedName: "Nom Test", signature: fakePng(), consent: true })).status).toBe(409);
-    expect((await request(app).get(`/api/billing/signature-requests/${created.body.id}/signed.pdf`).set(auth)).status).toBe(409);
+    // Après la 1re signature : version signée à ce jour (signature posée + certificat), visible par l'autre partie et par l'émetteur
+    const { PDFDocument: PdfLibEarly } = await import("pdf-lib");
+    const partialAdmin = await request(app).get(`/api/billing/signature-requests/${created.body.id}/signed.pdf`).set(auth).buffer().parse(bin);
+    expect(partialAdmin.status).toBe(200);
+    expect(partialAdmin.headers["content-disposition"]).toContain("en_cours_de_signature");
+    const originalEarly = await request(app).get(`/api/billing/signature-requests/${created.body.id}/original.pdf`).set(auth).buffer().parse(bin);
+    expect((await PdfLibEarly.load(partialAdmin.body as Buffer)).getPageCount()).toBe((await PdfLibEarly.load(originalEarly.body as Buffer)).getPageCount() + 1);
+    expect((partialAdmin.body as Buffer).equals(originalEarly.body as Buffer)).toBe(false);
+    const clientView = await request(app).post(`/api/sign/${b.token}/open`).send({ code: b.code });
+    expect(clientView.status).toBe(200);
+    expect(clientView.body.requestStatus).toBe("pending");
+    expect(Buffer.from(clientView.body.pdfBase64, "base64").equals(partialAdmin.body as Buffer)).toBe(true); // le client voit la version signée à ce jour
     const s2 = await request(app).post(`/api/sign/${b.token}/sign`).set("User-Agent", "TestAgent/1.0").send({ code: b.code, typedName: "Rep Test", signature: fakePng(), consent: true });
     expect(s2.body).toEqual({ ok: true, completed: true });
     // liste globale pour l'onglet « Signatures »
