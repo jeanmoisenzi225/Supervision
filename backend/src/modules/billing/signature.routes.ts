@@ -79,7 +79,8 @@ signRouter.post("/:token/sign", async (req, res) => {
   // L'émetteur est prévenu tout de suite (notification de l'appli installée), sans attendre d'ouvrir la Supervision.
   const done = fresh.signers.filter((s) => s.status === "signed").length;
   void sendPushToAll({
-    title: all ? "✅ Document signé par tous" : signer.role === "prestataire" ? "✍️ Vous avez signé : générez le lien du client" : `✍️ ${signer.name} a signé`,
+    kind: "signature",
+    title: all ? "Document signé par tous" : signer.role === "prestataire" ? "Vous avez signé : générez le lien du client" : `${signer.name} a signé`,
     body: all ? `${fresh.title} : toutes les signatures sont là, le PDF signé est prêt.` : signer.role === "prestataire" ? `${fresh.title} : ouvrez l'onglet Signatures pour générer le lien et le code du client.` : `${fresh.title} : ${done} signature(s) sur ${fresh.signers.length}.`,
     url: "/facturation",
     tag: `signature:${fresh.id}`,

@@ -21,7 +21,8 @@ self.addEventListener("push", (event) => {
       body: localizeTimes(data.body),
       tag: data.tag,
       renotify: Boolean(data.tag),
-      icon: "/njmdev-icon-192.png",
+      // Icône d'après la nature de la notification (critique, avertissement, ok, signature), sinon celle de l'appli.
+      icon: { critical: "/notif/critique.png", warning: "/notif/avertissement.png", ok: "/notif/ok.png", signature: "/notif/signature.png" }[data.kind] || "/njmdev-icon-192.png",
       badge: "/njmdev-icon-192.png",
       data: { url: data.url || "/" },
     })

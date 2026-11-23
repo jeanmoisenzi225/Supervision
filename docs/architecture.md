@@ -154,3 +154,7 @@ EDEN est évalué à partir de deux contrôles actifs : l'API (`/api/v1/health`)
 ## Actualisation par glissement (règle)
 
 Le geste « glisser vers le bas » (`components/PullToRefresh.tsx`) émet l'événement `supervision:refresh` (`lib/refresh.ts`) et force le serveur à ignorer ses mémoires tampons pendant 10 s (`X-Refresh`). Tout écran qui charge des données **doit** l'écouter : soit par `usePolling` (qui s'abonne tout seul), soit par `onRefreshRequested` pour un chargement fait à la main. Le test `backend/tests/refreshCoverage.test.ts` le vérifie sur tous les fichiers de l'interface qui appellent l'API ; les exceptions (connexion, page de signature publique, panneaux d'actions, palette de commandes) y sont listées avec leur raison.
+
+## Notifications push : icônes (v0.52.0)
+
+`PushMessage.kind` (`critical`, `warning`, `ok`, `signature`) choisit l'icône affichée par `push-worker.js` (`/notif/critique.png`, `avertissement.png`, `ok.png`, `signature.png`) ; sans `kind`, l'icône de l'appli. Les titres n'ont plus d'émoji (`tests/pushTitles.test.ts`). Une notification ne peut pas contenir d'icône dessinée dans son titre ; l'iPhone n'affiche que l'icône de l'appli, d'où le préfixe en mots (« Critique : », « Attention : », « Résolu : »).

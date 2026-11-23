@@ -31,7 +31,9 @@ export async function raiseAlert(input: AlertInput): Promise<void> {
   const alert = await prisma.alert.create({ data: { ...input, detail: input.detail ?? null } });
   if (input.severity !== "info") {
     await sendPushToAll({
-      title: input.severity === "critical" ? `🔴 ${input.title}` : `🟠 ${input.title}`,
+      // L'icône dit la gravité ; le préfixe en mots sert aux appareils qui n'affichent que l'icône de l'appli (iPhone).
+      kind: input.severity === "critical" ? "critical" : "warning",
+      title: input.severity === "critical" ? `Critique : ${input.title}` : `Attention : ${input.title}`,
       body: input.detail ?? "",
       url: `/supervision/alertes?id=${alert.id}`,
       tag: `${input.appKey}:${input.fingerprint}`,
@@ -45,6 +47,6 @@ export async function resolveAlert(appKey: string, fingerprint: string, message:
     data: { status: "resolved", resolvedAt: new Date() },
   });
   if (count > 0) {
-    await sendPushToAll({ title: `🟢 ${message}`, body: "Incident clos automatiquement", url: "/supervision/alertes", tag: `${appKey}:${fingerprint}` });
+    await sendPushToAll({ kind: "ok", title: `Résolu : ${message}`, body: "Incident clos automatiquement", url: "/supervision/alertes", tag: `${appKey}:${fingerprint}` });
   }
 }
