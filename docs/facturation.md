@@ -103,4 +103,4 @@ Le champ « Coordonnées de paiement » du formulaire d'un document de prestatio
 
 ### Demande de règlement : structure juridique en cours de création (v0.52.4)
 
-L'encadré « Modalités et coordonnées de paiement » de la demande de règlement comporte une ligne fixe « Structure juridique : en cours de création », précisant que le règlement se fait, dans l'attente, au nom du prestataire désigné à l'article 1. Quand la structure sera créée, cette ligne devra être retirée ou rendue conditionnelle (identité du prestataire à mettre à jour dans Paramètres).
+L'encadré « Modalités et coordonnées de paiement » de la demande de règlement comporte une ligne fixe « Structure juridique : en cours de création », précisant que la facture définitive officielle sera envoyée une fois le numéro d'immatriculation obtenu, et que le règlement se fait, dans l'attente, au nom du prestataire désigné à l'article 1. Quand la structure sera créée, cette ligne devra être retirée ou rendue conditionnelle (identité du prestataire à mettre à jour dans Paramètres).

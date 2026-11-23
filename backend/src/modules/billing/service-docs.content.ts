@@ -194,7 +194,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     has(d.paymentTerms) && ["Mode de paiement", t(d.paymentTerms)],
     has(d.paymentDue) && ["Échéance", t(d.paymentDue)],
     has(d.paymentCoordinates) && ["Coordonnées de paiement", t(d.paymentCoordinates)],
-    ["Structure juridique", "En cours de création. Dans l’attente, le règlement est à effectuer au nom du prestataire désigné à l’article 1."],
+    ["Structure juridique", "En cours de création. La facture définitive officielle sera envoyée une fois le numéro d’immatriculation obtenu. Dans l’attente, le règlement est à effectuer au nom du prestataire désigné à l’article 1."],
     ref && ["Libellé à indiquer", ref],
   ].filter(Boolean) as [string, string][];
   const hasWork = has(d.workNature) || has(d.period) || has(d.deliveryState);

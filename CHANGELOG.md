@@ -2,7 +2,7 @@
 
 ## v0.52.4 — 2026-11-23
 
-- **Demande de règlement : mention « structure juridique en cours de création ».** Dans l'encadré « Modalités et coordonnées de paiement », une ligne « Structure juridique » indique qu'elle est en cours de création et que, dans l'attente, le règlement est à effectuer au nom du prestataire désigné à l'article 1. Elle s'affiche toujours (PDF et Word) ; la convention n'est pas modifiée.
+- **Demande de règlement : mention « structure juridique en cours de création ».** Dans l'encadré « Modalités et coordonnées de paiement », une ligne « Structure juridique » indique qu'elle est en cours de création que la facture définitive officielle sera envoyée une fois le numéro d'immatriculation obtenu, et que, dans l'attente, le règlement est à effectuer au nom du prestataire désigné à l'article 1. Elle s'affiche toujours (PDF et Word) ; la convention n'est pas modifiée.
 
 ## v0.52.3 — 2026-11-23
 
