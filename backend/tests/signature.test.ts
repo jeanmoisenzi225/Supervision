@@ -53,8 +53,13 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
   it("deux signataires : refus d'un mauvais code, blocage, signatures, PDF signé avec certificat", async () => {
     const created = await request(app).post(`/api/billing/service-docs/${docId}/signature-requests`).set(auth).send({ kind: "convention" });
     expect(created.status).toBe(201);
-    expect(created.body.links).toHaveLength(2);
-    const [a, b] = created.body.links as { token: string; code: string; role: string }[];
+    // Seul le lien du prestataire existe : celui du client n'est généré qu'après la signature du prestataire.
+    expect(created.body.links).toHaveLength(1);
+    const [a] = created.body.links as { token: string; code: string; role: string }[];
+    expect(a.role).toBe("prestataire");
+    const clientSigner = created.body.signers.find((x: any) => x.role === "client");
+    expect(clientSigner).toMatchObject({ status: "waiting", linkIssued: false });
+    expect((await request(app).post(`/api/billing/signature-requests/${created.body.id}/signers/${clientSigner.id}/reset`).set(auth)).status).toBe(409);
     // jamais de secret dans le résumé
     expect(JSON.stringify(created.body.signers)).not.toContain(a.code);
     // une demande en cours bloque une seconde demande
@@ -76,6 +81,12 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
     expect((await request(app).post(`/api/sign/${reset.body.token}/sign`).send({ code: reset.body.code, typedName: "Nom Test", signature: "data:image/png;base64,AAAA", consent: true })).status).toBe(400);
     const s1 = await request(app).post(`/api/sign/${reset.body.token}/sign`).send({ code: reset.body.code, typedName: "Nom Test", signature: fakePng(), consent: true });
     expect(s1.body).toEqual({ ok: true, completed: false });
+    // Le prestataire a signé : le client devient signataire possible, son lien reste à générer
+    const afterFirst = (await request(app).get("/api/billing/signature-requests").set(auth)).body.find((r: any) => r.id === created.body.id);
+    expect(afterFirst.signers.find((x: any) => x.role === "client")).toMatchObject({ status: "pending", linkIssued: false });
+    const clientLink = await request(app).post(`/api/billing/signature-requests/${created.body.id}/signers/${clientSigner.id}/reset`).set(auth);
+    expect(clientLink.status).toBe(200);
+    const b = { token: clientLink.body.token as string, code: clientLink.body.code as string };
     expect((await request(app).post(`/api/sign/${reset.body.token}/sign`).send({ code: reset.body.code, typedName: "Nom Test", signature: fakePng(), consent: true })).status).toBe(409);
     // Après la 1re signature : version signée à ce jour (signature posée + certificat), visible par l'autre partie et par l'émetteur
     const { PDFDocument: PdfLibEarly } = await import("pdf-lib");
@@ -120,7 +131,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)("parcours de signature", () => {
   it("la signature d'un document annulé est refusée, et un dossier avec preuves ne se supprime pas", async () => {
     const created = await request(app).post(`/api/billing/service-docs/${docId}/signature-requests`).set(auth).send({ kind: "demande" });
     expect(created.status).toBe(201);
-    expect(created.body.links).toHaveLength(2);
+    expect(created.body.links).toHaveLength(1);
     const l = created.body.links[0];
     expect((await request(app).post(`/api/billing/signature-requests/${created.body.id}/cancel`).set(auth)).status).toBe(200);
     expect((await request(app).post(`/api/sign/${l.token}/open`).send({ code: l.code })).status).toBe(410);

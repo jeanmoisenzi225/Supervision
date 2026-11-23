@@ -71,7 +71,7 @@ export function SignPage({ token }: { token: string }) {
       <p className="small">Signé le {done.at.toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" })} par {name || doc.name}</p>
       {doc.requestStatus === "completed"
         ? <><p style={{ color: "var(--ok)" }}><strong>Toutes les parties ont signé.</strong> Le document est finalisé.</p><a className="button primary" href={url} download="document_signe.pdf">Télécharger le PDF signé</a></>
-        : <><p className="muted">{waiting.length ? `En attente de : ${waiting.map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}.` : "Finalisation en cours…"} Vous pouvez fermer cette page.</p><a className="button" href={url} download="document_signe_en_cours.pdf">Télécharger le document avec votre signature et son certificat</a></>}
+        : <>{doc.role === "prestataire" && <p style={{ color: "var(--ok)" }}><strong>Prochaine étape :</strong> retournez dans la Supervision (onglet Signatures) pour générer le lien et le code du client.</p>}<p className="muted">{waiting.length ? `En attente de : ${waiting.map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}.` : "Finalisation en cours…"} Vous pouvez fermer cette page.</p><a className="button" href={url} download="document_signe_en_cours.pdf">Télécharger le document avec votre signature et son certificat</a></>}
     </section>);
   }
   const completed = doc.requestStatus === "completed";
@@ -103,7 +103,7 @@ export function SignPage({ token }: { token: string }) {
             style={{ width: "100%", maxWidth: 520, height: "auto", aspectRatio: "16 / 5", touchAction: "none", background: dark ? "#f4f2ec" : "#fff", border: "1px solid var(--border)", borderRadius: 8, display: "block" }} />
           <button type="button" onClick={clear} style={{ marginTop: 6 }}>Effacer</button>
         </div>
-        <label className="row" style={{ alignItems: "flex-start" }}><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span className="small">Je déclare avoir lu le document ci-dessus et je le signe électroniquement. J’accepte que la date de ma signature, mon nom, mon tracé, mon adresse IP et mon navigateur soient conservés comme preuve.</span></label>
+        <label className="row" style={{ alignItems: "flex-start" }}><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span className="small"><strong>Lu et approuvé</strong> : je déclare avoir lu le document ci-dessus et je le signe électroniquement. Cette mention sera inscrite dans mon cadre de signature. J’accepte que la date de ma signature, mon nom, mon tracé, mon adresse IP et mon navigateur soient conservés comme preuve.</span></label>
         {error && <p className="small" style={{ color: "var(--bad)" }}>{error}</p>}
         <button className="primary" type="submit" disabled={busy || !inked || !consent || name.trim().length < 3}>Signer le document</button>
       </form>

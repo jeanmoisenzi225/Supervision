@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api, apiBlob } from "../lib/api";
 import { onRefreshRequested } from "../lib/refresh";
 
-type Signer = { id: string; role: string; name: string; status: string; signedAt: string | null; viewedAt: string | null; locked: boolean };
+type Signer = { id: string; role: string; name: string; status: string; signedAt: string | null; viewedAt: string | null; locked: boolean; linkIssued: boolean };
 export type SignReq = { id: string; kind: string; title: string; status: string; createdAt: string; expiresAt: string; completedAt: string | null; appName: string; clientName: string; signers: Signer[] };
 export type FreshLinks = { requestId: string; links: { signerId: string; role: string; name: string; token: string; code: string }[] };
 const ROLE: Record<string, string> = { prestataire: "Vous (prestataire)", client: "Client" };
@@ -14,7 +14,8 @@ function state(r: SignReq): { label: string; color: string } {
   if (r.status === "cancelled") return { label: "Annulé", color: "var(--muted)" };
   const done = r.signers.filter((s) => s.status === "signed").length;
   const waiting = r.signers.filter((s) => s.status !== "signed").map((s) => ROLE[s.role] ?? s.role).join(", ");
-  return { label: `⏳ ${done}/${r.signers.length} signé · attend : ${waiting}`, color: "var(--warn)" };
+  const toIssue = r.signers.some((s) => s.status === "pending" && !s.linkIssued);
+  return { label: `⏳ ${done}/${r.signers.length} signé · attend : ${waiting}${toIssue ? " (lien à générer)" : ""}`, color: "var(--warn)" };
 }
 
 /** Suivi des signatures : une liste claire, le détail seulement quand on ouvre une ligne. */
@@ -83,11 +84,11 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
               {r.signers.map((s) => {
                 const lk = l.find((x) => x.signerId === s.id);
                 return <div key={s.id} className="stack-small">
-                  <span className="small">{s.status === "signed" ? "✓" : "○"} {ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? `signé le ${when(s.signedAt!)}` : s.locked ? "code bloqué" : s.viewedAt ? "document ouvert, pas encore signé" : "pas encore ouvert"}</span>
+                  <span className="small">{s.status === "signed" ? "✓" : "○"} {ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? `signé le ${when(s.signedAt!)}` : s.status === "waiting" ? "son lien sera disponible après votre signature" : !s.linkIssued ? "lien à générer" : s.locked ? "code bloqué" : s.viewedAt ? "document ouvert, pas encore signé" : "pas encore ouvert"}</span>
                   {lk && s.status !== "signed" && !(fresh && fresh.requestId === r.id) && <span className="small">Lien : <span className="mono" style={{ overflowWrap: "anywhere" }}>{linkOf(lk.token)}</span> · Code : <strong className="mono">{lk.code}</strong></span>}
                   {r.status === "pending" && s.status !== "signed" && <div className="row wrap">
                     {lk && !(fresh && fresh.requestId === r.id) && <><button type="button" onClick={() => void copy(linkOf(lk.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(lk.code, "Code")}>Copier le code</button></>}
-                    <button type="button" onClick={() => void reset(r, s)}>Nouveau lien et code</button>
+                    {s.status !== "waiting" && <button type="button" className={!s.linkIssued ? "primary" : undefined} onClick={() => void reset(r, s)}>{!s.linkIssued ? `Générer le lien et le code de ${ROLE[s.role] ?? s.role}` : "Nouveau lien et code"}</button>}
                   </div>}
                 </div>;
               })}

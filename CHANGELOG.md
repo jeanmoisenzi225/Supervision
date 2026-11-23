@@ -1,5 +1,13 @@
 # Journal des versions
 
+## v0.51.0 — 2026-11-23
+
+Demandé le 2026-11-23 : le lien du client n'existe qu'après la signature de l'émetteur, et la case « lu et approuvé » inscrit la mention dans le cadre de signature.
+
+- **Signature en deux temps.** À la création d'une demande, **seul le lien du prestataire est créé**. Le client est « en attente » : aucun lien ni code n'existe pour lui. Dès que le prestataire a signé, l'onglet Signatures propose **« Générer le lien et le code de Client »**, et l'émetteur reçoit une notification (« Vous avez signé : générez le lien du client »). Impossible de générer ce lien avant la signature du prestataire. Les demandes créées avant cette version gardent leurs deux liens.
+- **« Lu et approuvé » sur le document.** La case de la page de signature devient « **Lu et approuvé** : je déclare avoir lu le document… » ; une fois signé, la mention **« Lu et approuvé »** est inscrite en gras dans le cadre de signature, au-dessus de « Signé électroniquement le … par … » et du tracé. Le certificat indique pour chaque signataire « Mention : « Lu et approuvé » (case cochée par le signataire) ».
+- Après sa signature, la page du prestataire indique la prochaine étape : générer le lien du client depuis la Supervision.
+
 ## v0.50.1 — 2026-11-23
 
 Retour du propriétaire : après la signature de l'émetteur, le client ne voyait ni sa signature ni le certificat en ouvrant son lien ; et l'émetteur ne les voyait pas non plus dans la Supervision tant que le client n'avait pas signé.

@@ -19,7 +19,7 @@ const signSchema = bodySchema.extend({
 
 async function authenticate(token: string, code: string) {
   const signer = await prisma.billingSigner.findUnique({ where: { tokenHash: hashToken(token) }, include: { request: { include: { signers: { orderBy: { role: "desc" } } } } } });
-  if (!signer) throw new HttpError(404, "Lien de signature invalide ou expiré");
+  if (!signer || signer.status === "waiting" || signer.codeHash === "") throw new HttpError(404, "Lien de signature invalide ou expiré");
   if (signer.attempts >= MAX_ATTEMPTS) throw new HttpError(423, "Trop d'essais : demande un nouveau lien et un nouveau code à l'émetteur.");
   if (!codeMatches(code, signer.codeHash)) {
     await prisma.billingSigner.update({ where: { id: signer.id }, data: { attempts: { increment: 1 } } });
@@ -60,6 +60,8 @@ signRouter.post("/:token/sign", async (req, res) => {
     where: { id: signer.id },
     data: { status: "signed", signedAt: now, ip: req.ip ?? null, userAgent: (req.get("user-agent") ?? "").slice(0, 300), typedName: input.typedName, signature: png },
   });
+  // Le prestataire a signé : le client devient signataire possible (son lien est à générer depuis la Supervision).
+  if (signer.role === "prestataire") await prisma.billingSigner.updateMany({ where: { requestId: signer.requestId, status: "waiting" }, data: { status: "pending" } });
   // Après CHAQUE signature : version signée à ce jour (signatures posées + certificat), pour que l'autre partie la voie.
   // Verrou par demande : deux signatures simultanées ne se marchent pas dessus.
   const fresh = await prisma.$transaction(async (tx) => {
@@ -77,8 +79,8 @@ signRouter.post("/:token/sign", async (req, res) => {
   // L'émetteur est prévenu tout de suite (notification de l'appli installée), sans attendre d'ouvrir la Supervision.
   const done = fresh.signers.filter((s) => s.status === "signed").length;
   void sendPushToAll({
-    title: all ? "✅ Document signé par tous" : `✍️ ${signer.name} a signé`,
-    body: all ? `${fresh.title} : toutes les signatures sont là, le PDF signé est prêt.` : `${fresh.title} : ${done} signature(s) sur ${fresh.signers.length}.`,
+    title: all ? "✅ Document signé par tous" : signer.role === "prestataire" ? "✍️ Vous avez signé : générez le lien du client" : `✍️ ${signer.name} a signé`,
+    body: all ? `${fresh.title} : toutes les signatures sont là, le PDF signé est prêt.` : signer.role === "prestataire" ? `${fresh.title} : ouvrez l'onglet Signatures pour générer le lien et le code du client.` : `${fresh.title} : ${done} signature(s) sur ${fresh.signers.length}.`,
     url: "/facturation",
     tag: `signature:${fresh.id}`,
   }).catch(() => undefined);

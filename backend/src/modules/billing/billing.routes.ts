@@ -372,9 +372,9 @@ billingRouter.get("/service-docs/:id/:kind.:format", async (req, res) => {
 
 // ---------- Signature électronique des documents de prestation (v0.48.0) ----------
 
-const requestSummary = (r: { id: string; kind: string; title: string; status: string; createdAt: Date; expiresAt: Date; completedAt: Date | null; pdfSha256: string; signedSha256: string | null; signers: { id: string; role: string; name: string; status: string; signedAt: Date | null; viewedAt: Date | null; attempts: number }[] }) => ({
+const requestSummary = (r: { id: string; kind: string; title: string; status: string; createdAt: Date; expiresAt: Date; completedAt: Date | null; pdfSha256: string; signedSha256: string | null; signers: { id: string; role: string; name: string; status: string; signedAt: Date | null; viewedAt: Date | null; attempts: number; codeHash: string }[] }) => ({
   id: r.id, kind: r.kind, title: r.title, status: r.status, createdAt: r.createdAt, expiresAt: r.expiresAt, completedAt: r.completedAt, pdfSha256: r.pdfSha256, signedSha256: r.signedSha256,
-  signers: r.signers.map((x) => ({ id: x.id, role: x.role, name: x.name, status: x.status, signedAt: x.signedAt, viewedAt: x.viewedAt, locked: x.attempts >= 5 })),
+  signers: r.signers.map((x) => ({ id: x.id, role: x.role, name: x.name, status: x.status, signedAt: x.signedAt, viewedAt: x.viewedAt, locked: x.attempts >= 5, linkIssued: x.codeHash !== "" })),
 });
 // Prestataire d'abord, puis client.
 const SIGNER_SELECT = { orderBy: { role: "desc" as const } };
@@ -406,15 +406,20 @@ billingRouter.post("/service-docs/:id/signature-requests", async (req, res) => {
   const title = kind === "demande" ? `Demande de règlement — ${data.appName}` : `Convention de constatation des travaux — ${data.appName}`;
   // Les deux documents sont signés par le prestataire et le client (la demande : « bon pour accord » du client).
   const people = [{ role: "prestataire", name: data.provider.name }, { role: "client", name: data.clientRepresentative.trim() || data.client.name }];
-  const secrets = people.map((p) => ({ ...p, token: newToken(), code: newCode() }));
+  // Seul le lien du prestataire est créé : celui du client n'existe qu'après la signature du prestataire.
+  const secrets = people.filter((p) => p.role === "prestataire").map((p) => ({ ...p, token: newToken(), code: newCode() }));
   const created = await prisma.billingSignRequest.create({
     data: {
       serviceDocId: row.id, kind, title, pdf, boxes, pdfSha256: sha256(pdf), expiresAt: new Date(Date.now() + VALIDITY_DAYS * 86_400_000),
-      signers: { create: secrets.map((x) => ({ role: x.role, name: x.name, tokenHash: hashToken(x.token), codeHash: hashCode(x.code) })) },
+      signers: { create: people.map((p) => {
+        const x = secrets.find((y) => y.role === p.role);
+        // Signataire en attente : jeton inconnu de tous et aucun code, donc aucun lien tant que le prestataire n'a pas signé.
+        return x ? { role: p.role, name: p.name, tokenHash: hashToken(x.token), codeHash: hashCode(x.code) } : { role: p.role, name: p.name, status: "waiting", tokenHash: hashToken(newToken()), codeHash: "" };
+      }) },
     },
     include: { signers: SIGNER_SELECT },
   });
-  res.status(201).json({ ...requestSummary(created), links: created.signers.map((sg) => { const x = secrets.find((y) => y.role === sg.role)!; return { signerId: sg.id, role: sg.role, name: sg.name, token: x.token, code: x.code }; }) });
+  res.status(201).json({ ...requestSummary(created), links: created.signers.filter((sg) => secrets.some((y) => y.role === sg.role)).map((sg) => { const x = secrets.find((y) => y.role === sg.role)!; return { signerId: sg.id, role: sg.role, name: sg.name, token: x.token, code: x.code }; }) });
 });
 
 /** Supprime définitivement une demande de signature et ses preuves (signataires en cascade). Irréversible : l'interface demande confirmation. */
@@ -438,6 +443,7 @@ billingRouter.post("/signature-requests/:id/signers/:signerId/reset", async (req
   const signer = await prisma.billingSigner.findFirst({ where: { id: req.params.signerId, requestId: req.params.id }, include: { request: true } });
   if (!signer) throw new HttpError(404, "Signataire introuvable");
   if (signer.request.status !== "pending" || signer.status === "signed") throw new HttpError(409, "Ce signataire ne peut plus recevoir de nouveau lien.");
+  if (signer.status === "waiting") throw new HttpError(409, "Le lien du client sera disponible après ta signature : signe d'abord le document avec ton propre lien.");
   const token = newToken(), code = newCode();
   await prisma.billingSigner.update({ where: { id: signer.id }, data: { tokenHash: hashToken(token), codeHash: hashCode(code), attempts: 0 } });
   res.json({ signerId: signer.id, role: signer.role, name: signer.name, token, code });

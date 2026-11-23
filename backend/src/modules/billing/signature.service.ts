@@ -58,11 +58,11 @@ export function renderCertificate(input: { title: string; requestId: string; pdf
   y += 6;
   for (const s of input.signers) {
     const pending = !s.signedAt;
-    const h = pending ? 56 : s.signature ? 126 : 76;
+    const h = pending ? 56 : s.signature ? 139 : 89;
     doc.save().roundedRect(ML, y, CW, h, 5).lineWidth(0.8).stroke(LINE).restore();
     doc.font("b").fontSize(10).fillColor(INK).text(`${ROLE[s.role] ?? s.role} : ${s.name}`, ML + 12, y + 10, { width: CW - 24 });
     if (pending) { doc.font("r").fontSize(8.8).fillColor(MUTED).text("En attente de signature", ML + 12, y + 30, { lineBreak: false }); y += h + 10; continue; }
-    const lines: [string, string][] = [["Signé le", s.signedAt ? `${parisTime(s.signedAt)} (heure de Paris)` : "—"], ["Nom saisi", s.typedName ?? "—"]];
+    const lines: [string, string][] = [["Signé le", s.signedAt ? `${parisTime(s.signedAt)} (heure de Paris)` : "—"], ["Nom saisi", s.typedName ?? "—"], ["Mention", "« Lu et approuvé » (case cochée par le signataire)"]];
     let yy = y + 28;
     for (const [k, v] of lines) { doc.font("r").fontSize(8).fillColor(MUTED).text(k, ML + 12, yy, { width: 80, lineBreak: false }); doc.font("r").fontSize(8.5).fillColor(INK).text(v, ML + 95, yy, { width: CW - 110, lineBreak: false }); yy += 13; }
     if (s.signature) { try { doc.image(s.signature, ML + 12, yy + 4, { fit: [200, 52] }); } catch { /* tracé illisible : le certificat reste valable sans l'image */ } }
@@ -107,12 +107,14 @@ export async function stampSignatures(original: Buffer, boxes: SignBox[], signer
     // Recouvre les lignes « Fait à … le … » du cadre, devenues inutiles.
     page.drawRectangle({ x: box.x + 2, y: bottom + 2, width: box.w - 4, height: box.h - 58 - 2, color: rgb(1, 1, 1) });
     const when = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Paris" }).format(s.signedAt);
-    page.drawText(winSafe(`Signé électroniquement le ${when}`), { x: box.x + 10, y: H - (box.y + 68), size: 8.2, font: bold, color: rgb(0.05, 0.06, 0.07) });
-    page.drawText(winSafe(`par ${s.typedName || s.name}`), { x: box.x + 10, y: H - (box.y + 80), size: 8.2, font, color: rgb(0.25, 0.26, 0.28) });
+    // « Lu et approuvé » : la case de la page de signature est cochée pour signer ; la mention est donc portée sur le document.
+    page.drawText("Lu et approuvé", { x: box.x + 10, y: H - (box.y + 67), size: 9.4, font: bold, color: rgb(0.05, 0.06, 0.07) });
+    page.drawText(winSafe(`Signé électroniquement le ${when}`), { x: box.x + 10, y: H - (box.y + 80), size: 8.2, font, color: rgb(0.05, 0.06, 0.07) });
+    page.drawText(winSafe(`par ${s.typedName || s.name}`), { x: box.x + 10, y: H - (box.y + 91), size: 8.2, font, color: rgb(0.25, 0.26, 0.28) });
     if (s.signature) {
       try {
         const img = await pdf.embedPng(s.signature);
-        const dims = img.scaleToFit(box.w - 24, 52);
+        const dims = img.scaleToFit(box.w - 24, 44);
         page.drawImage(img, { x: box.x + 12, y: bottom + 8, width: dims.width, height: dims.height });
       } catch { /* tracé illisible : la mention reste, le certificat garde le tracé */ }
     }
