@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.52.1 — 2026-11-23
+
+- **Bouton « Ouvrir le lien » aligné.** Le texte du bouton était plus haut que celui des boutons voisins (« Copier le lien », « Copier le code ») ; il est maintenant centré et à la même hauteur.
+
 ## v0.52.0 — 2026-11-23
 
 - **Notifications : de vraies icônes à la place des émojis.** Les titres ne contiennent plus d'émoji (🔴 🟠 🟢 ✍️ ✅). La notification affiche à la place une **icône classique, sans fond**, selon sa nature : disque rouge « ! » (critique), triangle ambre (avertissement), disque vert avec coche (résolu, test), feuille signée (signature) ; PNG transparents, lisibles sur fond clair comme sur fond sombre. Fichiers dans `frontend/public/notif/`. Les titres commencent par un mot (« Critique : », « Attention : », « Résolu : ») pour les appareils qui n'affichent que l'icône de l'appli, comme l'iPhone. Un test garantit qu'aucun titre de notification ne contient d'émoji.
