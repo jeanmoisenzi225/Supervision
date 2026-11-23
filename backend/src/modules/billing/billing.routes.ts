@@ -11,6 +11,7 @@ import { generateDraftInvoicePdf } from "./invoice-pdf";
 import { buildServiceDocs, DOC_FILENAMES, missingForDoc, type DocKind, type ServiceDocData } from "./service-docs.content";
 import { renderServiceDocDocx } from "./service-docs.docx";
 import { renderServiceDocPdf, renderServiceDocPdfWithBoxes } from "./service-docs.pdf";
+import { clientLogoFor } from "./client-logos";
 import { hashCode, hashToken, newCode, newToken, sha256, VALIDITY_DAYS } from "./signature.service";
 
 export const billingRouter = asyncRouter();
@@ -315,7 +316,7 @@ function serviceDocData(row: Awaited<ReturnType<typeof prisma.billingServiceDoc.
     amount: row.amount == null ? null : Number(row.amount), currency: row.currency === "XOF" ? "XOF" : "EUR",
     paymentTerms: row.paymentTerms, paymentDue: row.paymentDue, paymentCoordinates: row.paymentCoordinates || profile.paymentDetails || "",
     clientLegalForm: row.clientLegalForm, clientRepresentative: row.clientRepresentative, clientRole: row.clientRole, place: row.place,
-    reference: row.reference, emissionDate: row.emissionDate,
+    reference: row.reference, emissionDate: row.emissionDate, clientLogo: clientLogoFor(c.name),
     terms: row.terms && typeof row.terms === "object" && !Array.isArray(row.terms) ? (row.terms as Record<string, string>) : {},
     lines: Array.isArray(row.lines) ? (row.lines as { description: string; quantity: number; unitPrice: number; source?: string | null; tech?: string | null }[]) : [],
     provider: { name: profile.legalName ?? "", address: profile.businessAddress ?? "", email: profile.contactEmail ?? "", phone: profile.phone ?? "", brand: profile.brandName || "NJMDev" },

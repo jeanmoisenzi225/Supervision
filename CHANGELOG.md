@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v0.50.0 — 2026-11-23
+
+- **Logo du client sur les documents de prestation.** La demande de règlement et la convention affichent le logo du client en haut à droite du titre de la première page, en PDF comme en Word (le titre se replie pour lui laisser la place). Logos fournis : **Catalys Consulting** (site officiel du client) et **Autonova Group** (dépôt `site-autonova`, identique à celui de la Supervision), retrouvés d'après le nom du client, y compris l'orthographe « Antonova ». Un client sans logo n'a rien de plus sur son document.
+- Logos dans `backend/assets/clients/` (PNG) ; registre dans `client-logos.ts`. Un logo se fige avec le document à la création d'une demande de signature.
+
 ## v0.49.6 — 2026-11-23
 
 - **L'import des coûts génère maintenant des intitulés compréhensibles par le client**, sans rien retaper. Hébergement : « Serveur de l'application (fonctionnement et traitements) », « Base de données (conservation des données de l'application) », « Espace de stockage de la base de données (5 Go) », « Espace de stockage de l'application (… Go) ». Intelligence artificielle : « traitements automatisés (consommation du mois en cours) », sans nommer le fournisseur. S'applique à tous les dossiers de prestation et aux factures prévisionnelles.

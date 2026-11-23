@@ -33,6 +33,8 @@ export type ServiceDocData = {
   /** `source` : origine de la ligne (« hosting », « claude », « free ») ; à défaut, déduite de l'intitulé. */
   lines: { description: string; quantity: number; unitPrice: number; source?: string | null }[];
   terms?: Partial<Terms>;
+  /** Logo du client (PNG), s'il est connu. */
+  clientLogo?: Buffer | null;
   provider: { name: string; address: string; email: string; phone: string; brand: string };
   client: { name: string; address: string; rccm: string; ncc: string; email: string; phone: string };
 };
@@ -40,7 +42,8 @@ export type ServiceDocData = {
 export type AmountRow = { label: string; value: string; details?: [string, string][] };
 
 export type Block =
-  | { t: "title"; title: string; sub: string }
+  /** `logo` : logo du client (PNG), imprimé en haut à droite du titre. */
+  | { t: "title"; title: string; sub: string; logo?: Buffer | null }
   | { t: "meta"; items: [string, string][] }
   /** Mention de nature du document : texte sobre entre deux filets, sans encadré coloré. */
   | { t: "mention"; label: string; text: string }
@@ -197,7 +200,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
   const workLine = [has(d.period) && `Période de réalisation : ${t(d.period)}.`, has(d.deliveryState) && `État à ce jour : ${t(d.deliveryState)}.`].filter(Boolean).join(" ");
 
   const demande: Block[] = [
-    { t: "title", title: "DEMANDE DE RÈGLEMENT", sub: "Prestation de développement informatique" },
+    { t: "title", title: "DEMANDE DE RÈGLEMENT", sub: "Prestation de développement informatique", logo: d.clientLogo ?? null },
     { t: "meta", items: [ref && ["Référence", ref], ["Date d’émission", dateEm], ["Objet", `Règlement de la prestation « ${app} »`]].filter(Boolean) as [string, string][] },
     { t: "mention", label: "Nature du document", text: "La présente demande de règlement n’est pas une facture fiscale et n’en tient pas lieu : elle ne comporte ni numéro de facture ni TVA. Elle ne vaut pas, à elle seule, reconnaissance de dette ni titre de créance exigible." },
     { t: "h2", text: "1. Parties" },
@@ -232,7 +235,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
   const refConv = ref ? ref.replace(/^DR/i, "CV") : "";
 
   const convention: Block[] = [
-    { t: "title", title: "CONVENTION DE CONSTATATION DES TRAVAUX", sub: "et de régularisation contractuelle" },
+    { t: "title", title: "CONVENTION DE CONSTATATION DES TRAVAUX", sub: "et de régularisation contractuelle", logo: d.clientLogo ?? null },
     { t: "meta", items: [refConv && ["Référence", refConv], ["Prend effet", "à la date de la dernière signature"], ["Objet", `Application « ${app} »`]].filter(Boolean) as [string, string][] },
     { t: "h2", text: "ENTRE LES SOUSSIGNÉS" },
     { t: "cols", left: ["Le prestataire", identPre], right: ["Le client", identCli] },

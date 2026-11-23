@@ -2,6 +2,7 @@ import { AlignmentType, BorderStyle, Document, Footer, Header, ImageRun, Packer,
 import fs from "node:fs";
 import path from "node:path";
 import type { Block } from "./service-docs.content";
+import { pngSize } from "./client-logos";
 
 const LOGO = fs.readFileSync(path.resolve(__dirname, "../../../assets/logo-njmdev.png"));
 const MUTED = "6D6E74", LINE = "D9D6CC";
@@ -25,7 +26,18 @@ const gap = () => new Paragraph({ children: [], spacing: { after: 80 } });
 
 function toDocx(b: Block): (Paragraph | Table)[] {
   switch (b.t) {
-    case "title": return [p(b.title, { size: 40, bold: true, after: 20 }), p(b.sub, { size: 22, color: MUTED, after: 200 })];
+    case "title": {
+      const head = [p(b.title, { size: 40, bold: true, after: 20 }), p(b.sub, { size: 22, color: MUTED, after: 200 })];
+      const dims = b.logo ? pngSize(b.logo) : null;
+      if (!b.logo || !dims) return head;
+      const width = 150, height = Math.round((width * dims.height) / dims.width);
+      const none = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+      const noBorders = { top: none, bottom: none, left: none, right: none };
+      return [new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: { ...noBorders, insideHorizontal: none, insideVertical: none }, rows: [new TableRow({ children: [
+        new TableCell({ children: head, width: { size: 70, type: WidthType.PERCENTAGE }, borders: noBorders }),
+        new TableCell({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new ImageRun({ type: "png", data: b.logo, transformation: { width, height } })] })], width: { size: 30, type: WidthType.PERCENTAGE }, borders: noBorders }),
+      ] })] })];
+    }
     case "meta": return [new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [new TableRow({ children: b.items.map(([l, v]) => cell([p(l.toUpperCase(), { size: 14, color: MUTED, after: 20 }), p(v, { size: 19, after: 0 })], 100 / b.items.length)) })] }), gap()];
     case "mention": return [new Paragraph({ children: [new TextRun({ text: b.label.toUpperCase(), size: 14, color: MUTED, font: "Inter", characterSpacing: 20 })], spacing: { before: 120, after: 40 }, keepNext: true, border: { top: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 6 } } }), new Paragraph({ children: runs(b.text, 17, false, "3D3E44"), spacing: { after: 160 }, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 6 } } })];
     case "h2": return [new Paragraph({ children: [new TextRun({ text: b.text, bold: true, size: 23, font: "Inter" })], spacing: { before: 220, after: 100 }, keepNext: true, border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LINE, space: 2 } } })];

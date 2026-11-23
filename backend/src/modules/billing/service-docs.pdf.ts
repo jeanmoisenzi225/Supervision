@@ -91,8 +91,11 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
     switch (b.t) {
       case "title": {
         ensure(90);
+        // Logo du client en haut à droite du titre (la première page seulement) ; le titre lui laisse la place.
+        const logoW = 150;
+        if (b.logo) { try { doc.image(b.logo, W - MR - logoW, y - 2, { fit: [logoW, 46], align: "right" }); } catch { /* logo illisible : le document reste valable sans */ } }
         doc.font("b").fontSize(21).fillColor(INK);
-        const lines = layout(b.title, CW, 21, true);
+        const lines = layout(b.title, b.logo ? CW - logoW - 16 : CW, 21, true);
         for (const ln of lines) { drawLine(ln, ML, y, 21, INK); y += 26; }
         doc.font("r").fontSize(11).fillColor(MUTED).text(b.sub, ML, y, { lineBreak: false }); y += 20;
         doc.rect(ML, y, 54, 3).fill(MINT); y += 16; break;

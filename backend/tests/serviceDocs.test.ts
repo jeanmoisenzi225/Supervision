@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import request from "supertest";
+import { clientLogoFor, pngSize } from "../src/modules/billing/client-logos";
+import { renderServiceDocDocx } from "../src/modules/billing/service-docs.docx";
+import { renderServiceDocPdf } from "../src/modules/billing/service-docs.pdf";
 import { amountInWords, buildServiceDocs, formatAmount, frDate, missingForDoc, numberToFrench, type ServiceDocData } from "../src/modules/billing/service-docs.content";
 
 const base = (over: Partial<ServiceDocData> = {}): ServiceDocData => ({
@@ -147,6 +150,30 @@ describe("détail des composants", () => {
     const all = text(buildServiceDocs(base({ currency: "XOF", amount: null, lines: [{ description: "A", quantity: 1, unitPrice: 4591.7 }, { description: "B", quantity: 1, unitPrice: 4263.72 }] })));
     expect(all).toContain("8 856 FCFA");
     expect(all).not.toContain("8 855 FCFA");
+  });
+});
+
+describe("logo du client", () => {
+  it("retrouve le logo d'après le nom du client, y compris l'orthographe « Antonova »", () => {
+    for (const name of ["Catalys Consulting", "CATALYS", "Autonova Group", "Antonova Group", "My Autonova"]) {
+      const logo = clientLogoFor(name);
+      expect(logo, name).not.toBeNull();
+      expect(pngSize(logo!)?.width).toBeGreaterThan(100);
+    }
+    expect(clientLogoFor("Client inconnu")).toBeNull();
+  });
+  it("imprime le logo en PDF et en Word sans casser le document, et rien sans logo", async () => {
+    const logo = clientLogoFor("Catalys Consulting")!;
+    const withLogo = buildServiceDocs(base({ clientLogo: logo }));
+    expect((withLogo.demande.blocks[0] as { logo?: Buffer | null }).logo).toBe(logo);
+    expect((withLogo.convention.blocks[0] as { logo?: Buffer | null }).logo).toBe(logo);
+    const a = await renderServiceDocPdf(withLogo.demande.blocks, withLogo.demande.header, withLogo.brand);
+    const b = await renderServiceDocPdf(buildServiceDocs(base()).demande.blocks, "x", "NJMDev");
+    expect(a.subarray(0, 5).toString()).toBe("%PDF-");
+    expect(a.length).toBeGreaterThan(b.length + 10_000); // le logo est bien embarqué
+    const docx = await renderServiceDocDocx(withLogo.convention.blocks, withLogo.convention.header, withLogo.brand);
+    expect(docx.subarray(0, 2).toString()).toBe("PK");
+    expect((buildServiceDocs(base()).demande.blocks[0] as { logo?: unknown }).logo ?? null).toBeNull();
   });
 });
 
