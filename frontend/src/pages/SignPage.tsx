@@ -33,12 +33,30 @@ export function SignPage({ token }: { token: string }) {
   }
   const pos = (e: ReactPointerEvent<HTMLCanvasElement>) => { const r = e.currentTarget.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * e.currentTarget.width, y: ((e.clientY - r.top) / r.height) * e.currentTarget.height }; };
   function down(e: ReactPointerEvent<HTMLCanvasElement>) { e.currentTarget.setPointerCapture(e.pointerId); drawing.current = true; const c = e.currentTarget.getContext("2d")!; const p = pos(e); c.beginPath(); c.moveTo(p.x, p.y); }
-  function move(e: ReactPointerEvent<HTMLCanvasElement>) { if (!drawing.current) return; const c = e.currentTarget.getContext("2d")!; const p = pos(e); c.lineWidth = 3; c.lineCap = "round"; c.strokeStyle = "#0d0e10"; c.lineTo(p.x, p.y); c.stroke(); setInked(true); }
+  function move(e: ReactPointerEvent<HTMLCanvasElement>) { if (!drawing.current) return; const c = e.currentTarget.getContext("2d")!; const p = pos(e); c.lineWidth = 3; c.lineCap = "round"; c.strokeStyle = "#0d0e10"; c.lineTo(p.x, p.y); c.stroke(); setInked(true); setMissing(null); }
   const up = () => { drawing.current = false; };
   function clear() { const c = canvas.current; if (c) c.getContext("2d")!.clearRect(0, 0, c.width, c.height); setInked(false); }
 
+  const nameRef = useRef<HTMLInputElement>(null);
+  const consentRef = useRef<HTMLInputElement>(null);
+  const [missing, setMissing] = useState<"name" | "ink" | "consent" | null>(null);
+  const nameOk = name.trim().length >= 3;
+
+  // Le bouton reste actif : s'il manque quelque chose, on le dit clairement et on amène l'utilisateur sur le champ concerné.
+  function firstMissing(): "name" | "ink" | "consent" | null { return !nameOk ? "name" : !inked ? "ink" : !consent ? "consent" : null; }
+  const MISSING_TEXT = { name: "Avant de signer, saisissez votre nom complet dans le champ « Votre nom complet ».", ink: "Avant de signer, dessinez votre signature dans le cadre (avec le doigt ou la souris).", consent: "Avant de signer, cochez la case « Lu et approuvé »." };
+
   async function sign(e: React.FormEvent) {
-    e.preventDefault(); setError(""); setBusy(true);
+    e.preventDefault(); setError("");
+    const m = firstMissing();
+    if (m) {
+      setMissing(m);
+      const el = m === "name" ? nameRef.current : m === "ink" ? canvas.current : consentRef.current;
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (m === "name") nameRef.current?.focus({ preventScroll: true });
+      return;
+    }
+    setMissing(null); setBusy(true);
     try {
       const signature = canvas.current!.toDataURL("image/png");
       const r = await call<{ completed: boolean }>(token, "sign", { code, typedName: name, signature, consent });
@@ -97,16 +115,17 @@ export function SignPage({ token }: { token: string }) {
     {mustSign && <section className="card">
       <h3>Signer</h3>
       <form className="stack-small" onSubmit={sign}>
-        <label>Votre nom complet<input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder={doc.name} /></label>
+        <label>Votre nom complet<input ref={nameRef} value={name} onChange={(e) => { setName(e.target.value); setMissing(null); }} autoComplete="name" placeholder={doc.name} style={missing === "name" ? { borderColor: "var(--bad)" } : undefined} /></label>
         <div>
           <div className="small muted">Dessinez votre signature (doigt ou souris)</div>
           <canvas ref={canvas} width={640} height={200} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-            style={{ width: "100%", maxWidth: 520, height: "auto", aspectRatio: "16 / 5", touchAction: "none", background: dark ? "#f4f2ec" : "#fff", border: "1px solid var(--border)", borderRadius: 8, display: "block" }} />
+            style={{ outline: missing === "ink" ? "2px solid var(--bad)" : undefined,  width: "100%", maxWidth: 520, height: "auto", aspectRatio: "16 / 5", touchAction: "none", background: dark ? "#f4f2ec" : "#fff", border: "1px solid var(--border)", borderRadius: 8, display: "block" }} />
           <button type="button" onClick={clear} style={{ marginTop: 6 }}>Effacer</button>
         </div>
-        <label className="row" style={{ alignItems: "flex-start" }}><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span className="small"><strong>Lu et approuvé</strong> : je déclare avoir lu le document ci-dessus et je le signe électroniquement. Cette mention sera inscrite dans mon cadre de signature. J’accepte que la date de ma signature, mon nom, mon tracé, mon adresse IP et mon navigateur soient conservés comme preuve.</span></label>
+        <label className="row" style={{ alignItems: "flex-start" }}><input ref={consentRef} type="checkbox" checked={consent} onChange={(e) => { setConsent(e.target.checked); setMissing(null); }} style={missing === "consent" ? { outline: "2px solid var(--bad)" } : undefined} /> <span className="small"><strong>Lu et approuvé</strong> : je déclare avoir lu le document ci-dessus et je le signe électroniquement. Cette mention sera inscrite dans mon cadre de signature. J’accepte que la date de ma signature, mon nom, mon tracé, mon adresse IP et mon navigateur soient conservés comme preuve.</span></label>
+        {missing && <p className="small" role="alert" style={{ color: "var(--bad)" }}>{MISSING_TEXT[missing]}</p>}
         {error && <p className="small" style={{ color: "var(--bad)" }}>{error}</p>}
-        <button className="primary" type="submit" disabled={busy || !inked || !consent || name.trim().length < 3}>Signer le document</button>
+        <button className="primary" type="submit" disabled={busy}>Signer le document</button>
       </form>
     </section>}
   </>);
