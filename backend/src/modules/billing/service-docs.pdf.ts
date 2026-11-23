@@ -75,6 +75,13 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
     });
     y += o.after ?? 5;
   }
+  /** Mesure du tableau des montants : lignes de texte, hauteurs de ligne et hauteur totale. */
+  function measureAmount(b: Extract<Block, { t: "amount" }>) {
+    const labelW = CW - 160, detailW = CW - 190;
+    const rows = b.rows.map((r) => ({ ls: layout(r.label, labelW, 9.6), val: r.value, det: (r.details ?? []).map(([dl, dv]) => ({ ls: layout(dl, detailW, 8.4), dv })) }));
+    const rh = rows.map((r) => Math.max(r.ls.length * 13, 13) + 12 + r.det.reduce((t, x) => t + Math.max(x.ls.length * 11.5, 11.5) + 1.5, 0) + (r.det.length ? 4 : 0));
+    return { rows, rh, h: rh.reduce((t, x) => t + x, 0) + 33 };
+  }
   function box(h: number, stroke = LINE, fill?: string) {
     doc.save().roundedRect(ML, y, CW, h, 5);
     if (fill) doc.fillAndStroke(fill, stroke); else doc.lineWidth(0.8).stroke(stroke);
@@ -141,16 +148,19 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
         y += 8; break;
       }
       case "amount": {
-        const labelW = CW - 160;
-        const rows = b.rows.map(([label, val]) => ({ ls: layout(label, labelW, 9.6), val }));
-        const rh = rows.map((r) => Math.max(r.ls.length * 13, 13) + 12);
-        const h = rh.reduce((t, x) => t + x, 0) + 33;
+        const { rows, rh, h } = measureAmount(b);
         ensure(h + 40);
         box(h, INK);
         let yy = y;
         rows.forEach((r, i) => {
           r.ls.forEach((ln, j) => drawLine(ln, ML + 10, yy + 7 + j * 13, 9.6, INK));
           drawLine(layout(r.val, 200, 9.6)[0], W - MR - 10 - width(r.val.replace(/[⟦⟧]/g, ""), false, 9.6), yy + 7, 9.6, INK);
+          let dy = yy + 7 + Math.max(r.ls.length * 13, 13) + 1;
+          r.det.forEach((x) => {
+            x.ls.forEach((ln, j) => drawLine(ln, ML + 24, dy + j * 11.5, 8.4, "#55565c"));
+            drawLine(layout(x.dv, 160, 8.4)[0], W - MR - 10 - 6 - width(x.dv, false, 8.4), dy, 8.4, "#55565c");
+            dy += Math.max(x.ls.length * 11.5, 11.5) + 1.5;
+          });
           yy += rh[i];
           doc.moveTo(ML, yy).lineTo(W - MR, yy).lineWidth(0.4).stroke(LINE);
         });
@@ -185,7 +195,12 @@ export function renderServiceDocPdfWithBoxes(blocks: Block[], header: string, br
     }
   }
 
-  for (const b of blocks) render(b);
+  blocks.forEach((b, i) => {
+    const next = blocks[i + 1];
+    // Un titre de section suivi du tableau des montants ne doit jamais rester seul en bas de page.
+    if (b.t === "h2" && next?.t === "amount") ensure(measureAmount(next).h + 90);
+    render(b);
+  });
 
   const range = doc.bufferedPageRange();
   for (let i = 0; i < range.count; i++) {

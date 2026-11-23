@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.49.5 — 2026-11-23
+
+- **Demande de règlement et convention : l'hébergement tient sur une seule ligne.** Les postes d'hébergement d'une appli (service, base de données, stockage…) ne sont plus listés ligne par ligne : ils forment **une ligne « Hébergement <appli> » avec le total**, et le détail des postes et de leurs montants figure **dans cette ligne**, en plus petit. L'intelligence artificielle et les lignes libres restent chacune sur leur ligne. Dans la convention (article 4), l'hébergement est aussi une seule entrée avec son détail entre parenthèses. Le total est la somme des montants arrondis, comme avant.
+- Les lignes importées des coûts gardent leur origine (`source`), mémorisée dans le dossier ; à défaut (dossiers existants), elle est déduite de l'intitulé.
+- **Titre « Montant demandé » jamais seul en bas de page** : il suit désormais son tableau sur la page suivante.
+
 ## v0.49.4 — 2026-11-23
 
 - **Demande de règlement : mention de nature du document plus sobre.** L'encadré à fond crème et filet orange, qui faisait « document généré », est remplacé par une mention discrète entre deux filets fins, sous un petit titre « NATURE DU DOCUMENT », en PDF comme en Word. Le texte est reformulé plus simplement : « La présente demande de règlement n'est pas une facture fiscale et n'en tient pas lieu : elle ne comporte ni numéro de facture ni TVA. Elle ne vaut pas, à elle seule, reconnaissance de dette ni titre de créance exigible. » La phrase sur l'accord écrit des parties est retirée (aucun accord écrit n'existe à ce jour) ; le reste du fond juridique est inchangé.

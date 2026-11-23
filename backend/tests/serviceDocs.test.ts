@@ -95,10 +95,31 @@ describe("détail des composants", () => {
   const lines = [{ description: "App — hébergement : service api", quantity: 1, unitPrice: 7 }, { description: "App — base de données", quantity: 2, unitPrice: 10 }];
   it("affiche les lignes et signale un écart avec le montant convenu", () => {
     const all = text(buildServiceDocs(base({ amount: 30, lines })));
-    expect(all).toContain("hébergement : service api");
+    expect(all).toContain("service api");
     expect(all).toContain("(× 2)");
     expect(all).toContain("27,00 €");
     expect(all).toContain("diffère du total");
+  });
+  it("regroupe l'hébergement en une seule ligne avec son total et le détail des postes dans la ligne", () => {
+    const hosting = [
+      { description: "Procedia — hébergement : service procedia-backend (offre 0.5c-512mb)", quantity: 1, unitPrice: 6.37 },
+      { description: "Procedia — hébergement : base de données procedia-db (offre 0.1c-256mb)", quantity: 1, unitPrice: 5.46 },
+      { description: "Procedia — hébergement : Stockage de procedia-db (5 Go)", quantity: 1, unitPrice: 1.36 },
+      { description: "Procedia — Intelligence artificielle : « Procedia », dépenses du mois en cours", quantity: 1, unitPrice: 84.26 },
+      { description: "Support", quantity: 1, unitPrice: 10 },
+    ];
+    const rows = (buildServiceDocs(base({ amount: null, lines: hosting })).demande.blocks.find((b) => b.t === "amount") as { rows: { label: string; value: string; details?: [string, string][] }[]; total: string }).rows;
+    expect(rows).toHaveLength(3); // Hébergement, Intelligence artificielle, Support
+    expect(rows[0]).toMatchObject({ label: "Hébergement Procedia", value: "13,19 €" });
+    expect(rows[0].details).toEqual([["service procedia-backend (offre 0.5c-512mb)", "6,37 €"], ["base de données procedia-db (offre 0.1c-256mb)", "5,46 €"], ["Stockage de procedia-db (5 Go)", "1,36 €"]]);
+    expect(rows[1].details).toBeUndefined();
+    expect(rows[2].label).toBe("Support");
+    // la source explicite prime sur l'intitulé
+    const bySource = (buildServiceDocs(base({ amount: null, lines: [{ description: "Poste A", quantity: 1, unitPrice: 2, source: "hosting" }, { description: "Poste B", quantity: 1, unitPrice: 3, source: "hosting" }] })).demande.blocks.find((b) => b.t === "amount") as { rows: { label: string; value: string }[] }).rows;
+    expect(bySource).toHaveLength(1);
+    expect(bySource[0]).toMatchObject({ label: "Hébergement", value: "5,00 €" });
+    // la convention reprend le détail dans une seule entrée d'hébergement
+    expect(text(buildServiceDocs(base({ amount: null, lines: hosting })).convention.blocks)).toContain("Hébergement Procedia (service procedia-backend (offre 0.5c-512mb) : 6,37 €");
   });
   it("alimente le total quand aucun montant n'est saisi", () => {
     const all = text(buildServiceDocs(base({ amount: null, lines: [{ description: "A", quantity: 1, unitPrice: 7 }, { description: "B", quantity: 1, unitPrice: 6.5 }] })));

@@ -30,11 +30,14 @@ export type ServiceDocData = {
   appName: string; description: string; features: string[]; technologies: string; workNature: string; period: string; deliveryState: string; location: string;
   amount: number | null; currency: "EUR" | "XOF"; paymentTerms: string; paymentDue: string; paymentCoordinates: string;
   clientLegalForm: string; clientRepresentative: string; clientRole: string; place: string; reference: string; emissionDate: string | null;
-  lines: { description: string; quantity: number; unitPrice: number }[];
+  /** `source` : origine de la ligne (« hosting », « claude », « free ») ; à défaut, déduite de l'intitulé. */
+  lines: { description: string; quantity: number; unitPrice: number; source?: string | null }[];
   terms?: Partial<Terms>;
   provider: { name: string; address: string; email: string; phone: string; brand: string };
   client: { name: string; address: string; rccm: string; ncc: string; email: string; phone: string };
 };
+
+export type AmountRow = { label: string; value: string; details?: [string, string][] };
 
 export type Block =
   | { t: "title"; title: string; sub: string }
@@ -46,7 +49,8 @@ export type Block =
   | { t: "list"; items: string[] }
   | { t: "cols"; left: [string, string[]]; right: [string, string[]] }
   | { t: "kv"; rows: [string, string][] }
-  | { t: "amount"; rows: [string, string][]; total: string; note: string }
+  /** Ligne du tableau des montants ; `details` : postes détaillés dans la ligne (ex. hébergement). */
+  | { t: "amount"; rows: AmountRow[]; total: string; note: string }
   | { t: "art"; n: number; title: string; items: (string | Block)[] }
   /** Deux cadres de signature : prestataire (gauche) et client (droite). */
   | { t: "sig2"; intro: string; left: string; right: string; rightLabel?: string }
@@ -140,7 +144,29 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
   const lineSum = roundTo(lineAmounts.reduce((s, x) => s + x, 0));
   const total = d.amount ?? (lines.length ? lineSum : 0);
   const mont = formatAmount(total, d.currency);
-  const lineRows: [string, string][] = lines.map((l, i) => [l.quantity === 1 ? t(l.description) : `${t(l.description)} (× ${l.quantity})`, formatAmount(lineAmounts[i], d.currency)]);
+  // Regroupement du détail : tous les postes d'hébergement d'une appli forment UNE ligne (avec leur total), dont le détail
+  // est donné dans la ligne ; l'IA et les lignes libres restent chacune sur leur ligne.
+  const catOf = (l: { description: string; source?: string | null }): "hosting" | "other" =>
+    l.source === "hosting" || (!l.source && /hébergement\s*:/i.test(l.description)) ? "hosting" : "other";
+  const appOf = (desc: string) => /^(.+?) — /.exec(desc)?.[1]?.trim() ?? "";
+  const posteOf = (desc: string) => desc.replace(/^.+? — /, "").replace(/^hébergement\s*:\s*/i, "").trim();
+  const rowsModel: AmountRow[] = [];
+  const groups = new Map<string, { row: AmountRow; sum: number }>();
+  lines.forEach((l, i) => {
+    const amt = lineAmounts[i];
+    const labelQty = l.quantity === 1 ? "" : ` (× ${l.quantity})`;
+    if (catOf(l) === "hosting") {
+      const app = appOf(l.description);
+      let g = groups.get(app);
+      if (!g) { g = { row: { label: app ? `Hébergement ${app}` : "Hébergement", value: "", details: [] }, sum: 0 }; groups.set(app, g); rowsModel.push(g.row); }
+      g.sum = roundTo(g.sum + amt);
+      g.row.value = formatAmount(g.sum, d.currency);
+      g.row.details!.push([`${posteOf(l.description)}${labelQty}`, formatAmount(amt, d.currency)]);
+    } else {
+      rowsModel.push({ label: `${t(l.description)}${labelQty}`, value: formatAmount(amt, d.currency) });
+    }
+  });
+  const lineRows: [string, string][] = rowsModel.map((r) => [r.details?.length ? `${r.label} (${r.details.map(([a, b]) => `${a} : ${b}`).join(" ; ")})` : r.label, r.value]);
   const gap = lines.length > 0 && d.amount != null && Math.abs(lineSum - d.amount) > 0.005;
 
   const identPre = [`**${nomP}**, personne physique, agissant à titre personnel`, has(p.address) && `Adresse : ${t(p.address)}`, [p.email, p.phone].filter(has).length > 0 && `Contact : ${[p.email, p.phone].filter(has).join(" · ")}`, "Prestataire sans structure juridique à ce jour."].filter(Boolean) as string[];
@@ -180,7 +206,7 @@ export function buildServiceDocs(d: ServiceDocData, today = new Date().toISOStri
     has(d.workNature) && { t: "p", text: t(d.workNature) },
     workLine && { t: "p", text: workLine },
     { t: "h2", text: `${hasWork ? 4 : 3}. Montant demandé` },
-    { t: "amount", rows: lines.length ? lineRows : [[`Prestation de développement informatique « ${app} »`, mont]], total: mont,
+    { t: "amount", rows: lines.length ? rowsModel : [{ label: `Prestation de développement informatique « ${app} »`, value: mont }], total: mont,
       note: `${lines.length ? "Détail des composants et coûts relevés pour l’application. " : ""}Montant net, sans TVA.${gap ? ` Le montant convenu diffère du total du détail ci-dessus (${formatAmount(lineSum, d.currency)}).` : ""}` },
     payRows.length > 0 && { t: "h2", text: `${hasWork ? 5 : 4}. Modalités et coordonnées de paiement` },
     payRows.length > 0 && { t: "kv", rows: payRows },

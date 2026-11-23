@@ -12,7 +12,7 @@ type Doc = {
 };
 type Terms = { law: string; jurisdiction: string; rights: string; exclusivity: string; territory: string; duration: string; cessionFee: string; penaltyRate: string; bankFees: string; sourceCode: string };
 const blankTerms = (): Terms => ({ law: "", jurisdiction: "", rights: "licence", exclusivity: "non exclusive", territory: "", duration: "", cessionFee: "", penaltyRate: "", bankFees: "", sourceCode: "" });
-type DocLine = { description: string; quantity: number; unitPrice: number };
+type DocLine = { description: string; quantity: number; unitPrice: number; source?: string | null };
 type ForecastResponse = { lines: Array<DocLine & { source?: string }>; skippedFree: number; warnings: string[]; apps: string[]; missingApps: string[]; pricesAsOf: string; rate?: number; rateInfo?: string };
 const blank = () => ({ clientId: "", reference: "", appName: "", description: "", features: "", technologies: "", workNature: "", period: "", deliveryState: "", location: "", amount: "", currency: "EUR", paymentTerms: "", paymentDue: "", paymentCoordinates: "", clientLegalForm: "", clientRepresentative: "", clientRole: "", place: "", emissionDate: "" });
 const money = (v: string | null, c: string) => (v == null ? "montant à compléter" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: c === "XOF" ? "XOF" : "EUR", maximumFractionDigits: c === "XOF" ? 0 : 2 }).format(Number(v)));
@@ -46,7 +46,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
     } catch (err) { onError((err as Error).message); }
   }
   function edit(d: Doc) {
-    setEditing(d.id); setTerms({ ...blankTerms(), ...(d.terms ?? {}) }); setLines((d.lines ?? []).map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice) }))); setImportMsg(null);
+    setEditing(d.id); setTerms({ ...blankTerms(), ...(d.terms ?? {}) }); setLines((d.lines ?? []).map((l) => ({ description: l.description, quantity: Number(l.quantity), unitPrice: Number(l.unitPrice), source: l.source ?? null }))); setImportMsg(null);
     setForm({ clientId: d.clientId, reference: d.reference, appName: d.appName, description: d.description, features: d.features.join("\n"), technologies: d.technologies, workNature: d.workNature, period: d.period, deliveryState: d.deliveryState, location: d.location, amount: d.amount == null ? "" : String(Number(d.amount)), currency: d.currency, paymentTerms: d.paymentTerms, paymentDue: d.paymentDue, paymentCoordinates: d.paymentCoordinates, clientLegalForm: d.clientLegalForm, clientRepresentative: d.clientRepresentative, clientRole: d.clientRole, place: d.place, emissionDate: d.emissionDate ?? "" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -56,7 +56,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
     try {
       const r = await api<ForecastResponse>("/billing/forecast-lines", { method: "POST", body: { clientId, currency, date: form.emissionDate || undefined, includeClaude: true } });
       const kept = lines.filter((l) => !r.lines.some((n) => n.description === l.description));
-      setLines([...r.lines.map((l) => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice })), ...kept]);
+      setLines([...r.lines.map((l) => ({ description: l.description, quantity: l.quantity, unitPrice: l.unitPrice, source: l.source ?? null })), ...kept]);
       setImportMsg(r.lines.length === 0
         ? { ok: false, text: `Aucune ligne à importer pour ${r.apps.join(", ") || "ce client"} : ${r.skippedFree ? `${r.skippedFree} poste(s) gratuit(s) non repris. ` : "aucun coût trouvé. "}Rattache les applis au client (onglet Clients › Modifier).` }
         : { ok: true, text: `${r.lines.length} ligne(s) importée(s) pour ${r.apps.join(", ")} (tarifs Render du ${new Date(r.pricesAsOf).toLocaleDateString("fr-FR")}${r.rateInfo ? `, taux : ${r.rateInfo}` : ""}). Modifiables ligne par ligne.${r.warnings.length ? " " + r.warnings.join(" ") : ""}` });
