@@ -1,3 +1,4 @@
+import { CheckMark, Circle } from "../components/Icon";
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 type Opened = { title: string; role: string; name: string; signerStatus: string; requestStatus: string; sha256: string; signers: { role: string; name: string; status: string }[]; pdfBase64: string };
@@ -65,7 +66,7 @@ export function SignPage({ token }: { token: string }) {
   if (done) {
     const waiting = doc.signers.filter((s) => s.status !== "signed");
     return wrap(<section className="card" style={{ textAlign: "center", padding: "28px 18px" }}>
-      <div style={{ fontSize: 54, color: "var(--ok)", lineHeight: 1 }}>✓</div>
+      <div style={{ color: "var(--ok)", lineHeight: 1 }}><CheckMark size={56} style={{ margin: 0 }} /></div>
       <h2 style={{ margin: "10px 0 4px" }}>Votre signature est enregistrée</h2>
       <p className="muted">{doc.title}</p>
       <p className="small">Signé le {done.at.toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" })} par {name || doc.name}</p>
@@ -81,7 +82,7 @@ export function SignPage({ token }: { token: string }) {
     <p className="muted small">Vous signez en tant que <strong>{ROLE[doc.role] ?? doc.role}</strong> : {doc.name}</p>
     <section className="card">
       <h3>Document</h3>
-      {doc.signers.some((s) => s.status === "signed") && !completed && <p className="small" style={{ color: "var(--ok)" }}>✓ Ce document comporte déjà la signature de {doc.signers.filter((s) => s.status === "signed").map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}, avec son certificat (dernière page).</p>}
+      {doc.signers.some((s) => s.status === "signed") && !completed && <p className="small" style={{ color: "var(--ok)" }}><CheckMark />Ce document comporte déjà la signature de {doc.signers.filter((s) => s.status === "signed").map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}, avec son certificat (dernière page).</p>}
       <iframe title="Document à signer" src={url} style={{ width: "100%", height: "68vh", border: "1px solid var(--border)", borderRadius: 8, background: "#fff" }} />
       <div className="row wrap" style={{ marginTop: 8 }}><a className="button" href={url} target="_blank" rel="noreferrer">Ouvrir le PDF en grand</a>{completed && <a className="button" href={url} download="document_signe.pdf">Télécharger le PDF signé</a>}</div>
       <p className="muted small">Si le document n’apparaît pas ci-dessus (c’est fréquent sur téléphone), utilisez « Ouvrir le PDF en grand » et lisez-le en entier avant de signer.</p>
@@ -89,7 +90,7 @@ export function SignPage({ token }: { token: string }) {
     </section>
     <section className="card">
       <h3>Signataires</h3>
-      {doc.signers.map((s) => <p key={s.role} className="small">{s.status === "signed" ? "✓" : "○"} {ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? "a signé" : "en attente"}</p>)}
+      {doc.signers.map((s) => <p key={s.role} className="small">{s.status === "signed" ? <CheckMark /> : <Circle />}{ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? "a signé" : "en attente"}</p>)}
     </section>
     {completed && <p style={{ color: "var(--ok)" }}><strong>Le document est signé par toutes les parties.</strong> Le PDF ci-dessus comprend la page de certificat.</p>}
     {doc.requestStatus === "cancelled" && <p style={{ color: "var(--warn)" }}>Cette demande a été annulée.</p>}

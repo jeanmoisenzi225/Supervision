@@ -1,3 +1,4 @@
+import { Dot, Warning } from "../components/Icon";
 import { useState } from "react";
 import { LineChart } from "../components/LineChart";
 import { api, type AppOverview } from "../lib/api";
@@ -63,8 +64,8 @@ function Gauge({ label, value, alertAt, detail }: { label: string; value: number
         <div className={`gauge-fill gauge-${level}`} style={{ width: `${Math.min(100, value ?? 0)}%` }} />
       </div>
       <span className="muted small">
-        {level === "warning" && "⚠️ "}
-        {level === "critical" && "🔴 "}
+        {level === "warning" && <Warning />}
+        {level === "critical" && <Dot level="critical" />}
         {detail}
       </span>
     </div>
@@ -217,7 +218,7 @@ export function ResourcesPanel({ app }: { app: AppOverview }) {
                   <span className="muted small">Base gratuite</span>
                   <span className="metric-value">{db.daysLeft <= 0 ? "Expirée" : `${db.daysLeft} j`}</span>
                   <span className="muted small">
-                    {db.daysLeft <= 7 ? "⚠️ " : ""}expire le {new Date(db.expiresAt!).toLocaleDateString("fr-FR")}
+                    {db.daysLeft <= 7 ? <Warning /> : null}expire le {new Date(db.expiresAt!).toLocaleDateString("fr-FR")}
                   </span>
                 </div>
               )}

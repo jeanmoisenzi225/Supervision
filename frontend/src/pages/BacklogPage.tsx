@@ -1,3 +1,4 @@
+import { Warning } from "../components/Icon";
 import { useState } from "react";
 import { api } from "../lib/api";
 import { dateTime, timeAgo } from "../lib/format";
@@ -253,7 +254,7 @@ export function BacklogPage() {
       </p>
       {!data.githubConfigured && (
         <p className="card small">
-          ⚠️ Jeton GitHub manquant : les dépôts privés ne peuvent pas être lus. Ajouter <code>GITHUB_TOKEN</code> sur le service supervision (voir Réglages ou{" "}
+          <Warning />Jeton GitHub manquant : les dépôts privés ne peuvent pas être lus. Ajouter <code>GITHUB_TOKEN</code> sur le service supervision (voir Réglages ou{" "}
           <code>docs/deploiement.md</code>).
         </p>
       )}

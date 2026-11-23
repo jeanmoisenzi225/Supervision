@@ -1,3 +1,4 @@
+import { Warning } from "../components/Icon";
 import { useNavigate } from "react-router-dom";
 import { Treemap } from "../components/Treemap";
 import { api } from "../lib/api";
@@ -68,7 +69,7 @@ export function CostsPage() {
           </div>
           {data.claude.error && <p className="error small">{data.claude.error}</p>}
           {data.totals.unknown > 0 && (
-            <p className="small">⚠️ {data.totals.unknown} ligne(s) d'une offre Render inconnue de la table des tarifs : non comptée(s). À ajouter dans <code>hosting/prices.ts</code>.</p>
+            <p className="small"><Warning />{data.totals.unknown} ligne(s) d'une offre Render inconnue de la table des tarifs : non comptée(s). À ajouter dans <code>hosting/prices.ts</code>.</p>
           )}
           <Treemap
             items={data.apps.map((a) => ({ key: a.key, name: a.name, value: a.totalUsd, tone: a.render.unknown ? "warn" : "ok", label: usd(a.totalUsd), sub: `Render ${usd(a.render.usd)}${a.claude.usd ? ` · Claude ${usd(a.claude.usd)}` : ""}` }))}

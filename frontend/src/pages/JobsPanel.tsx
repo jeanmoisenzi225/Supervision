@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { CheckMark, Dot, Hourglass, Warning } from "../components/Icon";
+import { useState, type ReactNode } from "react";
 import { api, type AppOverview } from "../lib/api";
 import { cronLabel } from "../lib/cronLabel";
 import { dateTime, timeAgo } from "../lib/format";
@@ -18,11 +19,11 @@ interface Job {
   runs: { at: string; status: string; message: string | null; durationMs: number | null }[];
 }
 
-const STATE: Record<Job["state"], { label: string; cls: string; icon: string }> = {
-  ok: { label: "À l'heure", cls: "ok", icon: "✓" },
-  late: { label: "Non exécutée", cls: "ko", icon: "🔴" },
-  failed: { label: "En échec", cls: "warn", icon: "⚠️" },
-  waiting: { label: "En attente", cls: "info", icon: "…" },
+const STATE: Record<Job["state"], { label: string; cls: string; icon: ReactNode }> = {
+  ok: { label: "À l'heure", cls: "ok", icon: <CheckMark /> },
+  late: { label: "Non exécutée", cls: "ko", icon: <Dot level="critical" /> },
+  failed: { label: "En échec", cls: "warn", icon: <Warning /> },
+  waiting: { label: "En attente", cls: "info", icon: <Hourglass /> },
 };
 
 const duration = (ms: number | null) => (ms === null ? "" : ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${ms} ms`);
@@ -51,9 +52,9 @@ export function JobsPanel({ app }: { app: AppOverview }) {
   return (
     <div className="stack">
       <p className="small">
-        {late ? `🔴 ${late} tâche(s) non exécutée(s). ` : ""}
-        {failed ? `⚠️ ${failed} tâche(s) en échec. ` : ""}
-        {!late && !failed ? "✓ Toutes les tâches sont à l'heure. " : ""}
+        {late ? <><Dot level="critical" />{late} tâche(s) non exécutée(s). </> : null}
+        {failed ? <><Warning />{failed} tâche(s) en échec. </> : null}
+        {!late && !failed ? <><CheckMark />Toutes les tâches sont à l'heure. </> : null}
         <span className="muted">Horaires en UTC (= heure d'Abidjan).</span>
       </p>
       {data.map((j) => {
@@ -64,7 +65,7 @@ export function JobsPanel({ app }: { app: AppOverview }) {
               <span className={`dot ${st.cls}`} />
               <strong className="grow">{j.label}</strong>
               <span className="pill">
-                {st.icon} {st.label}
+                {st.icon}{st.label}
               </span>
             </div>
             <p className="small muted">

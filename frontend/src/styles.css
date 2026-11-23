@@ -648,3 +648,4 @@ button.primary { color: var(--bg); }
 .event-text { fill: #fff; font-size: 9.5px; font-weight: 700; }
 /* Icônes au trait (sablier, coche) : alignées sur le texte */
 .ico { display: inline-block; vertical-align: -2.5px; margin-right: 5px; flex: none; }
+.ico-dot { display: inline-block; border-radius: 50%; vertical-align: 0; margin-right: 7px; flex: none; box-sizing: border-box; }

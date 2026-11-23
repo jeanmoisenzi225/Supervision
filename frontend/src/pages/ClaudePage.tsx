@@ -1,3 +1,4 @@
+import { Dot, Warning } from "../components/Icon";
 import { LineChart } from "../components/LineChart";
 import { api } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
@@ -66,7 +67,7 @@ export function ClaudePage() {
                     <div className={`gauge-fill gauge-${level}`} style={{ width: `${Math.min(100, budgetPct)}%` }} />
                   </div>
                   <span className="muted small">
-                    {level === "warning" ? "⚠️ " : level === "critical" ? "🔴 " : ""}
+                    {level === "warning" ? <Warning /> : level === "critical" ? <Dot level="critical" /> : null}
                     {budgetPct} % du budget ({usd(data.budgetUsd!)})
                   </span>
                 </>

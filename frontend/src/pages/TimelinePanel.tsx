@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { Dot } from "../components/Icon";
+import { useState, type ReactNode } from "react";
 import { localizeTimes } from "../lib/format";
 import { api, type AppOverview } from "../lib/api";
 import { usePolling } from "../lib/usePolling";
@@ -24,7 +25,7 @@ const WINDOWS = [
   { hours: 720, label: "30 jours" },
 ];
 
-const ICON: Record<Item["level"], string> = { critical: "🔴", warning: "🟠", ok: "🟢", info: "⚪" };
+const ICON: Record<Item["level"], ReactNode> = { critical: <Dot level="critical" />, warning: <Dot level="warning" />, ok: <Dot level="ok" />, info: <Dot level="info" /> };
 const KIND: Record<string, string> = {
   alert: "Alerte",
   "render-failed": "Arrêt Render",

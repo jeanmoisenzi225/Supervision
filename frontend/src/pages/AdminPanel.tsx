@@ -1,3 +1,4 @@
+import { Warning } from "../components/Icon";
 import { useState } from "react";
 import { api, type AppOverview } from "../lib/api";
 import { dateTime } from "../lib/format";
@@ -87,7 +88,7 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
   }
 
   async function run(id: string, label: string, path: string, body: unknown, danger: boolean) {
-    if (!window.confirm(`${danger ? "⚠️ Action sensible. " : ""}Confirmer : ${label} sur ${app.name} ?`)) return;
+    if (!window.confirm(`${danger ? "Action sensible. " : ""}Confirmer : ${label} sur ${app.name} ?`)) return;
     setBusy(id);
     setFeedback(null);
     try {
@@ -204,7 +205,7 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
           ) : (
             <div className="stack-small">
               <p className="small">
-                ⚠️ <strong>{app.name}</strong> sera inaccessible pour tous ses utilisateurs : {data.render.services.map((s) => s.name).join(", ")}.
+                <Warning /><strong>{app.name}</strong> sera inaccessible pour tous ses utilisateurs : {data.render.services.map((s) => s.name).join(", ")}.
               </p>
               <label>
                 Pour confirmer, tape : {app.name}

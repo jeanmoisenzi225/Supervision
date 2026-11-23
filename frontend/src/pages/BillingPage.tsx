@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, apiBlob } from "../lib/api";
 import { onRefreshRequested } from "../lib/refresh";
-import { Hourglass } from "../components/Icon";
+import { Hourglass, Warning } from "../components/Icon";
 import { ServiceDocsTab } from "../components/ServiceDocsTab";
 import { SignaturesTab, type FreshLinks } from "../components/SignaturesTab";
 import { InvoicePreview, type InvoicePreviewData } from "../components/InvoicePreview";
@@ -263,19 +263,19 @@ export function BillingPage() {
         {currency !== "USD" && <>
           <label>Taux de conversion : 1 dollar (USD) = … {currency === "XOF" ? "FCFA" : "euro(s)"}<input type="number" min="0" step="0.0001" value={usdRate} onChange={(e) => { setUsdRate(e.target.value); setRateAuto(false); }}/></label>
           {fx && <p className="small muted">{fx.mode === "market" ? "Taux de marché repris automatiquement" : "Taux de facturation retenu"} : 1 $ = {fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} {currency === "XOF" ? "FCFA" : "€"} ({fx.source}{fx.date ? `, ${new Date(fx.date).toLocaleDateString("fr-FR")}` : ""}).{rateAuto ? " Modifiable." : <> <button type="button" onClick={() => { setRateAuto(true); setUsdRate(String(fx.rate)); }}>Reprendre le taux retenu</button></>}</p>}
-          {fxError && <p className="small">⚠️ {fxError}</p>}
-          {fx && Number(usdRate) > 0 && (Number(usdRate) > fx.rate * 1.5 || Number(usdRate) < fx.rate / 1.5) && <p className="error small">⚠️ Ce taux s'éloigne fortement du taux retenu ({fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })}) : vérifiez l'unité (1 dollar = combien de {currency === "XOF" ? "FCFA" : "euros"}).</p>}
+          {fxError && <p className="small"><Warning />{fxError}</p>}
+          {fx && Number(usdRate) > 0 && (Number(usdRate) > fx.rate * 1.5 || Number(usdRate) < fx.rate / 1.5) && <p className="error small"><Warning />Ce taux s'éloigne fortement du taux retenu ({fx.rate.toLocaleString("fr-FR", { maximumFractionDigits: 4 })}) : vérifiez l'unité (1 dollar = combien de {currency === "XOF" ? "FCFA" : "euros"}).</p>}
         </>}
         <label className="row"><input type="checkbox" checked={includeClaude} onChange={(e) => setIncludeClaude(e.target.checked)}/> Inclure les dépenses Claude du mois en cours</label>
         {(() => {
           const c = clients.find((x) => x.id === clientId);
-          if (!c) return <p className="small">⚠️ Choisissez d'abord un client.</p>;
+          if (!c) return <p className="small"><Warning />Choisissez d'abord un client.</p>;
           const names = (c.appKeys ?? []).map((k) => (k === "njmdev" ? "NJMDev" : catalog.find((x) => x.key === k)?.name ?? k));
-          return names.length ? <p className="small muted">Applis rattachées à {c.name} : {names.join(", ")}.</p> : <p className="small">⚠️ Aucune appli n'est rattachée à {c.name} : onglet Clients › Modifier › « Applis dont l'hébergement est facturé à ce client ».</p>;
+          return names.length ? <p className="small muted">Applis rattachées à {c.name} : {names.join(", ")}.</p> : <p className="small"><Warning />Aucune appli n'est rattachée à {c.name} : onglet Clients › Modifier › « Applis dont l'hébergement est facturé à ce client ».</p>;
         })()}
         <div className="row wrap"><button type="button" onClick={() => void importHosting()} disabled={!clientId || (currency !== "USD" && !Number(usdRate) && !fx)}>Importer l'hébergement du client</button></div>
         {importMsg && <p className={importMsg.ok ? "success small" : "error small"} role="status">{importMsg.text}</p>}
-        {importWarnings.map((w) => <p key={w} className="small">⚠️ {w}</p>)}
+        {importWarnings.map((w) => <p key={w} className="small"><Warning />{w}</p>)}
       </section>
       <section className="card"><div className="page-head"><h3>Prestations</h3><button type="button" onClick={() => setLines([...lines, blankLine()])}>+ Ajouter une ligne</button></div>
         <div className="row wrap"><span className="muted small">Ligne libre :</span>{FREE_LINES.map((d) => <button type="button" key={d} onClick={() => addFreeLine(d)}>{d}</button>)}</div>

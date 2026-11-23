@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.51.2 — 2026-11-23
+
+- **Plus aucun émoji dans l'interface.** Les triangles d'avertissement ⚠️ deviennent une icône au trait (même épaisseur que la loupe et l'engrenage) ; les pastilles 🔴 🟠 🟢 ⚪ deviennent de petits points colorés (critique, avertissement, ok, information) ; les coches et cercles ✓ ○ des signataires deviennent des icônes. Concerne : chronologie des incidents, tâches planifiées, page Claude, ressources, coûts, backlog, administration d'appli, facturation, onglet Signatures et page de signature. Les fenêtres de confirmation du navigateur, qui ne peuvent pas contenir d'icône, utilisent « Attention : » ou « Action sensible. ».
+- Composant `Icon.tsx` étendu (`Warning`, `Circle`, `Dot`, `CheckMark`, `Hourglass`).
+- Inchangés : les titres des notifications envoyées au téléphone, et les signes typographiques ✓ et ✕ dans les boutons de fermeture et les phrases.
+
 ## v0.51.1 — 2026-11-23
 
 - **Sablier et coche : vraies icônes au trait à la place des émojis.** L'émoji ⏳ (qui change d'aspect selon l'appareil et détonne avec l'interface) est remplacé par un sablier dessiné au même trait que la loupe et l'engrenage ; la coche verte ✅ « Signé par tous » devient aussi une coche au trait. Concerne l'onglet Signatures (titre et lignes), le compteur d'attente et l'indicateur d'import en cours. Composant `Icon.tsx` réutilisable.

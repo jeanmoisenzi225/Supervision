@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, apiBlob } from "../lib/api";
 import { onRefreshRequested } from "../lib/refresh";
-import { CheckMark, Hourglass } from "./Icon";
+import { CheckMark, Circle, Hourglass } from "./Icon";
 
 type Signer = { id: string; role: string; name: string; status: string; signedAt: string | null; viewedAt: string | null; locked: boolean; linkIssued: boolean };
 export type SignReq = { id: string; kind: string; title: string; status: string; createdAt: string; expiresAt: string; completedAt: string | null; appName: string; clientName: string; signers: Signer[] };
@@ -85,7 +85,7 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
               {r.signers.map((s) => {
                 const lk = l.find((x) => x.signerId === s.id);
                 return <div key={s.id} className="stack-small">
-                  <span className="small">{s.status === "signed" ? "✓" : "○"} {ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? `signé le ${when(s.signedAt!)}` : s.status === "waiting" ? "son lien sera disponible après votre signature" : !s.linkIssued ? "lien à générer" : s.locked ? "code bloqué" : s.viewedAt ? "document ouvert, pas encore signé" : "pas encore ouvert"}</span>
+                  <span className="small">{s.status === "signed" ? <CheckMark /> : <Circle />}{ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? `signé le ${when(s.signedAt!)}` : s.status === "waiting" ? "son lien sera disponible après votre signature" : !s.linkIssued ? "lien à générer" : s.locked ? "code bloqué" : s.viewedAt ? "document ouvert, pas encore signé" : "pas encore ouvert"}</span>
                   {lk && s.status !== "signed" && !(fresh && fresh.requestId === r.id) && <span className="small">Lien : <span className="mono" style={{ overflowWrap: "anywhere" }}>{linkOf(lk.token)}</span> · Code : <strong className="mono">{lk.code}</strong></span>}
                   {r.status === "pending" && s.status !== "signed" && <div className="row wrap">
                     {lk && !(fresh && fresh.requestId === r.id) && <><button type="button" onClick={() => void copy(linkOf(lk.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(lk.code, "Code")}>Copier le code</button></>}

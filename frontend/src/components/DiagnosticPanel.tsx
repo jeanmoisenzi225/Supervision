@@ -40,7 +40,7 @@ export function DiagnosticPanel({ app, onDone }: { app: AppOverview; onDone: () 
   }
 
   async function restartAll() {
-    if (!window.confirm(`⚠️ Redémarrer tous les services web de ${app.name} ? Ils seront indisponibles quelques instants.`)) return;
+    if (!window.confirm(`Attention : redémarrer tous les services web de ${app.name} ? Ils seront indisponibles quelques instants.`)) return;
     setBusy("restart");
     setMessage(null);
     try {
