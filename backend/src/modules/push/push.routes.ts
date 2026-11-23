@@ -35,6 +35,6 @@ pushRouter.post("/unsubscribe", async (req, res) => {
 });
 
 pushRouter.post("/test", async (_req, res) => {
-  await sendPushToAll({ title: "NJMDev", body: "Les notifications fonctionnent ✅", url: "/" });
+  await sendPushToAll({ kind: "ok", title: "NJMDev", body: "Les notifications fonctionnent.", url: "/" });
   res.json({ ok: true });
 });

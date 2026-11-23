@@ -60,12 +60,12 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
   return <div className="stack">
     {fresh && <section className="card" style={{ borderColor: "var(--ok)" }}>
       <h3>À transmettre maintenant</h3>
-      <p className="small">Envoyez à chaque signataire son <strong>lien</strong> et son <strong>code</strong> dans deux messages séparés. Ils ne seront plus affichés ensuite (vous pourrez en recréer).</p>
+      <p className="small">Envoyez à chaque signataire son <strong>lien</strong> et son <strong>code</strong> dans deux messages séparés. Pour signer vous-même, « Ouvrir le lien » s'ouvre dans un nouvel onglet : saisissez le code affiché. Ils ne seront plus affichés ensuite (vous pourrez en recréer).</p>
       {fresh.links.map((l) => <div key={l.signerId} className="service">
         <strong>{ROLE[l.role] ?? l.role} : {l.name}</strong>
         <span className="small mono" style={{ overflowWrap: "anywhere" }}>{linkOf(l.token)}</span>
         <span className="small">Code : <strong className="mono">{l.code}</strong></span>
-        <div className="row wrap"><button type="button" onClick={() => void copy(linkOf(l.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(l.code, "Code")}>Copier le code</button></div>
+        <div className="row wrap"><a className="button primary" href={linkOf(l.token)} target="_blank" rel="noreferrer">Ouvrir le lien</a><button type="button" onClick={() => void copy(linkOf(l.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(l.code, "Code")}>Copier le code</button></div>
       </div>)}
       <button type="button" className="primary" onClick={onDismissFresh}>J’ai tout transmis</button>
     </section>}
@@ -88,7 +88,7 @@ export function SignaturesTab({ fresh, onDismissFresh, onError, onNotice, onCoun
                   <span className="small">{s.status === "signed" ? <CheckMark /> : <Circle />}{ROLE[s.role] ?? s.role} : {s.name} — {s.status === "signed" ? `signé le ${when(s.signedAt!)}` : s.status === "waiting" ? "son lien sera disponible après votre signature" : !s.linkIssued ? "lien à générer" : s.locked ? "code bloqué" : s.viewedAt ? "document ouvert, pas encore signé" : "pas encore ouvert"}</span>
                   {lk && s.status !== "signed" && !(fresh && fresh.requestId === r.id) && <span className="small">Lien : <span className="mono" style={{ overflowWrap: "anywhere" }}>{linkOf(lk.token)}</span> · Code : <strong className="mono">{lk.code}</strong></span>}
                   {r.status === "pending" && s.status !== "signed" && <div className="row wrap">
-                    {lk && !(fresh && fresh.requestId === r.id) && <><button type="button" onClick={() => void copy(linkOf(lk.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(lk.code, "Code")}>Copier le code</button></>}
+                    {lk && !(fresh && fresh.requestId === r.id) && <><a className="button primary" href={linkOf(lk.token)} target="_blank" rel="noreferrer">Ouvrir le lien</a><button type="button" onClick={() => void copy(linkOf(lk.token), "Lien")}>Copier le lien</button><button type="button" onClick={() => void copy(lk.code, "Code")}>Copier le code</button></>}
                     {s.status !== "waiting" && <button type="button" className={!s.linkIssued ? "primary" : undefined} onClick={() => void reset(r, s)}>{!s.linkIssued ? `Générer le lien et le code de ${ROLE[s.role] ?? s.role}` : "Nouveau lien et code"}</button>}
                   </div>}
                 </div>;

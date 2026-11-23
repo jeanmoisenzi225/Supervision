@@ -51,7 +51,11 @@ export function getVapidPublicKey(): string | null {
   return vapidPublicKey;
 }
 
+/** Nature de la notification : choisit l'icône affichée à côté du texte (plus d'émoji dans le titre). */
+export type PushKind = "critical" | "warning" | "ok" | "signature";
+
 export interface PushMessage {
+  kind?: PushKind;
   title: string;
   body: string;
   url: string;
