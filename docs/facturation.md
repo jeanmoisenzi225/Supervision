@@ -96,3 +96,7 @@ Signature **simple**, sans service d'e-mail : l'émetteur transmet lui-même le 
 ### Page de signature : bouton toujours actif (v0.52.2)
 
 Le bouton « Signer le document » n'est jamais grisé. Au clic, si le nom complet (3 caractères minimum), le tracé ou la case « Lu et approuvé » manque, la page affiche un message rouge précis, défile jusqu'au premier élément manquant (dans cet ordre : nom, tracé, case) et l'entoure en rouge. Le serveur continue de refuser une signature incomplète.
+
+### Prestations : coordonnées de paiement préremplies (v0.52.3)
+
+Le champ « Coordonnées de paiement » du formulaire d'un document de prestation est prérempli avec les « Informations de paiement » du profil (Paramètres) pour tout nouveau document. Il reste modifiable par document. Un document déjà enregistré conserve ses propres coordonnées. Côté serveur, un champ vide à la génération reprend toujours le profil.

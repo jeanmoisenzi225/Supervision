@@ -18,10 +18,12 @@ const blank = () => ({ clientId: "", reference: "", appName: "", description: ""
 const money = (v: string | null, c: string) => (v == null ? "montant à compléter" : new Intl.NumberFormat("fr-FR", { style: "currency", currency: c === "XOF" ? "XOF" : "EUR", maximumFractionDigits: c === "XOF" ? 0 : 2 }).format(Number(v)));
 
 /** Dossiers de prestation : une saisie → demande de règlement + convention de constatation des travaux (PDF et Word). */
-export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSignCreated }: { clients: ClientRef[]; profileReady: boolean; onNotice: (m: string) => void; onError: (m: string) => void; onSignCreated: (fresh: { requestId: string; links: { signerId: string; role: string; name: string; token: string; code: string }[] }) => void }) {
+export function ServiceDocsTab({ clients, profileReady, paymentDetails, onNotice, onError, onSignCreated }: { clients: ClientRef[]; profileReady: boolean; paymentDetails: string; onNotice: (m: string) => void; onError: (m: string) => void; onSignCreated: (fresh: { requestId: string; links: { signerId: string; role: string; name: string; token: string; code: string }[] }) => void }) {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [form, setForm] = useState(blank());
   const [editing, setEditing] = useState<string | null>(null);
+  // Coordonnées de paiement : reprises automatiquement du profil (Paramètres) dans tout nouveau document ; modifiables, et effaçables.
+  useEffect(() => { if (!editing && paymentDetails) setForm((f) => (f.paymentCoordinates ? f : { ...f, paymentCoordinates: paymentDetails })); }, [paymentDetails, editing]);
   const [lines, setLines] = useState<DocLine[]>([]);
   const [terms, setTerms] = useState<Terms>(blankTerms());
   const setTerm = (k: keyof Terms, v: string) => setTerms((t) => ({ ...t, [k]: v }));
@@ -41,7 +43,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
     try {
       const body = { ...form, features: form.features.split("\n").map((x) => x.trim()).filter(Boolean), amount: form.amount === "" ? null : Number(form.amount), emissionDate: form.emissionDate || null, lines: lines.filter((l) => l.description.trim()), terms };
       await api(editing ? `/billing/service-docs/${editing}` : "/billing/service-docs", { method: editing ? "PUT" : "POST", body });
-      setForm({ ...blank(), clientId: form.clientId }); setLines([]); setTerms(blankTerms()); setImportMsg(null); setEditing(null); await load();
+      setForm({ ...blank(), clientId: form.clientId, paymentCoordinates: paymentDetails }); setLines([]); setTerms(blankTerms()); setImportMsg(null); setEditing(null); await load();
       onNotice("Dossier enregistré. Télécharge la demande de règlement et la convention depuis la liste.");
     } catch (err) { onError((err as Error).message); }
   }
@@ -115,7 +117,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
         </fieldset>
         <div className="row wrap"><label>Montant convenu (vide = total du détail{lines.length ? ` : ${fmt(total)}` : ""})<input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => set("amount", e.target.value)} placeholder={lines.length ? String(total) : ""}/></label><label>Devise<select value={form.currency} onChange={(e) => { set("currency", e.target.value); if (editing && lines.length) void importCosts(e.target.value); }}><option value="EUR">Euro (EUR)</option><option value="XOF">Franc CFA (FCFA)</option></select></label></div>
         <div className="row wrap"><label>Mode de paiement<input value={form.paymentTerms} onChange={(e) => set("paymentTerms", e.target.value)} placeholder="virement…"/></label><label>Échéance<input value={form.paymentDue} onChange={(e) => set("paymentDue", e.target.value)}/></label></div>
-        <label>Coordonnées de paiement (vide = informations de paiement du profil)<textarea rows={2} value={form.paymentCoordinates} onChange={(e) => set("paymentCoordinates", e.target.value)}/></label>
+        <label>Coordonnées de paiement (reprises des Paramètres, modifiables)<textarea rows={2} value={form.paymentCoordinates} onChange={(e) => set("paymentCoordinates", e.target.value)}/></label>
         <div className="row wrap"><label>Référence<input value={form.reference} onChange={(e) => set("reference", e.target.value)} placeholder="DR-2026-001"/></label><label>Lieu<input value={form.place} onChange={(e) => set("place", e.target.value)}/></label><label>Date d’émission (vide = jour du téléchargement)<input type="date" value={form.emissionDate} onChange={(e) => set("emissionDate", e.target.value)}/></label></div>
         <fieldset className="stack-small"><legend className="small">Convention : clauses</legend>
           <p className="muted small">Rien n’est laissé en blanc dans les documents. La loi applicable et la juridiction sont nécessaires pour produire la convention ; le reste a une valeur par défaut ou disparaît s’il est vide.</p>
@@ -126,7 +128,7 @@ export function ServiceDocsTab({ clients, profileReady, onNotice, onError, onSig
           <div className="row wrap"><label>Pénalités de retard (vide = aucune)<input value={terms.penaltyRate} onChange={(e) => setTerm("penaltyRate", e.target.value)} placeholder="ex. 3 % par mois"/></label><label>Frais bancaires à la charge de (vide = non précisé)<input value={terms.bankFees} onChange={(e) => setTerm("bankFees", e.target.value)} placeholder="le client"/></label></div>
           <label>Code source<select value={terms.sourceCode} onChange={(e) => setTerm("sourceCode", e.target.value)}><option value="">Non mentionné</option><option value="oui">Remise du code source comprise</option></select></label>
         </fieldset>
-        <div className="row"><button className="primary" type="submit" disabled={!form.clientId || !form.appName.trim()}>Enregistrer</button>{editing && <button type="button" onClick={() => { setEditing(null); setForm({ ...blank(), clientId: form.clientId }); }}>Annuler</button>}</div>
+        <div className="row"><button className="primary" type="submit" disabled={!form.clientId || !form.appName.trim()}>Enregistrer</button>{editing && <button type="button" onClick={() => { setEditing(null); setForm({ ...blank(), clientId: form.clientId, paymentCoordinates: paymentDetails }); }}>Annuler</button>}</div>
       </form>
     </section>
     <section className="card">

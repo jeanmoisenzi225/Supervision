@@ -294,7 +294,7 @@ export function BillingPage() {
         <div className="row wrap"><button type="button" onClick={previewCurrentDraft} disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Aperçu A4</button><button className="primary" type="submit" disabled={!clientId || lines.some((l) => !l.description.trim() || l.quantity <= 0)}>Enregistrer le brouillon</button><button type="button" onClick={() => setTab("invoices")}>Annuler</button></div>
       </section>
     </form>}
-    {tab === "docs" && <ServiceDocsTab clients={clients} profileReady={Boolean(profile.legalName?.trim() && profile.businessAddress?.trim())} onNotice={setNotice} onError={setError} onSignCreated={(f) => { setFreshLinks(f); setTab("signatures"); setNotice(""); }} />}
+    {tab === "docs" && <ServiceDocsTab clients={clients} profileReady={Boolean(profile.legalName?.trim() && profile.businessAddress?.trim())} paymentDetails={profile.paymentDetails || ""} onNotice={setNotice} onError={setError} onSignCreated={(f) => { setFreshLinks(f); setTab("signatures"); setNotice(""); }} />}
     {tab === "signatures" && <SignaturesTab fresh={freshLinks} onDismissFresh={() => setFreshLinks(null)} onError={setError} onNotice={setNotice} onCount={setPendingSigns} />}
     {tab === "settings" && <section className="card"><h3>Identité commerciale</h3><p className="muted small">Informations de marque uniquement, indépendantes de la future identité juridique.</p><form className="stack-small" onSubmit={saveProfile}>
       <label>Nom commercial<input value={profile.brandName} onChange={(e) => setProfile({ ...profile, brandName: e.target.value })}/></label>
