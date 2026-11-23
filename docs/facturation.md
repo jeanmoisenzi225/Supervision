@@ -112,3 +112,7 @@ Option `terms.equivalent = "oui"` (case « Afficher aussi le total dans l'autre 
 ### Page de signature : logo du client (v0.53.1)
 
 La réponse de `POST /api/sign/:token/open` (après saisie du code) contient `clientLogo` (PNG en data URL, ou null) d'après le registre `client-logos.ts`. La page l'affiche en haut à droite. Aucune donnée supplémentaire n'est exposée avant le code.
+
+### Page de signature : aperçu de toutes les pages (v0.53.2)
+
+Le composant `PdfPages` (pdf.js, import dynamique) dessine chaque page du PDF dans un `canvas`, à la largeur de l'écran, au lieu d'un `iframe` qui n'affiche souvent que la première page sur téléphone. Repli automatique sur l'`iframe` en cas d'erreur. Dépendance ajoutée au frontend : `pdfjs-dist` (version exacte 4.10.38).

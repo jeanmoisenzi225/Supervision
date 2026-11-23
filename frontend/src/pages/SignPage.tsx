@@ -1,4 +1,5 @@
 import { CheckMark, Circle } from "../components/Icon";
+import { PdfPages } from "../components/PdfPages";
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
 type Opened = { title: string; role: string; name: string; signerStatus: string; requestStatus: string; sha256: string; clientLogo?: string | null; signers: { role: string; name: string; status: string }[]; pdfBase64: string };
@@ -24,6 +25,7 @@ export function SignPage({ token }: { token: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [inked, setInked] = useState(false);
+  const [viewer, setViewer] = useState<"pages" | "frame">("pages");
   const url = useMemo(() => (doc ? pdfUrl(doc.pdfBase64) : ""), [doc?.pdfBase64]);
   useEffect(() => () => { if (url) URL.revokeObjectURL(url); }, [url]);
 
@@ -101,9 +103,9 @@ export function SignPage({ token }: { token: string }) {
     <section className="card">
       <h3>Document</h3>
       {doc.signers.some((s) => s.status === "signed") && !completed && <p className="small" style={{ color: "var(--ok)" }}><CheckMark />Ce document comporte déjà la signature de {doc.signers.filter((s) => s.status === "signed").map((s) => `${ROLE[s.role] ?? s.role} (${s.name})`).join(", ")}, avec son certificat (dernière page).</p>}
-      <iframe title="Document à signer" src={url} style={{ width: "100%", height: "68vh", border: "1px solid var(--border)", borderRadius: 8, background: "#fff" }} />
+      {viewer === "pages" ? <PdfPages base64={doc.pdfBase64} onFail={() => setViewer("frame")} /> : <iframe title="Document à signer" src={url} style={{ width: "100%", height: "68vh", border: "1px solid var(--border)", borderRadius: 8, background: "#fff" }} />}
       <div className="row wrap" style={{ marginTop: 8 }}><a className="button" href={url} target="_blank" rel="noreferrer">Ouvrir le PDF en grand</a>{completed && <a className="button" href={url} download="document_signe.pdf">Télécharger le PDF signé</a>}</div>
-      <p className="muted small">Si le document n’apparaît pas ci-dessus (c’est fréquent sur téléphone), utilisez « Ouvrir le PDF en grand » et lisez-le en entier avant de signer.</p>
+      <p className="muted small">Lisez le document en entier avant de signer. « Ouvrir le PDF en grand » l’ouvre dans un nouvel onglet.</p>
       <p className="muted small" style={{ overflowWrap: "anywhere" }}>Empreinte SHA-256 du document : {doc.sha256}</p>
     </section>
     <section className="card">
