@@ -1,4 +1,5 @@
 import { env } from "../../config/env";
+import { prisma } from "../../db/prisma";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
 
 /**
@@ -165,6 +166,9 @@ export async function watchBudget(): Promise<void> {
   const month = new Date().toISOString().slice(0, 7);
   const fp = `claude-budget:${month}`;
   if (pct >= 80) {
+    // Alerte déjà résolue ce mois-ci : on la laisse coupée jusqu'au mois suivant (l'empreinte change chaque mois).
+    const already = await prisma.alert.findFirst({ where: { appKey: "claude", fingerprint: fp, status: "resolved" }, select: { id: true } });
+    if (already) return;
     await raiseAlert({
       appKey: "claude",
       kind: "app",
