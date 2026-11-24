@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v0.53.3 — 2026-11-24
+
+- **Alerte de budget Claude : résolue = coupée jusqu'au mois suivant.** Quand vous résolvez l'alerte « Dépenses Claude… », elle ne se rouvre plus (et ne renvoie plus de notification) pour le reste du mois, même si les dépenses continuent. Elle reprend normalement au mois suivant, avec un nouveau décompte. Auparavant, la vérification horaire la recréait aussitôt.
+
 ## v0.53.2 — 2026-11-23
 
 - **Page de signature : toutes les pages du document s'affichent.** Sur téléphone, l'aperçu du PDF dans un cadre n'en montrait que la première page. Le document est maintenant dessiné page par page, l'une sous l'autre (bibliothèque pdf.js 4.10.38, chargée seulement sur cette page), avec un compteur de chargement et un rappel de faire défiler. Si l'affichage échoue, la page retombe sur l'ancien cadre PDF ; le bouton « Ouvrir le PDF en grand » reste disponible. Testé avec un PDF de 2 pages en largeur de téléphone.
