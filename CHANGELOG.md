@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.54.0 — 2026-11-25
+
+- **Alerte d'activité sur Procedia.** Dès qu'un compte se sert de Procedia, une alerte « Procedia — activité : <nom> » s'ouvre avec une notification (nom, rôle, heure de la dernière action). Une alerte par personne ; elle se referme sans bruit après 30 minutes sans action, et une nouvelle s'ouvre à la reprise. Le compte de maintenance NJMDev n'est jamais compté.
+- **Désactivable à tout moment** : carte « Alerte d'activité » en haut de l'onglet Administration de l'appli, bouton « Désactiver l'alerte » / « Activer l'alerte » (journalisé dans l'historique des actions). Désactivée, les alertes ouvertes sont refermées tout de suite et plus rien n'est envoyé. Active par défaut.
+- Données : Procedia (v0.67.0) ajoute `activity.users` à son rapport `runtime`, déjà lu toutes les 15 secondes ; aucun appel supplémentaire. Tant que Procedia n'est pas mis à jour, la carte n'apparaît pas et aucune alerte ne part. Réglage `activityAlert:procedia` (table Setting). Tests : `tests/activity.test.ts` (nécessite `TEST_DATABASE_URL`).
+
 ## v0.53.4 — 2026-11-25
 
 - **Coupure complète de Procedia : le bon service est ciblé.** La copie de test de Procedia (`procedia-test-backend`, suspendue en permanence) était rattachée à Procedia : la carte « Coupure du service » affichait « Service coupé : procedia-test-backend » et n'offrait que « Remettre en service », sans moyen de couper le vrai Procedia. Les services de test (`procedia-test-*`) ne sont plus rattachés à Procedia ; la coupure vise `procedia-backend`, `procedia-frontend` et `procedia-recette`.

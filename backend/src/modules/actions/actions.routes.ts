@@ -5,6 +5,7 @@ import { prisma } from "../../db/prisma";
 import { requireAdmin } from "../../middleware/auth";
 import { asyncRouter } from "../../utils/asyncRouter";
 import { HttpError } from "../../utils/httpError";
+import { isActivityAlertOn, setActivityAlert, supportsActivity } from "../activity/activity.service";
 import { pauseApp, resumeApp } from "../pause/pause.service";
 import { signAdminRequest } from "../../utils/adminSignature";
 import { deployService, describeService, resolveServiceIds, restartService, resumeService, suspendService } from "./render";
@@ -165,6 +166,21 @@ actionsRouter.get("/:key/tenants/:id", async (req, res) => {
   const app = getApp(req.params.key);
   if (!/^[\w.:@-]{1,100}$/.test(req.params.id)) throw new HttpError(400, "Identifiant invalide");
   res.json(await callApp(app, `/supervision/tenants/${encodeURIComponent(req.params.id)}`));
+});
+
+/** Alerte d'activité (v0.54.0) : état (active par défaut) et bascule, à tout moment. */
+actionsRouter.get("/:key/activity-alert", async (req, res) => {
+  const app = getApp(req.params.key);
+  res.json({ supported: supportsActivity(app.key), enabled: await isActivityAlertOn(app.key) });
+});
+actionsRouter.put("/:key/activity-alert", async (req, res) => {
+  const app = getApp(req.params.key);
+  const { enabled } = z.object({ enabled: z.boolean() }).parse(req.body ?? {});
+  const message = await audit(req.admin!.email, app.key, "activity-alert", { enabled }, async () => {
+    await setActivityAlert(app.key, enabled);
+    return enabled ? "Alerte d'activité activée" : "Alerte d'activité désactivée";
+  });
+  res.json({ ok: true, enabled, message });
 });
 
 actionsRouter.post("/:key/render/suspend-all", async (req, res) => {

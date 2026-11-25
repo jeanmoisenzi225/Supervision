@@ -56,6 +56,40 @@ const DEPLOY_STATUS: Record<string, string> = {
   created: "En file",
 };
 
+/** Alerte d'activité (v0.54.0) : prévient dès que des utilisateurs se servent de l'appli ; désactivable à tout moment. */
+function ActivityAlertCard({ app }: { app: AppOverview }) {
+  const { data, error, refresh } = usePolling(() => api<{ supported: boolean; enabled: boolean }>(`/apps/${app.key}/activity-alert`), 60_000, [app.key]);
+  const [busy, setBusy] = useState(false);
+  const [fail, setFail] = useState<string | null>(null);
+  if (error || !data?.supported) return null;
+  async function toggle(enabled: boolean) {
+    setBusy(true);
+    setFail(null);
+    try {
+      await api(`/apps/${app.key}/activity-alert`, { method: "PUT", body: { enabled } });
+      await refresh();
+    } catch (err) {
+      setFail((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="card">
+      <h3>Alerte d'activité</h3>
+      <p className="small">
+        {data.enabled
+          ? <><strong>Activée.</strong> Vous recevez une notification dès qu'un compte se sert de {app.name} (une alerte par personne, refermée après 30 minutes sans action). Le compte de maintenance NJMDev n'est jamais compté.</>
+          : <><strong>Désactivée.</strong> Aucune alerte quand des comptes se servent de {app.name}.</>}
+      </p>
+      {fail && <p className="error small">{fail}</p>}
+      <button className={data.enabled ? undefined : "primary"} disabled={busy} onClick={() => toggle(!data.enabled)}>
+        {data.enabled ? "Désactiver l'alerte" : "Activer l'alerte"}
+      </button>
+    </section>
+  );
+}
+
 export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () => void }) {
   const { data, error, refresh } = usePolling(() => api<ActionsData>(`/apps/${app.key}/actions`), 30_000, [app.key]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -108,6 +142,7 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
 
   return (
     <div className="stack">
+      <ActivityAlertCard app={app} />
       {feedback && (
         <div className={`card ${feedback.ok ? "" : "diag diag-ko"}`}>
           <p className={feedback.ok ? "success" : "error"}>{feedback.text}</p>

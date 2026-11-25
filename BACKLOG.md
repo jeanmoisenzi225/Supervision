@@ -263,3 +263,11 @@ Constat dans l'annexe B de [`docs/etude-signature-electronique-ged.md`](docs/etu
 - [ ] Procedia : dossier de sécurité (chiffrement, sauvegardes, journal d'audit, accès) pour répondre aux questionnaires des banques ; ISO 27001 seulement si un client l'exige.
 - [ ] Faire valider ces points par un juriste ivoirien.
 
+## 24. Alerte d'activité sur Procedia (2026-11-25) 🚧 (v0.54.0 prête, Procedia v0.67.0 à mettre en ligne)
+
+Demande (propriétaire) : être prévenu automatiquement dès qu'il y a une activité quelconque sur Procedia (des utilisateurs s'en servent sans donner signe de vie ni avoir réglé), avec la possibilité de désactiver l'alerte à tout moment.
+
+- [x] Procedia v0.67.0 : dernière action des comptes (`lastSeenAt`) et champ `activity.users` dans le rapport `runtime`.
+- [x] Supervision v0.54.0 : alerte par compte actif (notification), refermée après 30 minutes d'inactivité, carte de bascule dans l'onglet Administration.
+- [ ] Mise en ligne de Procedia v0.67.0 selon le rituel (aucun import en cours, client prévenu, feu vert du propriétaire).
+- [ ] À décider si besoin : exclure d'autres comptes (le compte de maintenance NJMDev l'est déjà), regrouper plusieurs personnes en une seule notification.
