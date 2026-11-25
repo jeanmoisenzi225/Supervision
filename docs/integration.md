@@ -109,6 +109,6 @@ Les services de chaque appli sont **reconnus automatiquement** dans la liste des
 
 Le service `supervision` n'est rattaché à aucune appli. Pour imposer une liste précise : `<PREFIXE>_RENDER_SERVICES` (identifiants `srv-…` séparés par des virgules), prioritaire sur la reconnaissance automatique.
 
-« Coupure du service » suspend tous les services reconnus pour l'appli (onglet Administration) : vérifier la liste affichée avant de confirmer.
+« Coupure du service » suspend tous les services reconnus pour l'appli (onglet Administration) : vérifier la liste affichée avant de confirmer. Les services de test de Procedia (`procedia-test-*`) ne sont pas rattachés à Procedia (v0.53.4) ; un service déjà coupé est ignoré, et la carte n'affiche « coupé » que lorsque tous les services le sont.
 
 Pour EDEN Supervision : définir `SUPERVISION_URL=https://supervision-20zi.onrender.com` et `SUPERVISION_INGEST_TOKEN` sur le backend EDEN avec la valeur de `EDEN_SUP_INGEST_TOKEN` du service `supervision`. Les journaux applicatifs sont envoyés à la Supervision NJMDev ; la supervision EDEN reste indépendante et continue de superviser les équipements de ses clients.\n\nLa clé API Render donne accès à tout le compte Render : elle ne se saisit que dans l'onglet Environment du service `supervision`, jamais ailleurs.

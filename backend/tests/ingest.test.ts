@@ -99,13 +99,16 @@ describe("reconnaissance des services Render", async () => {
     { id: "srv-4", name: "procedia-backend", url: "https://procedia-backend.onrender.com" },
     { id: "srv-5", name: "supervision", url: "https://supervision-20zi.onrender.com" },
     { id: "srv-6", name: "nom-libre", url: "https://autonova-group.ci" },
+    { id: "srv-7", name: "procedia-test-backend", url: "https://procedia-test-backend.onrender.com" },
+    { id: "srv-8", name: "procedia-recette", url: "https://procedia-recette.onrender.com" },
   ];
   const ids = (key: string) => matchServices(buildApps(() => "").find((a) => a.key === key)!.renderMatch, services).map((s) => s.id);
 
   it("rattache chaque service à la bonne appli", () => {
     expect(ids("mga")).toEqual(["srv-1", "srv-2"]);
     expect(ids("yiri")).toEqual(["srv-3"]);
-    expect(ids("procedia")).toEqual(["srv-4"]);
+    // La copie de test de Procedia n'est pas Procedia : elle ne doit ni être coupée ni masquer l'état réel (v0.53.4).
+    expect(ids("procedia")).toEqual(["srv-4", "srv-8"]);
     expect(ids("site-autonova")).toEqual(["srv-6"]);
     expect(ids("my-family")).toEqual([]);
   });

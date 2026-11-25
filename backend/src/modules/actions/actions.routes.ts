@@ -178,7 +178,13 @@ actionsRouter.post("/:key/render/suspend-all", async (req, res) => {
   const message = await audit(req.admin!.email, app.key, "render:suspend-all", { services: ids, reason }, async () => {
     const failed: string[] = [];
     for (const id of ids) {
-      const name = await describeService(id).then((s) => s.name, () => id);
+      const info = await describeService(id).then((s) => ({ name: s.name, suspended: s.suspended }), () => ({ name: id, suspended: false }));
+      const name = info.name;
+      // Déjà coupé : rien à refaire (Render refuserait).
+      if (info.suspended) {
+        results.push(`${name} : déjà coupé`);
+        continue;
+      }
       try {
         await suspendService(id);
         results.push(`${name} : coupé`);

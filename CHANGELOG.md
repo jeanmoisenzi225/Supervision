@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v0.53.4 — 2026-11-25
+
+- **Coupure complète de Procedia : le bon service est ciblé.** La copie de test de Procedia (`procedia-test-backend`, suspendue en permanence) était rattachée à Procedia : la carte « Coupure du service » affichait « Service coupé : procedia-test-backend » et n'offrait que « Remettre en service », sans moyen de couper le vrai Procedia. Les services de test (`procedia-test-*`) ne sont plus rattachés à Procedia ; la coupure vise `procedia-backend`, `procedia-frontend` et `procedia-recette`.
+- La carte se met en état « coupé » quand **tous** les services le sont ; si certains seulement le sont, elle l'indique, propose de remettre en service et permet de couper le reste. La coupure ne retente plus un service déjà coupé.
+- Test : la copie de test n'est pas rattachée à Procedia (`tests/ingest.test.ts`).
+
 ## v0.53.3 — 2026-11-24
 
 - **Alerte de budget Claude : résolue = coupée jusqu'au mois suivant.** Quand vous résolvez l'alerte « Dépenses Claude… », elle ne se rouvre plus (et ne renvoie plus de notification) pour le reste du mois, même si les dépenses continuent. Elle reprend normalement au mois suivant, avec un nouveau décompte. Auparavant, la vérification horaire la recréait aussitôt.
