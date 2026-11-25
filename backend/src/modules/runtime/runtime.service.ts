@@ -4,6 +4,7 @@ import { prisma } from "../../db/prisma";
 import { raiseAlert, resolveAlert } from "../alerts/alerts.service";
 import { renderFetch, resolveServiceIds } from "../actions/render";
 import type { RenderEvent } from "../renderEvents/renderEvents.service";
+import { watchActivity } from "../activity/activity.service";
 import { callApp } from "../actions/actions.routes";
 import { isPaused } from "../pause/pause.service";
 import { stamp } from "../../utils/time";
@@ -23,6 +24,8 @@ export interface RuntimeReport {
   jobs?: number | null;
   /** Imports en cours (Procedia v0.62.0) : durée et taille, sans nom de document. */
   runningImports?: { id: string; sinceSec: number; sizeMb: number | null }[];
+  /** Comptes actifs récemment (Procedia v0.67.0) : base de l'alerte d'activité. */
+  activity?: { users: { id: string; name: string; role: string; lastSeenAt: string }[] };
 }
 
 /** Dernier rapport reçu par appli (en mémoire, au plus 15 secondes de retard). */
@@ -150,6 +153,7 @@ export async function pollRuntime(app: AppTarget, now = new Date()): Promise<voi
     lastGood.set(app.key, { startedAt, rssMb: report.rssMb, at: now, recent: pushRecent(prev?.recent ?? [], report.rssMb) });
   }
   await watchTrends(app, report, now).catch((e) => console.error(`[tendance] ${app.key}`, (e as Error).message));
+  await watchActivity(app, report, now).catch((e) => console.error(`[activité] ${app.key}`, (e as Error).message));
   // Redémarrage dû à une mise en ligne : simple information, close d'elle-même au bout d'une heure, sans notification.
   await prisma.alert.updateMany({
     where: { appKey: app.key, fingerprint: `restart-deploy:${app.key}`, status: { in: ["open", "acknowledged"] }, openedAt: { lt: new Date(now.getTime() - 60 * 60_000) } },
