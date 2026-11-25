@@ -184,9 +184,15 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
       </section>
 
       {data.render.configured && data.render.services.some((s) => !s.error) && (
-        <section className={`card ${data.render.services.some((s) => s.suspended) ? "diag diag-ko" : ""}`}>
+        <section className={`card ${data.render.services.every((s) => s.suspended) ? "diag diag-ko" : ""}`}>
           <h3>Coupure du service</h3>
-          {data.render.services.some((s) => s.suspended) ? (
+          {!data.render.services.every((s) => s.suspended) && data.render.services.some((s) => s.suspended) && (
+            <div className="row wrap">
+              <p className="small"><Warning />Déjà coupés : {data.render.services.filter((s) => s.suspended).map((s) => s.name).join(", ")}.</p>
+              <button disabled={busy !== null} onClick={() => serviceCommand("resume-all")}>{busy === "resume-all" ? "Remise en service…" : "Remettre en service"}</button>
+            </div>
+          )}
+          {data.render.services.every((s) => s.suspended) ? (
             <>
               <p className="small">
                 <strong>Service coupé :</strong> {data.render.services.filter((s) => s.suspended).map((s) => s.name).join(", ")} hors ligne. La supervision de l'appli est coupée en attendant.
@@ -205,7 +211,7 @@ export function AdminPanel({ app, onChange }: { app: AppOverview; onChange?: () 
           ) : (
             <div className="stack-small">
               <p className="small">
-                <Warning /><strong>{app.name}</strong> sera inaccessible pour tous ses utilisateurs : {data.render.services.map((s) => s.name).join(", ")}.
+                <Warning /><strong>{app.name}</strong> sera inaccessible pour tous ses utilisateurs : {data.render.services.filter((s) => !s.suspended).map((s) => s.name).join(", ")}.
               </p>
               <label>
                 Pour confirmer, tape : {app.name}

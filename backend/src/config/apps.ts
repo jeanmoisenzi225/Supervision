@@ -140,7 +140,8 @@ export const APP_DEFINITIONS: AppDefinition[] = [
     // (Offre gratuite avant : 30 min, service réveillé par la vérification.)
     intervalSec: 60,
     defaultAdminUrl: "https://procedia-backend.onrender.com/api",
-    renderNames: [/^procedia-/],
+    // Hors copie de test (procedia-test-*) : sa coupure permanente faisait croire que Procedia était déjà coupé (v0.53.4).
+    renderNames: [/^procedia-(?!test)/],
     claudeNames: [/procedia/i],
     defaultChecks: [
       { id: "api", label: "API", url: "https://procedia-backend.onrender.com/api/health", expect: "health" },
